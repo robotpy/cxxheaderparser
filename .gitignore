@@ -1,0 +1,9 @@
+*.py[cod]
+*.egg-info
+/build
+/dist
+/cxxheaderparser/version.py
+/.vscode
+
+.coverage
+.pytest_cache

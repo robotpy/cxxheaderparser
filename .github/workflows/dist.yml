@@ -1,0 +1,94 @@
+---
+name: dist
+
+on: [push, pull_request]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: psf/black@stable
+  
+  # check-doc:
+  #   runs-on: ubuntu-18.04
+    
+  #   steps:
+  #   - uses: actions/checkout@v2
+  #     with:
+  #       submodules: recursive
+  #       fetch-depth: 0
+
+  #   - uses: actions/setup-python@v2
+  #     with:
+  #       python-version: 3.8
+  #   - name: Sphinx
+  #     run: |
+  #       pip --disable-pip-version-check install -e .
+  #       pip --disable-pip-version-check install -r docs/requirements.txt
+  #       cd docs && make clean html SPHINXOPTS="-W --keep-going"
+  
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-18.04]
+        python_version: [3.6, 3.7, 3.8, 3.9]
+        architecture: [x86, x64]
+        exclude:
+        - os: macos-latest
+          architecture: x86
+        - os: ubuntu-18.04
+          architecture: x86
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+        fetch-depth: 0
+    
+    - uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python_version }}
+        architecture: ${{ matrix.architecture }}
+
+    - name: Install build dependencies
+      run: python -m pip --disable-pip-version-check install wheel
+
+    - name: Build wheel
+      run: python setup.py bdist_wheel
+    
+    - name: Install test dependencies
+      run: python -m pip --disable-pip-version-check install pytest
+    
+    - name: Test wheel
+      shell: bash
+      run: |
+        cd dist
+        python -m pip --disable-pip-version-check install *.whl
+        cd ../tests
+        python -m pytest
+
+  publish:
+    runs-on: ubuntu-latest
+    needs: [check, check-doc, test]
+    if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags')
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+        fetch-depth: 0
+    
+    - uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+    - run: pip --disable-pip-version-check install wheel
+
+    - name: Build packages
+      run: python setup.py sdist bdist_wheel
+    - name: Publish to PyPI
+      uses: pypa/gh-action-pypi-publish@master
+      with:
+        user: __token__
+        password: ${{ secrets.PYPI_PASSWORD }}
