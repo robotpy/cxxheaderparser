@@ -5,7 +5,7 @@ import re
 import typing
 
 from .errors import CxxParseError
-from .lexer import Lexer, LexToken, Location
+from .lexer import Lexer, LexToken, Location, PhonyEnding
 from .options import ParserOptions
 from .parserstate import (
     BlockState,
@@ -559,24 +559,52 @@ class CxxParser:
         """
 
         args: typing.List[TemplateArgument] = []
-        param_pack = False
 
         # On entry, < has just been consumed
 
         while True:
-            raw_name = self._consume_value_until([], ",", ">", "...")
-            raw_name = [Token(tok.value, tok.type) for tok in raw_name]
-            args.append(TemplateArgument(raw_name))
 
-            tok = self._next_token_must_be(",", ">", "ELLIPSIS")
+            # We don't know whether each argument will be a type or an expression.
+            # Retrieve the expression first, then try to parse the name using those
+            # tokens. If it succeeds we're done, otherwise we use the value
+
+            param_pack = False
+            has_typename = True if self.lex.token_if("typename") else False
+
+            raw_toks = self._consume_value_until([], ",", ">", "ELLIPSIS")
+            val = self._create_value(raw_toks)
+            dtype = None
+
+            if raw_toks and raw_toks[0].type in self._pqname_start_tokens:
+
+                # append a token to make other parsing components happy
+                raw_toks.append(PhonyEnding)
+
+                with self.lex.set_group_of_tokens(raw_toks) as remainder:
+                    try:
+                        parsed_type, mods = self._parse_type(None)
+                        mods.validate(var_ok=False, meth_ok=False, msg="")
+                        dtype = self._parse_cv_ptr(parsed_type, nonptr_fn=True)
+                        self._next_token_must_be(PhonyEnding.type)
+                    except CxxParseError:
+                        dtype = None
+                    else:
+                        if remainder:
+                            dtype = None
+
+            if self.lex.token_if("ELLIPSIS"):
+                param_pack = True
+
+            if dtype:
+                args.append(TemplateArgument(dtype, has_typename, param_pack))
+            else:
+                args.append(TemplateArgument(val, has_typename, param_pack))
+
+            tok = self._next_token_must_be(",", ">")
             if tok.type == ">":
                 break
-            elif tok.type == "ELLIPSIS":
-                param_pack = True
-                self._next_token_must_be(">")
-                break
 
-        return TemplateSpecialization(args, param_pack)
+        return TemplateSpecialization(args)
 
     #
     # Attributes
@@ -1666,8 +1694,11 @@ class CxxParser:
         return Array(dtype, value)
 
     def _parse_cv_ptr(
-        self, dtype: typing.Union[Array, FunctionType, Pointer, Type]
+        self,
+        dtype: typing.Union[Array, FunctionType, Pointer, Type],
+        nonptr_fn: bool = False,
     ) -> DecoratedType:
+        # nonptr_fn is for parsing function types directly in template specialization
 
         while True:
             tok = self.lex.token_if("*", "const", "volatile", "(")
@@ -1680,6 +1711,19 @@ class CxxParser:
                 dtype.const = True
             elif tok.type == "volatile":
                 dtype.volatile = True
+            elif nonptr_fn:
+                # remove any inner grouping parens
+                while True:
+                    gtok = self.lex.token_if("(")
+                    if not gtok:
+                        break
+
+                    toks = self._consume_balanced_tokens(gtok)
+                    self.lex.return_tokens(toks[1:-1])
+
+                fn_params, vararg = self._parse_parameters()
+                dtype = FunctionType(dtype, fn_params, vararg)
+
             else:
                 # Check to see if this is a grouping paren or something else
                 if not self.lex.token_peek_if("*", "&"):

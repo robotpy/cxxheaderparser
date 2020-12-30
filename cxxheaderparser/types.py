@@ -188,9 +188,13 @@ class TemplateArgument:
 
     """
 
-    #: This contains unparsed arbitrary expressions, including additional
-    #: specializations or decltypes or whatever
-    tokens: typing.List[Token]
+    #: If this argument is a type, it is stored here as a DecoratedType,
+    #: otherwise it's stored as an unparsed set of values
+    arg: typing.Union["DecoratedType", Value]
+
+    #: Set if starts with "typename"
+    has_typename: bool = False
+    param_pack: bool = False
 
 
 @dataclass
@@ -206,9 +210,6 @@ class TemplateSpecialization:
     """
 
     args: typing.List[TemplateArgument]
-
-    #: If True, indicates a parameter pack (...) on the last parameter
-    param_pack: bool = False
 
 
 @dataclass
