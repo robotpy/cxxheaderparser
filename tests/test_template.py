@@ -4,6 +4,7 @@ from cxxheaderparser.types import (
     Array,
     BaseClass,
     ClassDecl,
+    DecltypeSpecifier,
     Field,
     ForwardDecl,
     Function,
@@ -52,10 +53,26 @@ def test_template_base_template_ns():
                                             specialization=TemplateSpecialization(
                                                 args=[
                                                     TemplateArgument(
-                                                        tokens=[Token(value="int")]
+                                                        arg=Type(
+                                                            typename=PQName(
+                                                                segments=[
+                                                                    FundamentalSpecifier(
+                                                                        name="int"
+                                                                    )
+                                                                ]
+                                                            )
+                                                        )
                                                     ),
                                                     TemplateArgument(
-                                                        tokens=[Token(value="int")]
+                                                        arg=Type(
+                                                            typename=PQName(
+                                                                segments=[
+                                                                    FundamentalSpecifier(
+                                                                        name="int"
+                                                                    )
+                                                                ]
+                                                            )
+                                                        )
                                                     ),
                                                 ]
                                             ),
@@ -341,15 +358,42 @@ def test_template_template_template():
                                     specialization=TemplateSpecialization(
                                         args=[
                                             TemplateArgument(
-                                                tokens=[
-                                                    Token(value="TT"),
-                                                    Token(value="<"),
-                                                    Token(value="T1"),
-                                                    Token(value=","),
-                                                    Token(value="Rest"),
-                                                    Token(value="..."),
-                                                    Token(value=">"),
-                                                ]
+                                                arg=Type(
+                                                    typename=PQName(
+                                                        segments=[
+                                                            NameSpecifier(
+                                                                name="TT",
+                                                                specialization=TemplateSpecialization(
+                                                                    args=[
+                                                                        TemplateArgument(
+                                                                            arg=Type(
+                                                                                typename=PQName(
+                                                                                    segments=[
+                                                                                        NameSpecifier(
+                                                                                            name="T1"
+                                                                                        )
+                                                                                    ]
+                                                                                )
+                                                                            )
+                                                                        ),
+                                                                        TemplateArgument(
+                                                                            arg=Type(
+                                                                                typename=PQName(
+                                                                                    segments=[
+                                                                                        NameSpecifier(
+                                                                                            name="Rest"
+                                                                                        )
+                                                                                    ]
+                                                                                )
+                                                                            ),
+                                                                            param_pack=True,
+                                                                        ),
+                                                                    ]
+                                                                ),
+                                                            )
+                                                        ]
+                                                    )
+                                                )
                                             )
                                         ]
                                     ),
@@ -420,13 +464,13 @@ def test_template_static_var():
                     ),
                     fields=[
                         Field(
-                            name="x",
+                            access="public",
                             type=Type(
                                 typename=PQName(
                                     segments=[FundamentalSpecifier(name="int")]
                                 )
                             ),
-                            access="public",
+                            name="x",
                             static=True,
                         )
                     ],
@@ -439,7 +483,15 @@ def test_template_static_var():
                             NameSpecifier(
                                 name="X",
                                 specialization=TemplateSpecialization(
-                                    args=[TemplateArgument(tokens=[Token(value="T")])]
+                                    args=[
+                                        TemplateArgument(
+                                            arg=Type(
+                                                typename=PQName(
+                                                    segments=[NameSpecifier(name="T")]
+                                                )
+                                            )
+                                        )
+                                    ]
                                 ),
                             ),
                             NameSpecifier(name="x"),
@@ -547,10 +599,26 @@ def test_template_fn_param_initializer():
                                             specialization=TemplateSpecialization(
                                                 args=[
                                                     TemplateArgument(
-                                                        tokens=[Token(value="T")]
+                                                        arg=Type(
+                                                            typename=PQName(
+                                                                segments=[
+                                                                    NameSpecifier(
+                                                                        name="T"
+                                                                    )
+                                                                ]
+                                                            )
+                                                        )
                                                     ),
                                                     TemplateArgument(
-                                                        tokens=[Token(value="U")]
+                                                        arg=Type(
+                                                            typename=PQName(
+                                                                segments=[
+                                                                    NameSpecifier(
+                                                                        name="U"
+                                                                    )
+                                                                ]
+                                                            )
+                                                        )
                                                     ),
                                                 ]
                                             ),
@@ -624,28 +692,73 @@ def test_template_huge():
                                             specialization=TemplateSpecialization(
                                                 args=[
                                                     TemplateArgument(
-                                                        tokens=[Token(value="unsigned")]
+                                                        arg=Type(
+                                                            typename=PQName(
+                                                                segments=[
+                                                                    FundamentalSpecifier(
+                                                                        name="unsigned"
+                                                                    )
+                                                                ]
+                                                            )
+                                                        )
                                                     ),
                                                     TemplateArgument(
-                                                        tokens=[
-                                                            Token(value="std"),
-                                                            Token(value="::"),
-                                                            Token(value="pair"),
-                                                            Token(value="<"),
-                                                            Token(value="unsigned"),
-                                                            Token(value=","),
-                                                            Token(
-                                                                value="SnailTemplateClass"
-                                                            ),
-                                                            Token(value="<"),
-                                                            Token(
-                                                                value="SnailNamespace"
-                                                            ),
-                                                            Token(value="::"),
-                                                            Token(value="SnailClass"),
-                                                            Token(value=">"),
-                                                            Token(value=">"),
-                                                        ]
+                                                        arg=Type(
+                                                            typename=PQName(
+                                                                segments=[
+                                                                    NameSpecifier(
+                                                                        name="std"
+                                                                    ),
+                                                                    NameSpecifier(
+                                                                        name="pair",
+                                                                        specialization=TemplateSpecialization(
+                                                                            args=[
+                                                                                TemplateArgument(
+                                                                                    arg=Type(
+                                                                                        typename=PQName(
+                                                                                            segments=[
+                                                                                                FundamentalSpecifier(
+                                                                                                    name="unsigned"
+                                                                                                )
+                                                                                            ]
+                                                                                        )
+                                                                                    )
+                                                                                ),
+                                                                                TemplateArgument(
+                                                                                    arg=Type(
+                                                                                        typename=PQName(
+                                                                                            segments=[
+                                                                                                NameSpecifier(
+                                                                                                    name="SnailTemplateClass",
+                                                                                                    specialization=TemplateSpecialization(
+                                                                                                        args=[
+                                                                                                            TemplateArgument(
+                                                                                                                arg=Type(
+                                                                                                                    typename=PQName(
+                                                                                                                        segments=[
+                                                                                                                            NameSpecifier(
+                                                                                                                                name="SnailNamespace"
+                                                                                                                            ),
+                                                                                                                            NameSpecifier(
+                                                                                                                                name="SnailClass"
+                                                                                                                            ),
+                                                                                                                        ]
+                                                                                                                    )
+                                                                                                                )
+                                                                                                            )
+                                                                                                        ]
+                                                                                                    ),
+                                                                                                )
+                                                                                            ]
+                                                                                        )
+                                                                                    )
+                                                                                ),
+                                                                            ]
+                                                                        ),
+                                                                    ),
+                                                                ]
+                                                            )
+                                                        )
                                                     ),
                                                 ]
                                             ),
@@ -673,36 +786,73 @@ def test_template_huge():
                                                     specialization=TemplateSpecialization(
                                                         args=[
                                                             TemplateArgument(
-                                                                tokens=[
-                                                                    Token(
-                                                                        value="unsigned"
+                                                                arg=Type(
+                                                                    typename=PQName(
+                                                                        segments=[
+                                                                            FundamentalSpecifier(
+                                                                                name="unsigned"
+                                                                            )
+                                                                        ]
                                                                     )
-                                                                ]
+                                                                )
                                                             ),
                                                             TemplateArgument(
-                                                                tokens=[
-                                                                    Token(value="std"),
-                                                                    Token(value="::"),
-                                                                    Token(value="pair"),
-                                                                    Token(value="<"),
-                                                                    Token(
-                                                                        value="unsigned"
-                                                                    ),
-                                                                    Token(value=","),
-                                                                    Token(
-                                                                        value="SnailTemplateClass"
-                                                                    ),
-                                                                    Token(value="<"),
-                                                                    Token(
-                                                                        value="SnailNamespace"
-                                                                    ),
-                                                                    Token(value="::"),
-                                                                    Token(
-                                                                        value="SnailClass"
-                                                                    ),
-                                                                    Token(value=">"),
-                                                                    Token(value=">"),
-                                                                ]
+                                                                arg=Type(
+                                                                    typename=PQName(
+                                                                        segments=[
+                                                                            NameSpecifier(
+                                                                                name="std"
+                                                                            ),
+                                                                            NameSpecifier(
+                                                                                name="pair",
+                                                                                specialization=TemplateSpecialization(
+                                                                                    args=[
+                                                                                        TemplateArgument(
+                                                                                            arg=Type(
+                                                                                                typename=PQName(
+                                                                                                    segments=[
+                                                                                                        FundamentalSpecifier(
+                                                                                                            name="unsigned"
+                                                                                                        )
+                                                                                                    ]
+                                                                                                )
+                                                                                            )
+                                                                                        ),
+                                                                                        TemplateArgument(
+                                                                                            arg=Type(
+                                                                                                typename=PQName(
+                                                                                                    segments=[
+                                                                                                        NameSpecifier(
+                                                                                                            name="SnailTemplateClass",
+                                                                                                            specialization=TemplateSpecialization(
+                                                                                                                args=[
+                                                                                                                    TemplateArgument(
+                                                                                                                        arg=Type(
+                                                                                                                            typename=PQName(
+                                                                                                                                segments=[
+                                                                                                                                    NameSpecifier(
+                                                                                                                                        name="SnailNamespace"
+                                                                                                                                    ),
+                                                                                                                                    NameSpecifier(
+                                                                                                                                        name="SnailClass"
+                                                                                                                                    ),
+                                                                                                                                ]
+                                                                                                                            )
+                                                                                                                        )
+                                                                                                                    )
+                                                                                                                ]
+                                                                                                            ),
+                                                                                                        )
+                                                                                                    ]
+                                                                                                )
+                                                                                            )
+                                                                                        ),
+                                                                                    ]
+                                                                                ),
+                                                                            ),
+                                                                        ]
+                                                                    )
+                                                                )
                                                             ),
                                                         ]
                                                     ),
@@ -740,7 +890,15 @@ def test_template_specialized():
                                     specialization=TemplateSpecialization(
                                         args=[
                                             TemplateArgument(
-                                                tokens=[Token(value="int")]
+                                                arg=Type(
+                                                    typename=PQName(
+                                                        segments=[
+                                                            FundamentalSpecifier(
+                                                                name="int"
+                                                            )
+                                                        ]
+                                                    )
+                                                )
                                             )
                                         ]
                                     ),
@@ -799,7 +957,15 @@ def test_template_class_defaults():
                                             specialization=TemplateSpecialization(
                                                 args=[
                                                     TemplateArgument(
-                                                        tokens=[Token(value="VALUE")]
+                                                        arg=Type(
+                                                            typename=PQName(
+                                                                segments=[
+                                                                    NameSpecifier(
+                                                                        name="VALUE"
+                                                                    )
+                                                                ]
+                                                            )
+                                                        )
                                                     )
                                                 ]
                                             ),
@@ -953,10 +1119,26 @@ def test_template_many_packs():
                                             specialization=TemplateSpecialization(
                                                 args=[
                                                     TemplateArgument(
-                                                        tokens=[Token(value="Type")]
+                                                        arg=Type(
+                                                            typename=PQName(
+                                                                segments=[
+                                                                    NameSpecifier(
+                                                                        name="Type"
+                                                                    )
+                                                                ]
+                                                            )
+                                                        )
                                                     ),
                                                     TemplateArgument(
-                                                        tokens=[Token(value="int")]
+                                                        arg=Type(
+                                                            typename=PQName(
+                                                                segments=[
+                                                                    FundamentalSpecifier(
+                                                                        name="int"
+                                                                    )
+                                                                ]
+                                                            )
+                                                        )
                                                     ),
                                                 ]
                                             ),
@@ -995,29 +1177,67 @@ def test_template_many_packs():
                                             specialization=TemplateSpecialization(
                                                 args=[
                                                     TemplateArgument(
-                                                        tokens=[
-                                                            Token(
-                                                                value="concat_iterator"
-                                                            ),
-                                                            Token(value="<"),
-                                                            Token(value="ValueT"),
-                                                            Token(value=","),
-                                                            Token(value="IterTs"),
-                                                            Token(value="..."),
-                                                            Token(value=">"),
-                                                        ]
+                                                        arg=Type(
+                                                            typename=PQName(
+                                                                segments=[
+                                                                    NameSpecifier(
+                                                                        name="concat_iterator",
+                                                                        specialization=TemplateSpecialization(
+                                                                            args=[
+                                                                                TemplateArgument(
+                                                                                    arg=Type(
+                                                                                        typename=PQName(
+                                                                                            segments=[
+                                                                                                NameSpecifier(
+                                                                                                    name="ValueT"
+                                                                                                )
+                                                                                            ]
+                                                                                        )
+                                                                                    )
+                                                                                ),
+                                                                                TemplateArgument(
+                                                                                    arg=Type(
+                                                                                        typename=PQName(
+                                                                                            segments=[
+                                                                                                NameSpecifier(
+                                                                                                    name="IterTs"
+                                                                                                )
+                                                                                            ]
+                                                                                        )
+                                                                                    ),
+                                                                                    param_pack=True,
+                                                                                ),
+                                                                            ]
+                                                                        ),
+                                                                    )
+                                                                ]
+                                                            )
+                                                        )
                                                     ),
                                                     TemplateArgument(
-                                                        tokens=[
-                                                            Token(value="std"),
-                                                            Token(value="::"),
-                                                            Token(
-                                                                value="forward_iterator_tag"
-                                                            ),
-                                                        ]
+                                                        arg=Type(
+                                                            typename=PQName(
+                                                                segments=[
+                                                                    NameSpecifier(
+                                                                        name="std"
+                                                                    ),
+                                                                    NameSpecifier(
+                                                                        name="forward_iterator_tag"
+                                                                    ),
+                                                                ]
+                                                            )
+                                                        )
                                                     ),
                                                     TemplateArgument(
-                                                        tokens=[Token(value="ValueT")]
+                                                        arg=Type(
+                                                            typename=PQName(
+                                                                segments=[
+                                                                    NameSpecifier(
+                                                                        name="ValueT"
+                                                                    )
+                                                                ]
+                                                            )
+                                                        )
                                                     ),
                                                 ]
                                             ),
@@ -1052,24 +1272,34 @@ def test_template_many_packs():
                                             specialization=TemplateSpecialization(
                                                 args=[
                                                     TemplateArgument(
-                                                        tokens=[
-                                                            Token(value="N"),
-                                                            Token(value="-"),
-                                                            Token(value="1"),
-                                                        ]
+                                                        arg=Value(
+                                                            tokens=[
+                                                                Token(value="N"),
+                                                                Token(value="-"),
+                                                                Token(value="1"),
+                                                            ]
+                                                        )
                                                     ),
                                                     TemplateArgument(
-                                                        tokens=[
-                                                            Token(value="N"),
-                                                            Token(value="-"),
-                                                            Token(value="1"),
-                                                        ]
+                                                        arg=Value(
+                                                            tokens=[
+                                                                Token(value="N"),
+                                                                Token(value="-"),
+                                                                Token(value="1"),
+                                                            ]
+                                                        )
                                                     ),
                                                     TemplateArgument(
-                                                        tokens=[
-                                                            Token(value="I"),
-                                                            Token(value="..."),
-                                                        ]
+                                                        arg=Type(
+                                                            typename=PQName(
+                                                                segments=[
+                                                                    NameSpecifier(
+                                                                        name="I"
+                                                                    )
+                                                                ]
+                                                            )
+                                                        ),
+                                                        param_pack=True,
                                                     ),
                                                 ]
                                             ),
@@ -1115,12 +1345,18 @@ def test_template_many_packs():
                                     name="build_index_impl",
                                     specialization=TemplateSpecialization(
                                         args=[
-                                            TemplateArgument(tokens=[Token(value="0")]),
                                             TemplateArgument(
-                                                tokens=[
-                                                    Token(value="I"),
-                                                    Token(value="..."),
-                                                ]
+                                                arg=Value(tokens=[Token(value="0")])
+                                            ),
+                                            TemplateArgument(
+                                                arg=Type(
+                                                    typename=PQName(
+                                                        segments=[
+                                                            NameSpecifier(name="I")
+                                                        ]
+                                                    )
+                                                ),
+                                                param_pack=True,
                                             ),
                                         ]
                                     ),
@@ -1138,10 +1374,16 @@ def test_template_many_packs():
                                             specialization=TemplateSpecialization(
                                                 args=[
                                                     TemplateArgument(
-                                                        tokens=[
-                                                            Token(value="I"),
-                                                            Token(value="..."),
-                                                        ]
+                                                        arg=Type(
+                                                            typename=PQName(
+                                                                segments=[
+                                                                    NameSpecifier(
+                                                                        name="I"
+                                                                    )
+                                                                ]
+                                                            )
+                                                        ),
+                                                        param_pack=True,
                                                     )
                                                 ]
                                             ),
@@ -1176,60 +1418,179 @@ def test_template_many_packs():
                                     name="is_callable",
                                     specialization=TemplateSpecialization(
                                         args=[
-                                            TemplateArgument(tokens=[Token(value="F")]),
-                                            TemplateArgument(tokens=[Token(value="P")]),
                                             TemplateArgument(
-                                                tokens=[
-                                                    Token(value="typelist"),
-                                                    Token(value="<"),
-                                                    Token(value="T"),
-                                                    Token(value="..."),
-                                                    Token(value=">"),
-                                                ]
+                                                arg=Type(
+                                                    typename=PQName(
+                                                        segments=[
+                                                            NameSpecifier(name="F")
+                                                        ]
+                                                    )
+                                                )
                                             ),
                                             TemplateArgument(
-                                                tokens=[
-                                                    Token(value="void_t"),
-                                                    Token(value="<"),
-                                                    Token(value="decltype"),
-                                                    Token(value="("),
-                                                    Token(value="("),
-                                                    Token(value="("),
-                                                    Token(value="*"),
-                                                    Token(value="std"),
-                                                    Token(value="::"),
-                                                    Token(value="declval"),
-                                                    Token(value="<"),
-                                                    Token(value="P"),
-                                                    Token(value=">"),
-                                                    Token(value="("),
-                                                    Token(value=")"),
-                                                    Token(value=")"),
-                                                    Token(value="."),
-                                                    Token(value="*"),
-                                                    Token(value="std"),
-                                                    Token(value="::"),
-                                                    Token(value="declval"),
-                                                    Token(value="<"),
-                                                    Token(value="F"),
-                                                    Token(value=">"),
-                                                    Token(value="("),
-                                                    Token(value=")"),
-                                                    Token(value=")"),
-                                                    Token(value="("),
-                                                    Token(value="std"),
-                                                    Token(value="::"),
-                                                    Token(value="declval"),
-                                                    Token(value="<"),
-                                                    Token(value="T"),
-                                                    Token(value=">"),
-                                                    Token(value="("),
-                                                    Token(value=")"),
-                                                    Token(value="..."),
-                                                    Token(value=")"),
-                                                    Token(value=")"),
-                                                    Token(value=">"),
-                                                ]
+                                                arg=Type(
+                                                    typename=PQName(
+                                                        segments=[
+                                                            NameSpecifier(name="P")
+                                                        ]
+                                                    )
+                                                )
+                                            ),
+                                            TemplateArgument(
+                                                arg=Type(
+                                                    typename=PQName(
+                                                        segments=[
+                                                            NameSpecifier(
+                                                                name="typelist",
+                                                                specialization=TemplateSpecialization(
+                                                                    args=[
+                                                                        TemplateArgument(
+                                                                            arg=Type(
+                                                                                typename=PQName(
+                                                                                    segments=[
+                                                                                        NameSpecifier(
+                                                                                            name="T"
+                                                                                        )
+                                                                                    ]
+                                                                                )
+                                                                            ),
+                                                                            param_pack=True,
+                                                                        )
+                                                                    ]
+                                                                ),
+                                                            )
+                                                        ]
+                                                    )
+                                                )
+                                            ),
+                                            TemplateArgument(
+                                                arg=Type(
+                                                    typename=PQName(
+                                                        segments=[
+                                                            NameSpecifier(
+                                                                name="void_t",
+                                                                specialization=TemplateSpecialization(
+                                                                    args=[
+                                                                        TemplateArgument(
+                                                                            arg=Type(
+                                                                                typename=PQName(
+                                                                                    segments=[
+                                                                                        DecltypeSpecifier(
+                                                                                            tokens=[
+                                                                                                Token(
+                                                                                                    value="("
+                                                                                                ),
+                                                                                                Token(
+                                                                                                    value="("
+                                                                                                ),
+                                                                                                Token(
+                                                                                                    value="*"
+                                                                                                ),
+                                                                                                Token(
+                                                                                                    value="std"
+                                                                                                ),
+                                                                                                Token(
+                                                                                                    value="::"
+                                                                                                ),
+                                                                                                Token(
+                                                                                                    value="declval"
+                                                                                                ),
+                                                                                                Token(
+                                                                                                    value="<"
+                                                                                                ),
+                                                                                                Token(
+                                                                                                    value="P"
+                                                                                                ),
+                                                                                                Token(
+                                                                                                    value=">"
+                                                                                                ),
+                                                                                                Token(
+                                                                                                    value="("
+                                                                                                ),
+                                                                                                Token(
+                                                                                                    value=")"
+                                                                                                ),
+                                                                                                Token(
+                                                                                                    value=")"
+                                                                                                ),
+                                                                                                Token(
+                                                                                                    value="."
+                                                                                                ),
+                                                                                                Token(
+                                                                                                    value="*"
+                                                                                                ),
+                                                                                                Token(
+                                                                                                    value="std"
+                                                                                                ),
+                                                                                                Token(
+                                                                                                    value="::"
+                                                                                                ),
+                                                                                                Token(
+                                                                                                    value="declval"
+                                                                                                ),
+                                                                                                Token(
+                                                                                                    value="<"
+                                                                                                ),
+                                                                                                Token(
+                                                                                                    value="F"
+                                                                                                ),
+                                                                                                Token(
+                                                                                                    value=">"
+                                                                                                ),
+                                                                                                Token(
+                                                                                                    value="("
+                                                                                                ),
+                                                                                                Token(
+                                                                                                    value=")"
+                                                                                                ),
+                                                                                                Token(
+                                                                                                    value=")"
+                                                                                                ),
+                                                                                                Token(
+                                                                                                    value="("
+                                                                                                ),
+                                                                                                Token(
+                                                                                                    value="std"
+                                                                                                ),
+                                                                                                Token(
+                                                                                                    value="::"
+                                                                                                ),
+                                                                                                Token(
+                                                                                                    value="declval"
+                                                                                                ),
+                                                                                                Token(
+                                                                                                    value="<"
+                                                                                                ),
+                                                                                                Token(
+                                                                                                    value="T"
+                                                                                                ),
+                                                                                                Token(
+                                                                                                    value=">"
+                                                                                                ),
+                                                                                                Token(
+                                                                                                    value="("
+                                                                                                ),
+                                                                                                Token(
+                                                                                                    value=")"
+                                                                                                ),
+                                                                                                Token(
+                                                                                                    value="..."
+                                                                                                ),
+                                                                                                Token(
+                                                                                                    value=")"
+                                                                                                ),
+                                                                                            ]
+                                                                                        )
+                                                                                    ]
+                                                                                )
+                                                                            )
+                                                                        )
+                                                                    ]
+                                                                ),
+                                                            )
+                                                        ]
+                                                    )
+                                                )
                                             ),
                                         ]
                                     ),

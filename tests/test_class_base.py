@@ -220,7 +220,15 @@ def test_class_base_specialized():
                                             specialization=TemplateSpecialization(
                                                 args=[
                                                     TemplateArgument(
-                                                        tokens=[Token(value="Green")]
+                                                        arg=Type(
+                                                            typename=PQName(
+                                                                segments=[
+                                                                    NameSpecifier(
+                                                                        name="Green"
+                                                                    )
+                                                                ]
+                                                            )
+                                                        )
                                                     )
                                                 ]
                                             ),

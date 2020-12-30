@@ -433,10 +433,17 @@ def test_fn_template_ptr():
                                         specialization=TemplateSpecialization(
                                             args=[
                                                 TemplateArgument(
-                                                    tokens=[
-                                                        Token(value="Pointer"),
-                                                        Token(value="*"),
-                                                    ]
+                                                    arg=Pointer(
+                                                        ptr_to=Type(
+                                                            typename=PQName(
+                                                                segments=[
+                                                                    NameSpecifier(
+                                                                        name="Pointer"
+                                                                    )
+                                                                ]
+                                                            )
+                                                        )
+                                                    )
                                                 )
                                             ]
                                         ),
@@ -458,10 +465,17 @@ def test_fn_template_ptr():
                                                 specialization=TemplateSpecialization(
                                                     args=[
                                                         TemplateArgument(
-                                                            tokens=[
-                                                                Token(value="Pointer"),
-                                                                Token(value="*"),
-                                                            ]
+                                                            arg=Pointer(
+                                                                ptr_to=Type(
+                                                                    typename=PQName(
+                                                                        segments=[
+                                                                            NameSpecifier(
+                                                                                name="Pointer"
+                                                                            )
+                                                                        ]
+                                                                    )
+                                                                )
+                                                            )
                                                         )
                                                     ]
                                                 ),

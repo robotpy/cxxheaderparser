@@ -4,6 +4,7 @@ from cxxheaderparser.types import (
     BaseClass,
     ClassDecl,
     Function,
+    FunctionType,
     FundamentalSpecifier,
     Method,
     NameSpecifier,
@@ -139,7 +140,15 @@ def test_alias_declaration_2():
                                     name="foo",
                                     specialization=TemplateSpecialization(
                                         args=[
-                                            TemplateArgument(tokens=[Token(value="T")])
+                                            TemplateArgument(
+                                                arg=Type(
+                                                    typename=PQName(
+                                                        segments=[
+                                                            NameSpecifier(name="T")
+                                                        ]
+                                                    )
+                                                )
+                                            )
                                         ]
                                     ),
                                 )
@@ -201,7 +210,15 @@ def test_alias_declaration_4():
                                     name="bar",
                                     specialization=TemplateSpecialization(
                                         args=[
-                                            TemplateArgument(tokens=[Token(value="T")])
+                                            TemplateArgument(
+                                                arg=Type(
+                                                    typename=PQName(
+                                                        segments=[
+                                                            NameSpecifier(name="T")
+                                                        ]
+                                                    )
+                                                )
+                                            )
                                         ]
                                     ),
                                 ),
@@ -260,7 +277,15 @@ def test_alias_declaration_6():
                                     name="foo",
                                     specialization=TemplateSpecialization(
                                         args=[
-                                            TemplateArgument(tokens=[Token(value="T")])
+                                            TemplateArgument(
+                                                arg=Type(
+                                                    typename=PQName(
+                                                        segments=[
+                                                            NameSpecifier(name="T")
+                                                        ]
+                                                    )
+                                                )
+                                            )
                                         ]
                                     ),
                                 ),
@@ -410,11 +435,18 @@ def test_using_many_things():
                                                     specialization=TemplateSpecialization(
                                                         args=[
                                                             TemplateArgument(
-                                                                tokens=[
-                                                                    Token(value="int"),
-                                                                    Token(value="("),
-                                                                    Token(value=")"),
-                                                                ]
+                                                                arg=FunctionType(
+                                                                    return_type=Type(
+                                                                        typename=PQName(
+                                                                            segments=[
+                                                                                FundamentalSpecifier(
+                                                                                    name="int"
+                                                                                )
+                                                                            ]
+                                                                        )
+                                                                    ),
+                                                                    parameters=[],
+                                                                )
                                                             )
                                                         ]
                                                     ),
@@ -491,11 +523,18 @@ def test_using_many_things():
                                             specialization=TemplateSpecialization(
                                                 args=[
                                                     TemplateArgument(
-                                                        tokens=[
-                                                            Token(value="void"),
-                                                            Token(value="("),
-                                                            Token(value=")"),
-                                                        ]
+                                                        arg=FunctionType(
+                                                            return_type=Type(
+                                                                typename=PQName(
+                                                                    segments=[
+                                                                        FundamentalSpecifier(
+                                                                            name="void"
+                                                                        )
+                                                                    ]
+                                                                )
+                                                            ),
+                                                            parameters=[],
+                                                        )
                                                     )
                                                 ]
                                             ),

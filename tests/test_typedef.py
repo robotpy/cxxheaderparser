@@ -45,7 +45,15 @@ def test_simple_typedef():
                                     specialization=TemplateSpecialization(
                                         args=[
                                             TemplateArgument(
-                                                tokens=[Token(value="int")]
+                                                arg=Type(
+                                                    typename=PQName(
+                                                        segments=[
+                                                            FundamentalSpecifier(
+                                                                name="int"
+                                                            )
+                                                        ]
+                                                    )
+                                                )
                                             )
                                         ]
                                     ),

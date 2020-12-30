@@ -296,7 +296,7 @@ def test_class_member_spec_2():
                     ),
                     fields=[
                         Field(
-                            name="C",
+                            access="private",
                             type=Type(
                                 typename=PQName(
                                     segments=[
@@ -305,10 +305,10 @@ def test_class_member_spec_2():
                                     ]
                                 )
                             ),
-                            access="private",
+                            name="C",
                         ),
                         Field(
-                            name="data",
+                            access="private",
                             type=Type(
                                 typename=PQName(
                                     segments=[
@@ -318,7 +318,15 @@ def test_class_member_spec_2():
                                             specialization=TemplateSpecialization(
                                                 args=[
                                                     TemplateArgument(
-                                                        tokens=[Token(value="int")]
+                                                        arg=Type(
+                                                            typename=PQName(
+                                                                segments=[
+                                                                    FundamentalSpecifier(
+                                                                        name="int"
+                                                                    )
+                                                                ]
+                                                            )
+                                                        )
                                                     )
                                                 ]
                                             ),
@@ -326,7 +334,7 @@ def test_class_member_spec_2():
                                     ]
                                 )
                             ),
-                            access="private",
+                            name="data",
                         ),
                     ],
                     methods=[
@@ -617,7 +625,7 @@ def test_class_member_spec_6():
                             ),
                             fields=[
                                 Field(
-                                    name="s",
+                                    access="public",
                                     type=Type(
                                         typename=PQName(
                                             segments=[
@@ -627,9 +635,15 @@ def test_class_member_spec_6():
                                                     specialization=TemplateSpecialization(
                                                         args=[
                                                             TemplateArgument(
-                                                                tokens=[
-                                                                    Token(value="CharT")
-                                                                ]
+                                                                arg=Type(
+                                                                    typename=PQName(
+                                                                        segments=[
+                                                                            NameSpecifier(
+                                                                                name="CharT"
+                                                                            )
+                                                                        ]
+                                                                    )
+                                                                )
                                                             )
                                                         ]
                                                     ),
@@ -637,7 +651,7 @@ def test_class_member_spec_6():
                                             ]
                                         )
                                     ),
-                                    access="public",
+                                    name="s",
                                 )
                             ],
                         )
@@ -1662,7 +1676,15 @@ def test_initializer_with_initializer_list_1():
                                             specialization=TemplateSpecialization(
                                                 args=[
                                                     TemplateArgument(
-                                                        tokens=[Token(value="int")]
+                                                        arg=Type(
+                                                            typename=PQName(
+                                                                segments=[
+                                                                    FundamentalSpecifier(
+                                                                        name="int"
+                                                                    )
+                                                                ]
+                                                            )
+                                                        )
                                                     )
                                                 ]
                                             ),
@@ -1747,9 +1769,15 @@ def test_initializer_with_initializer_list_2():
                                                         specialization=TemplateSpecialization(
                                                             args=[
                                                                 TemplateArgument(
-                                                                    tokens=[
-                                                                        Token(value="R")
-                                                                    ]
+                                                                    arg=Type(
+                                                                        typename=PQName(
+                                                                            segments=[
+                                                                                NameSpecifier(
+                                                                                    name="R"
+                                                                                )
+                                                                            ]
+                                                                        )
+                                                                    )
                                                                 )
                                                             ]
                                                         ),
@@ -2438,10 +2466,26 @@ def test_class_multi_vars():
                                             specialization=TemplateSpecialization(
                                                 args=[
                                                     TemplateArgument(
-                                                        tokens=[Token(value="string")]
+                                                        arg=Type(
+                                                            typename=PQName(
+                                                                segments=[
+                                                                    NameSpecifier(
+                                                                        name="string"
+                                                                    )
+                                                                ]
+                                                            )
+                                                        )
                                                     ),
                                                     TemplateArgument(
-                                                        tokens=[Token(value="int")]
+                                                        arg=Type(
+                                                            typename=PQName(
+                                                                segments=[
+                                                                    FundamentalSpecifier(
+                                                                        name="int"
+                                                                    )
+                                                                ]
+                                                            )
+                                                        )
                                                     ),
                                                 ]
                                             ),
@@ -2461,10 +2505,26 @@ def test_class_multi_vars():
                                             specialization=TemplateSpecialization(
                                                 args=[
                                                     TemplateArgument(
-                                                        tokens=[Token(value="string")]
+                                                        arg=Type(
+                                                            typename=PQName(
+                                                                segments=[
+                                                                    NameSpecifier(
+                                                                        name="string"
+                                                                    )
+                                                                ]
+                                                            )
+                                                        )
                                                     ),
                                                     TemplateArgument(
-                                                        tokens=[Token(value="int")]
+                                                        arg=Type(
+                                                            typename=PQName(
+                                                                segments=[
+                                                                    FundamentalSpecifier(
+                                                                        name="int"
+                                                                    )
+                                                                ]
+                                                            )
+                                                        )
                                                     ),
                                                 ]
                                             ),
@@ -2484,10 +2544,26 @@ def test_class_multi_vars():
                                             specialization=TemplateSpecialization(
                                                 args=[
                                                     TemplateArgument(
-                                                        tokens=[Token(value="string")]
+                                                        arg=Type(
+                                                            typename=PQName(
+                                                                segments=[
+                                                                    NameSpecifier(
+                                                                        name="string"
+                                                                    )
+                                                                ]
+                                                            )
+                                                        )
                                                     ),
                                                     TemplateArgument(
-                                                        tokens=[Token(value="int")]
+                                                        arg=Type(
+                                                            typename=PQName(
+                                                                segments=[
+                                                                    FundamentalSpecifier(
+                                                                        name="int"
+                                                                    )
+                                                                ]
+                                                            )
+                                                        )
                                                     ),
                                                 ]
                                             ),
