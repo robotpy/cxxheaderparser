@@ -1,9 +1,11 @@
+import contextlib
 from collections import deque
 import re
 import typing
 import sys
 
 
+from .errors import CxxParseError
 from ._ply import lex
 
 
@@ -41,6 +43,13 @@ class LexToken(Protocol):
 
     #: Location token was found at
     location: Location
+
+
+PhonyEnding = lex.LexToken()
+PhonyEnding.type = "PLACEHOLDER"
+PhonyEnding.value = ""
+PhonyEnding.lineno = 0
+PhonyEnding.lexpos = 0
 
 
 class Lexer:
@@ -268,6 +277,10 @@ class Lexer:
 
         self.lookahead = typing.Deque[LexToken]()
 
+        # For 'set_group_of_tokens' support
+        self._get_token = self.lex.token
+        self.lookahead_stack = typing.Deque[typing.Deque[LexToken]]()
+
     def current_location(self) -> Location:
         if self.lookahead:
             return self.lookahead[0].location
@@ -295,7 +308,7 @@ class Lexer:
                     return None
 
             while True:
-                tok = self.lex.token()
+                tok = self._get_token()
                 comments.extend(self.comments)
 
                 if tok is None:
@@ -324,6 +337,39 @@ class Lexer:
 
     _discard_types = {"NEWLINE", "COMMENT_SINGLELINE", "COMMENT_MULTILINE"}
 
+    def _token_limit_exceeded(self):
+        raise CxxParseError("no more tokens left in this group")
+
+    @contextlib.contextmanager
+    def set_group_of_tokens(self, toks: typing.List[LexToken]):
+        # intended for use when you have a set of tokens that you know
+        # must be consumed, such as a paren grouping or some type of
+        # lookahead case
+
+        stack = self.lookahead_stack
+        restore_fn = False
+
+        if not stack:
+            restore_fn = True
+            self._get_token = self._token_limit_exceeded
+
+        this_buf = typing.Deque[LexToken](toks)
+        prev_buf = self.lookahead
+        stack.append(prev_buf)
+        self.lookahead = this_buf
+
+        try:
+            yield this_buf
+        finally:
+            buf = stack.pop()
+            if prev_buf is not buf:
+                raise ValueError("internal error")
+
+            self.lookahead = prev_buf
+
+            if restore_fn:
+                self._get_token = self.lex.token
+
     def token(self) -> LexToken:
         tok = None
         while self.lookahead:
@@ -332,7 +378,7 @@ class Lexer:
                 return tok
 
         while True:
-            tok = self.lex.token()
+            tok = self._get_token()
             if tok is None:
                 raise EOFError("unexpected end of file")
 
@@ -350,7 +396,7 @@ class Lexer:
                 return tok
 
         while True:
-            tok = self.lex.token()
+            tok = self._get_token()
             if tok is None:
                 break
 
