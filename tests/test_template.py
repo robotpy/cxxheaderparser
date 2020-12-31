@@ -1649,3 +1649,168 @@ def test_template_many_packs():
             ]
         )
     )
+
+
+def test_template_specialized_fn_typename():
+    content = """
+      // clang-format off
+      struct T{};
+      
+      template <typename T>
+      class C {
+        template<>
+        void foo<typename ::T>();
+      }; 
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            classes=[
+                ClassScope(
+                    class_decl=ClassDecl(
+                        typename=PQName(
+                            segments=[NameSpecifier(name="T")], classkey="struct"
+                        )
+                    )
+                ),
+                ClassScope(
+                    class_decl=ClassDecl(
+                        typename=PQName(
+                            segments=[NameSpecifier(name="C")], classkey="class"
+                        ),
+                        template=TemplateDecl(
+                            params=[TemplateTypeParam(typekey="typename", name="T")]
+                        ),
+                    ),
+                    methods=[
+                        Method(
+                            return_type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="void")]
+                                )
+                            ),
+                            name=PQName(
+                                segments=[
+                                    NameSpecifier(
+                                        name="foo",
+                                        specialization=TemplateSpecialization(
+                                            args=[
+                                                TemplateArgument(
+                                                    arg=Type(
+                                                        typename=PQName(
+                                                            segments=[
+                                                                NameSpecifier(name=""),
+                                                                NameSpecifier(name="T"),
+                                                            ]
+                                                        )
+                                                    ),
+                                                    has_typename=True,
+                                                )
+                                            ]
+                                        ),
+                                    )
+                                ]
+                            ),
+                            parameters=[],
+                            template=TemplateDecl(),
+                            access="private",
+                        )
+                    ],
+                ),
+            ]
+        )
+    )
+
+
+def test_template_specialized_fn_typename_template():
+    content = """
+      // clang-format off
+      template <typename X>
+      struct T{};
+      
+      template <typename T>
+      class C {
+          template<>
+          void foo<typename ::template T<int>>();
+      };
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            classes=[
+                ClassScope(
+                    class_decl=ClassDecl(
+                        typename=PQName(
+                            segments=[NameSpecifier(name="T")], classkey="struct"
+                        ),
+                        template=TemplateDecl(
+                            params=[TemplateTypeParam(typekey="typename", name="X")]
+                        ),
+                    )
+                ),
+                ClassScope(
+                    class_decl=ClassDecl(
+                        typename=PQName(
+                            segments=[NameSpecifier(name="C")], classkey="class"
+                        ),
+                        template=TemplateDecl(
+                            params=[TemplateTypeParam(typekey="typename", name="T")]
+                        ),
+                    ),
+                    methods=[
+                        Method(
+                            return_type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="void")]
+                                )
+                            ),
+                            name=PQName(
+                                segments=[
+                                    NameSpecifier(
+                                        name="foo",
+                                        specialization=TemplateSpecialization(
+                                            args=[
+                                                TemplateArgument(
+                                                    arg=Type(
+                                                        typename=PQName(
+                                                            segments=[
+                                                                NameSpecifier(name=""),
+                                                                NameSpecifier(
+                                                                    name="T",
+                                                                    specialization=TemplateSpecialization(
+                                                                        args=[
+                                                                            TemplateArgument(
+                                                                                arg=Type(
+                                                                                    typename=PQName(
+                                                                                        segments=[
+                                                                                            FundamentalSpecifier(
+                                                                                                name="int"
+                                                                                            )
+                                                                                        ]
+                                                                                    )
+                                                                                )
+                                                                            )
+                                                                        ]
+                                                                    ),
+                                                                ),
+                                                            ]
+                                                        )
+                                                    ),
+                                                    has_typename=True,
+                                                )
+                                            ]
+                                        ),
+                                    )
+                                ]
+                            ),
+                            parameters=[],
+                            template=TemplateDecl(),
+                            access="private",
+                        )
+                    ],
+                ),
+            ]
+        )
+    )

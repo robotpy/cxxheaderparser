@@ -4,6 +4,7 @@ from cxxheaderparser.types import (
     Array,
     AutoSpecifier,
     Function,
+    FunctionType,
     FundamentalSpecifier,
     NameSpecifier,
     PQName,
@@ -518,3 +519,69 @@ def test_fn_with_impl():
             ]
         )
     )
+
+
+def test_fn_return_std_function():
+    content = """
+      std::function<void(int)> fn();
+    """
+    data1 = parse_string(content, cleandoc=True)
+
+    content = """
+      std::function<void((int))> fn();
+    """
+    data2 = parse_string(content, cleandoc=True)
+
+    expected = ParsedData(
+        namespace=NamespaceScope(
+            functions=[
+                Function(
+                    return_type=Type(
+                        typename=PQName(
+                            segments=[
+                                NameSpecifier(name="std"),
+                                NameSpecifier(
+                                    name="function",
+                                    specialization=TemplateSpecialization(
+                                        args=[
+                                            TemplateArgument(
+                                                arg=FunctionType(
+                                                    return_type=Type(
+                                                        typename=PQName(
+                                                            segments=[
+                                                                FundamentalSpecifier(
+                                                                    name="void"
+                                                                )
+                                                            ]
+                                                        )
+                                                    ),
+                                                    parameters=[
+                                                        Parameter(
+                                                            type=Type(
+                                                                typename=PQName(
+                                                                    segments=[
+                                                                        FundamentalSpecifier(
+                                                                            name="int"
+                                                                        )
+                                                                    ]
+                                                                )
+                                                            )
+                                                        )
+                                                    ],
+                                                )
+                                            )
+                                        ]
+                                    ),
+                                ),
+                            ]
+                        )
+                    ),
+                    name=PQName(segments=[NameSpecifier(name="fn")]),
+                    parameters=[],
+                )
+            ]
+        )
+    )
+
+    assert data1 == expected
+    assert data2 == expected
