@@ -7,6 +7,21 @@ your own parser listener, but you can accomplish most things with it.
 cxxheaderparser's unit tests predominantly use the simple API for parsing,
 so you can expect it to be pretty stable.
 
+The :func:`parse_string` and :func:`parse_file` functions are a great place
+to start:
+
+.. code-block:: python
+
+    from cxxheaderparser.simple import parse_string
+
+    content = '''
+        int x;
+    '''
+
+    parsed_data = parse_string(content)
+
+See below for the contents of the returned :class:`ParsedData`.
+
 """
 
 import inspect
@@ -46,7 +61,11 @@ from .options import ParserOptions
 
 @dataclass
 class ClassScope:
+    """
+    Contains all data collected for a single C++ class
+    """
 
+    #: Information about the class declaration is here
     class_decl: ClassDecl
 
     #: Nested classes
@@ -64,6 +83,10 @@ class ClassScope:
 
 @dataclass
 class NamespaceScope:
+    """
+    Contains all data collected for a single namespace. Content for child
+    namespaces are found in the ``namespaces`` attribute.
+    """
 
     name: str = ""
 
@@ -108,23 +131,9 @@ class UsingNamespace:
 
 @dataclass
 class ParsedData:
-
-    namespace: NamespaceScope = field(default_factory=lambda: NamespaceScope())
-
-    defines: typing.List[Define] = field(default_factory=list)
-    pragmas: typing.List[Pragma] = field(default_factory=list)
-    includes: typing.List[Include] = field(default_factory=list)
-
-
-#
-# Visitor implementation
-#
-
-
-class SimpleCxxVisitor:
     """
-    A simple visitor that stores all of the C++ elements passed to it
-    in an "easy" to use data structure
+    Container for information parsed by the :func:`parse_file` and
+    :func:`parse_string` functions.
 
     .. warning:: Names are not resolved, so items are stored in the scope that
                  they are found. For example:
@@ -139,9 +148,36 @@ class SimpleCxxVisitor:
                         void fn();
                     };
 
-                The 'C' class would be a forward declaration in the 'N' namespace,
-                but the ClassDecl for 'C' would be stored in the global
-                namespace instead of the 'N' namespace.
+                 The 'C' class would be a forward declaration in the 'N' namespace,
+                 but the ClassDecl for 'C' would be stored in the global
+                 namespace instead of the 'N' namespace.
+    """
+
+    #: Global namespace
+    namespace: NamespaceScope = field(default_factory=lambda: NamespaceScope())
+
+    #: Any ``#define`` preprocessor directives encountered
+    defines: typing.List[Define] = field(default_factory=list)
+
+    #: Any ``#pragma`` directives encountered
+    pragmas: typing.List[Pragma] = field(default_factory=list)
+
+    #: Any ``#include`` directives encountered
+    includes: typing.List[Include] = field(default_factory=list)
+
+
+#
+# Visitor implementation
+#
+
+
+class SimpleCxxVisitor:
+    """
+    A simple visitor that stores all of the C++ elements passed to it
+    in an "easy" to use data structure
+
+    You probably don't want to use this directly, use :func:`parse_file`
+    or  :func:`parse_string` instead.
     """
 
     data: ParsedData

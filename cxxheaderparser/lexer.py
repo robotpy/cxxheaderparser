@@ -4,8 +4,6 @@ import re
 import typing
 import sys
 
-
-from .errors import CxxParseError
 from ._ply import lex
 
 
@@ -340,6 +338,8 @@ class Lexer:
     _discard_types = {"NEWLINE", "COMMENT_SINGLELINE", "COMMENT_MULTILINE"}
 
     def _token_limit_exceeded(self):
+        from .errors import CxxParseError
+
         raise CxxParseError("no more tokens left in this group")
 
     @contextlib.contextmanager

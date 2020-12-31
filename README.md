@@ -41,7 +41,7 @@ There are two APIs available:
 Documentation
 -------------
 
-TODO: documentation site
+Documentation can be found at https://cxxheaderparser.readthedocs.io
 
 Install
 -------

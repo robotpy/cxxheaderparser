@@ -202,7 +202,7 @@ class TemplateSpecialization:
     """
     Contains the arguments of a template specialization
 
-    .. code-block:: c++s
+    .. code-block:: c++
 
         Foo<int, Bar...>
             ~~~~~~~~~~~
