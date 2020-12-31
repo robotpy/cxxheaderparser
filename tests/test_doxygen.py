@@ -37,185 +37,256 @@ from cxxheaderparser.simple import (
     ParsedData,
 )
 
-r"""
-class SampleClass: public BaseSampleClass
-{
-public:
-	enum Elephant
-	{
-		EL_ONE = 1,
-		EL_TWO = 2,
-		EL_NINE = 9,
-		EL_TEN,
-	};
 
-    SampleClass();
-    /*!
-     * Method 1
-     */
-    string meth1();
+def test_doxygen_class():
+    content = """
+      // clang-format off
+      
+      /// cls comment
+      class
+      C {
+          /// member comment
+          void fn();
+      
+          /// var above
+          int var_above;
+      
+          int var_after; /// var after
+      };
+    """
+    data = parse_string(content, cleandoc=True)
 
-    ///
-    /// Method 2 description
-    ///
-    /// @param v1 Variable 1
-    ///
-    int meth2(int v1);
-
-    /**
-     * Method 3 description
-     *
-     * \param v1 Variable 1 with a really long
-     * wrapping description
-     * \param v2 Variable 2
-     */
-    void meth3(const string & v1, vector<string> & v2);
-
-    /**********************************
-     * Method 4 description
-     *
-     * @return Return value
-     *********************************/
-    unsigned int meth4();
-private:
-    void * meth5(){return NULL;}
-
-    /// prop1 description
-    string prop1;
-    //! prop5 description
-    int prop5;
-
-    bool prop6;     /*!< prop6 description */
-
-    double prop7;   //!< prop7 description
-                    //!< with two lines
-    
-    /// prop8 description
-    int prop8;
-};
-namespace Alpha
-{
-    class AlphaClass
-    {
-    public:
-    	AlphaClass();
-
-    	void alphaMethod();
-
-    	string alphaString;
-    protected:
-    	typedef enum
-    	{
-    		Z_A,
-    		Z_B = 0x2B,
-    		Z_C = 'j',
-			Z_D,
-    	} Zebra;
-    };
-
-    namespace Omega
-    {
-		class OmegaClass
-		{
-		public:
-			OmegaClass();
-
-			string omegaString;
-		protected:
-			///
-			/// @brief Rino Numbers, not that that means anything
-			///
-			typedef enum
-			{
-				RI_ZERO, /// item zero
-				RI_ONE,  /** item one */
-				RI_TWO,   //!< item two
-				RI_THREE,
-				/// item four
-				RI_FOUR,
-			} Rino;
-		};
-    };
-}
-
-"""
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            classes=[
+                ClassScope(
+                    class_decl=ClassDecl(
+                        typename=PQName(
+                            segments=[NameSpecifier(name="C")], classkey="class"
+                        ),
+                        doxygen="/// cls comment",
+                    ),
+                    fields=[
+                        Field(
+                            access="private",
+                            type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="int")]
+                                )
+                            ),
+                            name="var_above",
+                            doxygen="/// var above",
+                        ),
+                        Field(
+                            access="private",
+                            type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="int")]
+                                )
+                            ),
+                            name="var_after",
+                            doxygen="/// var after",
+                        ),
+                    ],
+                    methods=[
+                        Method(
+                            return_type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="void")]
+                                )
+                            ),
+                            name=PQName(segments=[NameSpecifier(name="fn")]),
+                            parameters=[],
+                            doxygen="/// member comment",
+                            access="private",
+                        )
+                    ],
+                )
+            ]
+        )
+    )
 
 
-# def test_doxygen_messy():
-#     content = """
-#       // clang-format off
+def test_doxygen_class_template():
+    content = """
+      // clang-format off
+      
+      /// template comment
+      template <typename T>
+      class C2 {};
+    """
+    data = parse_string(content, cleandoc=True)
 
-#       /// fn comment
-#       void
-#       fn();
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            classes=[
+                ClassScope(
+                    class_decl=ClassDecl(
+                        typename=PQName(
+                            segments=[NameSpecifier(name="C2")], classkey="class"
+                        ),
+                        template=TemplateDecl(
+                            params=[TemplateTypeParam(typekey="typename", name="T")]
+                        ),
+                        doxygen="/// template comment",
+                    )
+                )
+            ]
+        )
+    )
 
-#       /// var comment
-#       int
-#       v1 = 0;
 
-#       int
-#       v2 = 0; /// var2 comment
+def test_doxygen_enum():
+    content = """
+      // clang-format off
+      
+      ///
+      /// @brief Rino Numbers, not that that means anything
+      ///
+      typedef enum
+      {
+          RI_ZERO, /// item zero
+          RI_ONE,  /** item one */
+          RI_TWO,   //!< item two
+          RI_THREE,
+          /// item four
+          RI_FOUR,
+      } Rino;
+    """
+    data = parse_string(content, cleandoc=True)
 
-#       /// cls comment
-#       class
-#       C {};
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            enums=[
+                EnumDecl(
+                    typename=PQName(segments=[AnonymousName(id=1)], classkey="enum"),
+                    values=[
+                        Enumerator(name="RI_ZERO", doxygen="/// item zero"),
+                        Enumerator(name="RI_ONE", doxygen="/** item one */"),
+                        Enumerator(name="RI_TWO", doxygen="//!< item two"),
+                        Enumerator(name="RI_THREE"),
+                        Enumerator(name="RI_FOUR", doxygen="/// item four"),
+                    ],
+                    doxygen="///\n/// @brief Rino Numbers, not that that means anything\n///",
+                )
+            ],
+            typedefs=[
+                Typedef(
+                    type=Type(
+                        typename=PQName(segments=[AnonymousName(id=1)], classkey="enum")
+                    ),
+                    name="Rino",
+                )
+            ],
+        )
+    )
 
-#       /// template comment
-#       template <typename T>
-#       class
-#       C2 {};
-#     """
-#     data = parse_string(content, cleandoc=True)
 
-#     assert data == ParsedData(
-#         namespace=NamespaceScope(
-#             classes=[
-#                 ClassScope(
-#                     class_decl=ClassDecl(
-#                         typename=PQName(
-#                             segments=[NameSpecifier(name="C")], classkey="class"
-#                         ),
-#                         doxygen="/// cls comment",
-#                     )
-#                 ),
-#                 ClassScope(
-#                     class_decl=ClassDecl(
-#                         typename=PQName(
-#                             segments=[NameSpecifier(name="C2")], classkey="class"
-#                         ),
-#                         template=TemplateDecl(
-#                             params=[TemplateTypeParam(typekey="typename", name="T")]
-#                         ),
-#                         doxygen="/// template comment",
-#                     )
-#                 ),
-#             ],
-#             functions=[
-#                 Function(
-#                     return_type=Type(
-#                         typename=PQName(segments=[FundamentalSpecifier(name="void")])
-#                     ),
-#                     name=PQName(segments=[NameSpecifier(name="fn")]),
-#                     parameters=[],
-#                     doxygen="/// fn comment",
-#                 )
-#             ],
-#             variables=[
-#                 Variable(
-#                     name=PQName(segments=[NameSpecifier(name="v1")]),
-#                     type=Type(
-#                         typename=PQName(segments=[FundamentalSpecifier(name="int")])
-#                     ),
-#                     value=Value(tokens=[Token(value="0")]),
-#                     doxygen="/// var comment",
-#                 ),
-#                 Variable(
-#                     name=PQName(segments=[NameSpecifier(name="v2")]),
-#                     type=Type(
-#                         typename=PQName(segments=[FundamentalSpecifier(name="int")])
-#                     ),
-#                     value=Value(tokens=[Token(value="0")]),
-#                 ),
-#             ],
-#         )
-#     )
+def test_doxygen_fn_3slash():
+    content = """
+      // clang-format off
+      
+      /// fn comment
+      void
+      fn();
+      
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            functions=[
+                Function(
+                    return_type=Type(
+                        typename=PQName(segments=[FundamentalSpecifier(name="void")])
+                    ),
+                    name=PQName(segments=[NameSpecifier(name="fn")]),
+                    parameters=[],
+                    doxygen="/// fn comment",
+                )
+            ]
+        )
+    )
+
+
+def test_doxygen_fn_cstyle():
+    content = """
+      // clang-format off
+      
+      /**
+       * fn comment
+       */
+      void
+      fn();
+      
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            functions=[
+                Function(
+                    return_type=Type(
+                        typename=PQName(segments=[FundamentalSpecifier(name="void")])
+                    ),
+                    name=PQName(segments=[NameSpecifier(name="fn")]),
+                    parameters=[],
+                    doxygen="/**\n* fn comment\n*/",
+                )
+            ]
+        )
+    )
+
+
+def test_doxygen_var_above():
+    content = """
+      // clang-format off
+      
+      
+      /// var comment
+      int
+      v1 = 0;
+      
+      
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            variables=[
+                Variable(
+                    name=PQName(segments=[NameSpecifier(name="v1")]),
+                    type=Type(
+                        typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                    ),
+                    value=Value(tokens=[Token(value="0")]),
+                    doxygen="/// var comment",
+                )
+            ]
+        )
+    )
+
+
+def test_doxygen_var_after():
+    content = """
+      // clang-format off
+      
+      int
+      v2 = 0; /// var2 comment
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            variables=[
+                Variable(
+                    name=PQName(segments=[NameSpecifier(name="v2")]),
+                    type=Type(
+                        typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                    ),
+                    value=Value(tokens=[Token(value="0")]),
+                    doxygen="/// var2 comment",
+                )
+            ]
+        )
+    )
