@@ -248,6 +248,7 @@ class Lexer:
         print("Lex error: ", v)
 
     _lexer = None
+    lex: lex.Lexer
 
     def __new__(cls, *args, **kwargs):
         # only build the lexer once
@@ -256,6 +257,7 @@ class Lexer:
             cls._lexer = lex.lex(module=inst)
 
         inst.lex = cls._lexer.clone(inst)
+        inst.lex.begin("INITIAL")
         return inst
 
     def __init__(self, filename: typing.Optional[str] = None):
