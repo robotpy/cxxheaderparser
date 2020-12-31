@@ -1150,6 +1150,10 @@ class CxxParser:
 
                 default = self._create_value(self._consume_balanced_tokens(tok))
 
+        if doxygen is None:
+            # try checking after the var
+            doxygen = self.lex.get_doxygen()
+
         if is_typedef:
             typedef = Typedef(dtype, name, self._current_access)
             self.visitor.on_typedef(state, typedef)
