@@ -1,6 +1,6 @@
 import typing
 
-from .lexer import Lexer
+from .lexer import LexToken, Lexer
 from .types import Token
 
 # key: token type, value: (left spacing, right spacing)
@@ -58,7 +58,7 @@ if __name__ == "__main__":
     with open(lexer.filename) as fp:
         lexer.input(fp.read())
 
-    toks = []
+    toks: typing.List[Token] = []
     while True:
         tok = lexer.token_eof_ok()
         if not tok:
@@ -68,7 +68,7 @@ if __name__ == "__main__":
             print(tokfmt(toks))
             toks = []
         else:
-            toks.append(tok)
+            toks.append(Token(tok.value, tok.type))
 
     print(toks)
     print(tokfmt(toks))

@@ -8,7 +8,7 @@ from ._ply import lex
 
 
 if sys.version_info >= (3, 8):
-    Protocol = typing.Protocol
+    from typing import Protocol
 else:
     Protocol = object
 
@@ -43,7 +43,7 @@ class LexToken(Protocol):
     location: Location
 
 
-PhonyEnding = lex.LexToken()
+PhonyEnding: LexToken = lex.LexToken()  # type: ignore
 PhonyEnding.type = "PLACEHOLDER"
 PhonyEnding.value = ""
 PhonyEnding.lineno = 0
@@ -278,7 +278,7 @@ class Lexer:
         self.lookahead = typing.Deque[LexToken]()
 
         # For 'set_group_of_tokens' support
-        self._get_token = self.lex.token
+        self._get_token: typing.Callable[[], LexToken] = self.lex.token
         self.lookahead_stack = typing.Deque[typing.Deque[LexToken]]()
 
     def current_location(self) -> Location:
@@ -462,7 +462,7 @@ class Lexer:
     def return_token(self, tok: LexToken) -> None:
         self.lookahead.appendleft(tok)
 
-    def return_tokens(self, toks: typing.Iterable[LexToken]) -> None:
+    def return_tokens(self, toks: typing.Sequence[LexToken]) -> None:
         self.lookahead.extendleft(reversed(toks))
 
 

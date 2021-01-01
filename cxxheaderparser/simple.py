@@ -98,7 +98,7 @@ class NamespaceScope:
 
     forward_decls: typing.List[ForwardDecl] = field(default_factory=list)
     using: typing.List[UsingDecl] = field(default_factory=list)
-    using_ns: typing.List[UsingDecl] = field(default_factory=list)
+    using_ns: typing.List["UsingNamespace"] = field(default_factory=list)
     using_alias: typing.List[UsingAlias] = field(default_factory=list)
 
     #: Child namespaces

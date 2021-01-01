@@ -95,7 +95,7 @@ class NameSpecifier:
 
     name: str
 
-    specialization: typing.Optional[typing.List["TemplateSpecialization"]] = None
+    specialization: typing.Optional["TemplateSpecialization"] = None
 
 
 @dataclass
@@ -233,15 +233,14 @@ class FunctionType:
 
 @dataclass
 class Type:
-    """"""
+    """
+    A type with a name associated with it
+    """
 
     typename: PQName
 
     const: bool = False
     volatile: bool = False
-
-    def get_type(self) -> "Type":
-        return self
 
 
 @dataclass
@@ -262,9 +261,6 @@ class Array:
     #:          ~~
     size: typing.Optional[Value]
 
-    def get_type(self) -> Type:
-        return self.array_of.get_type()
-
 
 @dataclass
 class Pointer:
@@ -278,9 +274,6 @@ class Pointer:
     const: bool = False
     volatile: bool = False
 
-    def get_type(self) -> Type:
-        return self.ptr_to.get_type()
-
 
 @dataclass
 class Reference:
@@ -290,9 +283,6 @@ class Reference:
 
     ref_to: typing.Union[Array, Pointer, Type]
 
-    def get_type(self) -> Type:
-        return self.ref_to.get_type()
-
 
 @dataclass
 class MoveReference:
@@ -301,9 +291,6 @@ class MoveReference:
     """
 
     moveref_to: typing.Union[Array, Pointer, Type]
-
-    def get_type(self) -> Type:
-        return self.moveref_to.get_type()
 
 
 #: A type or function type that is decorated with various things
@@ -443,7 +430,7 @@ class ClassDecl:
     access: typing.Optional[str] = None
 
     @property
-    def classkey(self) -> str:
+    def classkey(self) -> typing.Optional[str]:
         return self.typename.classkey
 
 

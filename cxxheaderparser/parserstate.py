@@ -33,6 +33,9 @@ class State:
     #: parent state
     parent: typing.Optional["State"]
 
+    #: Approximate location that the parsed element was found at
+    location: Location
+
     def __init__(self, parent: typing.Optional["State"]) -> None:
         self.parent = parent
 
@@ -40,18 +43,12 @@ class State:
         pass
 
 
-class BlockState(State):
-
-    #: Approximate location that the parsed element was found at
-    location: Location
-
-
-class EmptyBlockState(BlockState):
+class EmptyBlockState(State):
     def _finish(self, visitor: "CxxVisitor") -> None:
         visitor.on_empty_block_end(self)
 
 
-class ExternBlockState(BlockState):
+class ExternBlockState(State):
 
     #: The linkage for this extern block
     linkage: str
@@ -64,7 +61,7 @@ class ExternBlockState(BlockState):
         visitor.on_extern_block_end(self)
 
 
-class NamespaceBlockState(BlockState):
+class NamespaceBlockState(State):
 
     #: The incremental namespace for this block
     namespace: NamespaceDecl
@@ -79,7 +76,7 @@ class NamespaceBlockState(BlockState):
         visitor.on_namespace_end(self)
 
 
-class ClassBlockState(BlockState):
+class ClassBlockState(State):
 
     #: class decl block being processed
     class_decl: ClassDecl

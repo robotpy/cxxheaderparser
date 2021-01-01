@@ -2,9 +2,10 @@ import sys
 import typing
 
 if sys.version_info >= (3, 8):
-    Protocol = typing.Protocol
+    from typing import Protocol
 else:
     Protocol = object
+
 
 from .types import (
     EnumDecl,
