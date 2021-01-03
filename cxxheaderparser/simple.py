@@ -324,6 +324,9 @@ def parse_file(
     Simple function to parse a header from a file and return a data structure
     """
 
+    if encoding is None:
+        encoding = "utf-8-sig"
+
     with open(filename, encoding=encoding) as fp:
         content = fp.read()
 
