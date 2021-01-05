@@ -1515,6 +1515,31 @@ class CxxParser:
 
         return params, vararg
 
+    _auto_return_typename = PQName([AutoSpecifier()])
+
+    def _parse_trailing_return_type(
+        self, fn: typing.Union[Function, FunctionType]
+    ) -> None:
+        # entry is "->"
+        return_type = fn.return_type
+        if not (
+            isinstance(return_type, Type)
+            and not return_type.const
+            and not return_type.volatile
+            and return_type.typename == self._auto_return_typename
+        ):
+            raise CxxParseError(
+                f"function with trailing return type must specify return type of 'auto', not {return_type}"
+            )
+
+        parsed_type, mods = self._parse_type(None)
+        mods.validate(var_ok=False, meth_ok=False, msg="parsing trailing return type")
+
+        dtype = self._parse_cv_ptr(parsed_type)
+
+        fn.has_trailing_return = True
+        fn.return_type = dtype
+
     def _parse_fn_end(self, fn: Function) -> None:
         """
         Consumes the various keywords after the parameters in a function
@@ -1535,6 +1560,8 @@ class CxxParser:
         if self.lex.token_if("{"):
             self._discard_contents("{", "}")
             fn.has_body = True
+        elif self.lex.token_if("ARROW"):
+            self._parse_trailing_return_type(fn)
 
     def _parse_method_end(self, method: Method) -> None:
         """
@@ -1577,6 +1604,9 @@ class CxxParser:
                 setattr(method, tok_value, True)
             elif tok_value in ("&", "&&"):
                 method.ref_qualifier = tok_value
+            elif tok_value == "ARROW":
+                self._parse_trailing_return_type(method)
+                break
             elif tok_value == "throw":
                 tok = self._next_token_must_be("(")
                 method.throw = self._create_value(self._consume_balanced_tokens(tok))
@@ -1667,7 +1697,7 @@ class CxxParser:
 
                 self.visitor.on_class_method(state, method)
 
-            return method.has_body
+            return method.has_body or method.has_trailing_return
 
         else:
             fn = Function(
@@ -1682,7 +1712,7 @@ class CxxParser:
             self._parse_fn_end(fn)
             self.visitor.on_function(state, fn)
 
-            return fn.has_body
+            return fn.has_body or fn.has_trailing_return
 
     #
     # Decorated type parsing
@@ -1736,6 +1766,8 @@ class CxxParser:
 
                 fn_params, vararg = self._parse_parameters()
                 dtype = FunctionType(dtype, fn_params, vararg)
+                if self.lex.token_if("ARROW"):
+                    self._parse_trailing_return_type(dtype)
 
             else:
                 # Check to see if this is a grouping paren or something else

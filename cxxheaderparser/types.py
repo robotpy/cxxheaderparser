@@ -230,6 +230,11 @@ class FunctionType:
     #: Set to True if ends with ``...``
     vararg: bool = False
 
+    #: True if function has a trailing return type (``auto foo() -> int``).
+    #: In this case, the 'auto' return type is removed and replaced with
+    #: whatever the trailing return type was
+    has_trailing_return: bool = False
+
 
 @dataclass
 class Type:
@@ -468,6 +473,11 @@ class Function:
 
     #: If true, the body of the function is present
     has_body: bool = False
+
+    #: True if function has a trailing return type (``auto foo() -> int``).
+    #: In this case, the 'auto' return type is removed and replaced with
+    #: whatever the trailing return type was
+    has_trailing_return: bool = False
 
     template: typing.Optional[TemplateDecl] = None
 
