@@ -12,6 +12,7 @@ from cxxheaderparser.types import Token
         "unsigned int",
         "::uint8_t",
         "void *",
+        "void * *",
         "const char *",
         "const char[]",
         "void * (*)()",
