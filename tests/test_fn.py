@@ -585,3 +585,131 @@ def test_fn_return_std_function():
 
     assert data1 == expected
     assert data2 == expected
+
+
+def test_fn_return_std_function_trailing():
+    content = """
+      std::function<auto(int)->int> fn();
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            functions=[
+                Function(
+                    return_type=Type(
+                        typename=PQName(
+                            segments=[
+                                NameSpecifier(name="std"),
+                                NameSpecifier(
+                                    name="function",
+                                    specialization=TemplateSpecialization(
+                                        args=[
+                                            TemplateArgument(
+                                                arg=FunctionType(
+                                                    return_type=Type(
+                                                        typename=PQName(
+                                                            segments=[
+                                                                FundamentalSpecifier(
+                                                                    name="int"
+                                                                )
+                                                            ]
+                                                        )
+                                                    ),
+                                                    parameters=[
+                                                        Parameter(
+                                                            type=Type(
+                                                                typename=PQName(
+                                                                    segments=[
+                                                                        FundamentalSpecifier(
+                                                                            name="int"
+                                                                        )
+                                                                    ]
+                                                                )
+                                                            )
+                                                        )
+                                                    ],
+                                                    has_trailing_return=True,
+                                                )
+                                            )
+                                        ]
+                                    ),
+                                ),
+                            ]
+                        )
+                    ),
+                    name=PQName(segments=[NameSpecifier(name="fn")]),
+                    parameters=[],
+                )
+            ]
+        )
+    )
+
+
+def test_fn_trailing_return_simple():
+    content = """
+      auto fn() -> int;
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            functions=[
+                Function(
+                    return_type=Type(
+                        typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                    ),
+                    name=PQName(segments=[NameSpecifier(name="fn")]),
+                    parameters=[],
+                    has_trailing_return=True,
+                )
+            ]
+        )
+    )
+
+
+def test_fn_trailing_return_std_function():
+    content = """
+      auto fn() -> std::function<int()>;
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            functions=[
+                Function(
+                    return_type=Type(
+                        typename=PQName(
+                            segments=[
+                                NameSpecifier(name="std"),
+                                NameSpecifier(
+                                    name="function",
+                                    specialization=TemplateSpecialization(
+                                        args=[
+                                            TemplateArgument(
+                                                arg=FunctionType(
+                                                    return_type=Type(
+                                                        typename=PQName(
+                                                            segments=[
+                                                                FundamentalSpecifier(
+                                                                    name="int"
+                                                                )
+                                                            ]
+                                                        )
+                                                    ),
+                                                    parameters=[],
+                                                )
+                                            )
+                                        ]
+                                    ),
+                                ),
+                            ]
+                        )
+                    ),
+                    name=PQName(segments=[NameSpecifier(name="fn")]),
+                    parameters=[],
+                    has_trailing_return=True,
+                )
+            ]
+        )
+    )

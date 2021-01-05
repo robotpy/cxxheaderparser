@@ -149,6 +149,7 @@ class Lexer:
         "DBL_RBRACKET",
         "DBL_COLON",
         "DBL_AMP",
+        "ARROW",
         "SHIFT_LEFT",
     ] + list(keywords)
 
@@ -217,6 +218,7 @@ class Lexer:
     t_DBL_RBRACKET = r"\]\]"
     t_DBL_COLON = r"::"
     t_DBL_AMP = r"&&"
+    t_ARROW = r"->"
     t_SHIFT_LEFT = r"<<"
     # SHIFT_RIGHT introduces ambiguity
 
