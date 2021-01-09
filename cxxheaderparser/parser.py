@@ -574,7 +574,6 @@ class CxxParser:
             # tokens. If it succeeds we're done, otherwise we use the value
 
             param_pack = False
-            has_typename = True if self.lex.token_if("typename") else False
 
             raw_toks = self._consume_value_until([], ",", ">", "ELLIPSIS")
             val = self._create_value(raw_toks)
@@ -601,9 +600,9 @@ class CxxParser:
                 param_pack = True
 
             if dtype:
-                args.append(TemplateArgument(dtype, has_typename, param_pack))
+                args.append(TemplateArgument(dtype, param_pack))
             else:
-                args.append(TemplateArgument(val, has_typename, param_pack))
+                args.append(TemplateArgument(val, param_pack))
 
             tok = self._next_token_must_be(",", ">")
             if tok.type == ">":
@@ -1251,7 +1250,7 @@ class CxxParser:
         return parts
 
     _pqname_start_tokens = (
-        {"auto", "decltype", "NAME", "operator", "template", "DBL_COLON"}
+        {"auto", "decltype", "NAME", "operator", "template", "typename", "DBL_COLON"}
         | _name_compound_start
         | _fundamentals
     )
@@ -1329,6 +1328,7 @@ class CxxParser:
         classkey = None
         segments: typing.List[PQNameSegment] = []
         op = None
+        has_typename = False
 
         if tok is None:
             tok = self.lex.token()
@@ -1369,6 +1369,11 @@ class CxxParser:
                 self.anon_id += 1
                 segments.append(AnonymousName(self.anon_id))
                 return PQName(segments, classkey), None
+        elif tok.type == "typename":
+            has_typename = True
+            tok = self.lex.token()
+            if tok.type not in self._pqname_start_tokens:
+                raise self._parse_error(tok)
 
         # First section of the name: Add empty segment if starting out with a
         # namespace specifier
@@ -1415,7 +1420,7 @@ class CxxParser:
 
             tok = self._next_token_must_be("NAME", "operator", "template", "decltype")
 
-        pqname = PQName(segments, classkey)
+        pqname = PQName(segments, classkey, has_typename)
 
         self.debug_print(
             "parse_pqname: %s op=%s",
