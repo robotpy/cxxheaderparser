@@ -17,6 +17,7 @@ from cxxheaderparser.types import (
     TemplateTypeParam,
     Token,
     Type,
+    Value,
 )
 from cxxheaderparser.simple import (
     NamespaceScope,
@@ -66,6 +67,61 @@ def test_fn_returns_class():
                     name=PQName(segments=[NameSpecifier(name="fn3")]),
                     parameters=[],
                 ),
+            ]
+        )
+    )
+
+
+def test_fn_returns_typename():
+    content = """
+      typename ns::X fn();
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            functions=[
+                Function(
+                    return_type=Type(
+                        typename=PQName(
+                            segments=[
+                                NameSpecifier(name="ns"),
+                                NameSpecifier(name="X"),
+                            ],
+                            has_typename=True,
+                        )
+                    ),
+                    name=PQName(segments=[NameSpecifier(name="fn")]),
+                    parameters=[],
+                )
+            ]
+        )
+    )
+
+
+def test_fn_returns_typename_const():
+    content = """
+      const typename ns::X fn();
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            functions=[
+                Function(
+                    return_type=Type(
+                        typename=PQName(
+                            segments=[
+                                NameSpecifier(name="ns"),
+                                NameSpecifier(name="X"),
+                            ],
+                            has_typename=True,
+                        ),
+                        const=True,
+                    ),
+                    name=PQName(segments=[NameSpecifier(name="fn")]),
+                    parameters=[],
+                )
             ]
         )
     )
@@ -187,6 +243,58 @@ def test_fn_array_param():
                                 size=None,
                             ),
                         )
+                    ],
+                )
+            ]
+        )
+    )
+
+
+def test_fn_typename_param():
+    content = """
+      void MethodA(const mynamespace::SomeObject &x,
+                   typename mynamespace::SomeObject * = 0);
+      
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            functions=[
+                Function(
+                    return_type=Type(
+                        typename=PQName(segments=[FundamentalSpecifier(name="void")])
+                    ),
+                    name=PQName(segments=[NameSpecifier(name="MethodA")]),
+                    parameters=[
+                        Parameter(
+                            type=Reference(
+                                ref_to=Type(
+                                    typename=PQName(
+                                        segments=[
+                                            NameSpecifier(name="mynamespace"),
+                                            NameSpecifier(name="SomeObject"),
+                                        ]
+                                    ),
+                                    const=True,
+                                )
+                            ),
+                            name="x",
+                        ),
+                        Parameter(
+                            type=Pointer(
+                                ptr_to=Type(
+                                    typename=PQName(
+                                        segments=[
+                                            NameSpecifier(name="mynamespace"),
+                                            NameSpecifier(name="SomeObject"),
+                                        ],
+                                        has_typename=True,
+                                    )
+                                )
+                            ),
+                            default=Value(tokens=[Token(value="0")]),
+                        ),
                     ],
                 )
             ]

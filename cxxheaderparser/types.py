@@ -140,6 +140,9 @@ class PQName:
     #: Set if the name starts with class/enum/struct
     classkey: typing.Optional[str] = None
 
+    #: Set to true if the type was preceded with 'typename'
+    has_typename: bool = False
+
 
 @dataclass
 class Enumerator:
@@ -192,8 +195,6 @@ class TemplateArgument:
     #: otherwise it's stored as an unparsed set of values
     arg: typing.Union["DecoratedType", Value]
 
-    #: Set if starts with "typename"
-    has_typename: bool = False
     param_pack: bool = False
 
 

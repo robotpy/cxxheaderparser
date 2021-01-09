@@ -1702,10 +1702,10 @@ def test_template_specialized_fn_typename():
                                                             segments=[
                                                                 NameSpecifier(name=""),
                                                                 NameSpecifier(name="T"),
-                                                            ]
+                                                            ],
+                                                            has_typename=True,
                                                         )
                                                     ),
-                                                    has_typename=True,
                                                 )
                                             ]
                                         ),
@@ -1795,10 +1795,10 @@ def test_template_specialized_fn_typename_template():
                                                                         ]
                                                                     ),
                                                                 ),
-                                                            ]
+                                                            ],
+                                                            has_typename=True,
                                                         )
                                                     ),
-                                                    has_typename=True,
                                                 )
                                             ]
                                         ),
