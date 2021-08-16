@@ -876,3 +876,26 @@ def test_typedef_enum_expr():
             ],
         )
     )
+
+
+def test_volatile_typedef():
+    content = """
+      typedef volatile signed short vint16;
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            typedefs=[
+                Typedef(
+                    type=Type(
+                        typename=PQName(
+                            segments=[FundamentalSpecifier(name="signed short")]
+                        ),
+                        volatile=True,
+                    ),
+                    name="vint16",
+                )
+            ]
+        )
+    )

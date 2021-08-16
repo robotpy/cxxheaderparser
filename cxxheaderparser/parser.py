@@ -1815,7 +1815,7 @@ class CxxParser:
         return dtype
 
     # Applies to variables and return values
-    _type_kwd_both = {"const", "constexpr", "extern", "inline", "static", "volatile"}
+    _type_kwd_both = {"const", "constexpr", "extern", "inline", "static"}
 
     # Only found on methods
     _type_kwd_meth = {"explicit", "virtual"}
