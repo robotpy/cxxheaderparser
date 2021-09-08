@@ -2917,3 +2917,44 @@ def test_class_noexcept():
             ]
         )
     )
+
+
+def test_class_volatile():
+    content = """
+      class Foo
+      {
+      public:
+      
+      private:
+      
+      volatile bool               myToShutDown;
+      
+      };
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            classes=[
+                ClassScope(
+                    class_decl=ClassDecl(
+                        typename=PQName(
+                            segments=[NameSpecifier(name="Foo")], classkey="class"
+                        )
+                    ),
+                    fields=[
+                        Field(
+                            access="private",
+                            type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="bool")]
+                                ),
+                                volatile=True,
+                            ),
+                            name="myToShutDown",
+                        )
+                    ],
+                )
+            ]
+        )
+    )
