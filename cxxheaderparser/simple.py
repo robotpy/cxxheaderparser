@@ -24,6 +24,7 @@ See below for the contents of the returned :class:`ParsedData`.
 
 """
 
+import sys
 import inspect
 import typing
 
@@ -327,7 +328,11 @@ def parse_file(
     if encoding is None:
         encoding = "utf-8-sig"
 
-    with open(filename, encoding=encoding) as fp:
-        content = fp.read()
+    if filename == "-":
+        content = sys.stdin.read()
+    else:
+
+        with open(filename, encoding=encoding) as fp:
+            content = fp.read()
 
     return parse_string(content, filename=filename, options=options)
