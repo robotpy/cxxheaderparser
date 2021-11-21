@@ -821,3 +821,38 @@ def test_fn_trailing_return_std_function():
             ]
         )
     )
+
+def test_inline_volatile_fn():
+    content = """
+      inline int Standard_Atomic_Increment (volatile int* theValue);
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            functions=[
+                Function(
+                    return_type=Type(
+                        typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                    ),
+                    name=PQName(
+                        segments=[NameSpecifier(name="Standard_Atomic_Increment")]
+                    ),
+                    parameters=[
+                        Parameter(
+                            type=Pointer(
+                                ptr_to=Type(
+                                    typename=PQName(
+                                        segments=[FundamentalSpecifier(name="int")]
+                                    ),
+                                    volatile=True,
+                                )
+                            ),
+                            name="theValue",
+                        )
+                    ],
+                    inline=True,
+                )
+            ]
+        )
+    )
