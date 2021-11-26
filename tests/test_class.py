@@ -2959,6 +2959,7 @@ def test_class_volatile():
         )
     )
 
+
 def test_class_mutable():
     content = """
       class Foo

@@ -822,6 +822,7 @@ def test_fn_trailing_return_std_function():
         )
     )
 
+
 def test_inline_volatile_fn():
     content = """
       inline int Standard_Atomic_Increment (volatile int* theValue);
