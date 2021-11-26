@@ -614,6 +614,23 @@ class CxxParser:
     # Attributes
     #
 
+    _attribute_specifier_seq_start_types = {"DBL_LBRACKET", "alignas"}
+    _attribute_start_tokens = {
+        "__attribute__",
+        "__declspec",
+    }
+    _attribute_start_tokens |= _attribute_specifier_seq_start_types
+
+    def _consume_attribute(self, tok: LexToken) -> None:
+        if tok.type == "__attribute__":
+            self._consume_gcc_attribute(tok)
+        elif tok.type == "__declspec":
+            self._consume_declspec(tok)
+        elif tok.type in self._attribute_specifier_seq_start_types:
+            self._consume_attribute_specifier_seq(tok)
+        else:
+            raise CxxParseError("internal error")
+
     def _consume_gcc_attribute(
         self, tok: LexToken, doxygen: typing.Optional[str] = None
     ) -> None:
@@ -626,8 +643,6 @@ class CxxParser:
     ) -> None:
         tok = self._next_token_must_be("(")
         self._consume_balanced_tokens(tok)
-
-    _attribute_specifier_seq_start_types = ("DBL_LBRACKET", "alignas")
 
     def _consume_attribute_specifier_seq(
         self, tok: LexToken, doxygen: typing.Optional[str] = None
@@ -1361,16 +1376,10 @@ class CxxParser:
                 if tok:
                     classkey = f"{classkey} {tok.value}"
 
-            tok = self.lex.token_if(
-                "alignas", "__attribute__", "__declspec", "DBL_LBRACKET"
-            )
+            # Sometimes there's an embedded attribute
+            tok = self.lex.token_if(*self._attribute_start_tokens)
             if tok:
-                if tok.type == "__attribute__":
-                    self._consume_gcc_attribute(tok)
-                elif tok.type == "__declspec":
-                    self._consume_declspec(tok)
-                else:
-                    self._consume_attribute_specifier_seq(tok)
+                self._consume_attribute(tok)
 
             tok = self.lex.token_if("NAME", "DBL_COLON")
             if not tok:
@@ -1898,6 +1907,7 @@ class CxxParser:
         pqname: typing.Optional[PQName] = None
 
         _pqname_start_tokens = self._pqname_start_tokens
+        _attribute_start = self._attribute_start_tokens
 
         # This loop parses until it finds two pqname or ptr/ref
         while True:
@@ -1926,6 +1936,8 @@ class CxxParser:
                 vars["mutable"] = tok
             elif tok_type == "volatile":
                 volatile = True
+            elif tok_type in _attribute_start:
+                self._consume_attribute(tok)
             else:
                 break
 

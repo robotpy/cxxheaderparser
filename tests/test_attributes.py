@@ -5,8 +5,10 @@ from cxxheaderparser.types import (
     EnumDecl,
     Enumerator,
     Field,
+    FriendDecl,
     Function,
     FundamentalSpecifier,
+    Method,
     NameSpecifier,
     PQName,
     Pointer,
@@ -141,6 +143,59 @@ def test_attributes_gcc_enum_packed():
                         Enumerator(name="w1"),
                         Enumerator(name="w2"),
                         Enumerator(name="w3"),
+                    ],
+                )
+            ]
+        )
+    )
+
+
+def test_friendly_declspec():
+    content = """
+      struct D {
+          friend __declspec(dllexport) void my_friend();
+          static __declspec(dllexport) void static_declspec();
+      };
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            classes=[
+                ClassScope(
+                    class_decl=ClassDecl(
+                        typename=PQName(
+                            segments=[NameSpecifier(name="D")], classkey="struct"
+                        )
+                    ),
+                    friends=[
+                        FriendDecl(
+                            fn=Method(
+                                return_type=Type(
+                                    typename=PQName(
+                                        segments=[FundamentalSpecifier(name="void")]
+                                    )
+                                ),
+                                name=PQName(segments=[NameSpecifier(name="my_friend")]),
+                                parameters=[],
+                                access="public",
+                            )
+                        )
+                    ],
+                    methods=[
+                        Method(
+                            return_type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="void")]
+                                )
+                            ),
+                            name=PQName(
+                                segments=[NameSpecifier(name="static_declspec")]
+                            ),
+                            parameters=[],
+                            static=True,
+                            access="public",
+                        )
                     ],
                 )
             ]
