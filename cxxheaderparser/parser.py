@@ -1250,7 +1250,16 @@ class CxxParser:
         return parts
 
     _pqname_start_tokens = (
-        {"auto", "decltype", "NAME", "operator", "template", "typename", "DBL_COLON"}
+        {
+            "auto",
+            "decltype",
+            "NAME",
+            "operator",
+            "template",
+            "typename",
+            "DBL_COLON",
+            "final",
+        }
         | _name_compound_start
         | _fundamentals
     )
@@ -1463,7 +1472,7 @@ class CxxParser:
             self.lex.return_tokens(toks[1:-1])
 
         # optional name
-        tok = self.lex.token_if("NAME")
+        tok = self.lex.token_if("NAME", "final")
         if tok:
             param_name = tok.value
 

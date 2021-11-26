@@ -1,15 +1,20 @@
 # Note: testcases generated via `python -m cxxheaderparser.gentest`
 
 from cxxheaderparser.types import (
+    BaseClass,
+    ClassDecl,
     Function,
     FundamentalSpecifier,
     NameSpecifier,
     PQName,
     Parameter,
+    Token,
     Type,
+    Value,
     Variable,
 )
 from cxxheaderparser.simple import (
+    ClassScope,
     Include,
     NamespaceScope,
     Pragma,
@@ -167,4 +172,67 @@ def test_comment_eof():
 
     assert data == ParsedData(
         namespace=NamespaceScope(namespaces={"a": NamespaceScope(name="a")})
+    )
+
+
+def test_final():
+    content = """
+      // ok here
+      int fn(const int final);
+      
+      // ok here
+      int final = 2;
+      
+      // but it's a keyword here
+      struct B final : A {};
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            classes=[
+                ClassScope(
+                    class_decl=ClassDecl(
+                        typename=PQName(
+                            segments=[NameSpecifier(name="B")], classkey="struct"
+                        ),
+                        bases=[
+                            BaseClass(
+                                access="public",
+                                typename=PQName(segments=[NameSpecifier(name="A")]),
+                            )
+                        ],
+                        final=True,
+                    )
+                )
+            ],
+            functions=[
+                Function(
+                    return_type=Type(
+                        typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                    ),
+                    name=PQName(segments=[NameSpecifier(name="fn")]),
+                    parameters=[
+                        Parameter(
+                            type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="int")]
+                                ),
+                                const=True,
+                            ),
+                            name="final",
+                        )
+                    ],
+                )
+            ],
+            variables=[
+                Variable(
+                    name=PQName(segments=[NameSpecifier(name="final")]),
+                    type=Type(
+                        typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                    ),
+                    value=Value(tokens=[Token(value="2")]),
+                )
+            ],
+        )
     )
