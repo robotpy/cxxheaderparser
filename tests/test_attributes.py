@@ -12,6 +12,8 @@ from cxxheaderparser.types import (
     NameSpecifier,
     PQName,
     Pointer,
+    TemplateDecl,
+    TemplateTypeParam,
     Token,
     Type,
     Typedef,
@@ -197,6 +199,34 @@ def test_friendly_declspec():
                             access="public",
                         )
                     ],
+                )
+            ]
+        )
+    )
+
+
+def test_declspec_template():
+    content = """
+      template <class T2>
+      __declspec(deprecated("message"))
+      static T2 fn() { return T2(); }
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            functions=[
+                Function(
+                    return_type=Type(
+                        typename=PQName(segments=[NameSpecifier(name="T2")])
+                    ),
+                    name=PQName(segments=[NameSpecifier(name="fn")]),
+                    parameters=[],
+                    static=True,
+                    has_body=True,
+                    template=TemplateDecl(
+                        params=[TemplateTypeParam(typekey="class", name="T2")]
+                    ),
                 )
             ]
         )
