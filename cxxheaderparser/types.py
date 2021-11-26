@@ -236,6 +236,8 @@ class FunctionType:
     #: whatever the trailing return type was
     has_trailing_return: bool = False
 
+    noexcept: typing.Optional[Value] = None
+
 
 @dataclass
 class Type:
@@ -550,13 +552,13 @@ class Typedef:
 
     """
 
-    #: The aliased type
+    #: The aliased type or function type
     #:
     #: .. code-block:: c++
     #:
     #:    typedef type *pname;
     #:            ~~~~~~
-    type: DecoratedType
+    type: typing.Union[DecoratedType, FunctionType]
 
     #: The alias introduced for the specified type
     #:

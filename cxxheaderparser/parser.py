@@ -1645,6 +1645,7 @@ class CxxParser:
         constructor: bool,
         destructor: bool,
         is_friend: bool,
+        is_typedef: bool,
     ) -> bool:
         """
         Assumes the caller has already consumed the return type and name, this consumes the
@@ -1667,7 +1668,7 @@ class CxxParser:
 
         params, vararg = self._parse_parameters()
 
-        if is_class_block:
+        if is_class_block and not is_typedef:
             props.update(dict.fromkeys(mods.meths.keys(), True))
 
             method: Method
@@ -1723,9 +1724,39 @@ class CxxParser:
                 **props,
             )
             self._parse_fn_end(fn)
-            self.visitor.on_function(state, fn)
 
-            return fn.has_body or fn.has_trailing_return
+            if is_typedef:
+                if len(pqname.segments) != 1:
+                    raise CxxParseError(
+                        "typedef name may not be a nested-name-specifier"
+                    )
+                if fn.constexpr:
+                    raise CxxParseError("typedef function may not be constexpr")
+                if fn.extern:
+                    raise CxxParseError("typedef function may not be extern")
+                if fn.static:
+                    raise CxxParseError("typedef function may not be static")
+                if fn.inline:
+                    raise CxxParseError("typedef function may not be inline")
+                if fn.has_body:
+                    raise CxxParseError("typedef may not be a function definition")
+                if fn.template:
+                    raise CxxParseError("typedef function may not have a template")
+
+                fntype = FunctionType(
+                    fn.return_type,
+                    fn.parameters,
+                    fn.vararg,
+                    fn.has_trailing_return,
+                    noexcept=fn.noexcept,
+                )
+
+                typedef = Typedef(fntype, pqname.segments[0].name, self._current_access)
+                self.visitor.on_typedef(state, typedef)
+                return False
+            else:
+                self.visitor.on_function(state, fn)
+                return fn.has_body or fn.has_trailing_return
 
     #
     # Decorated type parsing
@@ -1988,9 +2019,6 @@ class CxxParser:
 
         # if ( then it's a function/method
         if self.lex.token_if("("):
-            if is_typedef:
-                raise self._parse_error(None)
-
             if not pqname:
                 raise self._parse_error(None)
 
@@ -2005,6 +2033,7 @@ class CxxParser:
                 constructor,
                 destructor,
                 is_friend,
+                is_typedef,
             )
 
         # anything else is a field/variable
