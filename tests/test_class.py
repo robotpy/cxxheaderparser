@@ -2958,3 +2958,43 @@ def test_class_volatile():
             ]
         )
     )
+
+
+def test_class_mutable():
+    content = """
+      class Foo
+      {
+      private:
+      
+      mutable volatile Standard_Integer myRefCount_;
+      
+      };
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            classes=[
+                ClassScope(
+                    class_decl=ClassDecl(
+                        typename=PQName(
+                            segments=[NameSpecifier(name="Foo")], classkey="class"
+                        )
+                    ),
+                    fields=[
+                        Field(
+                            access="private",
+                            type=Type(
+                                typename=PQName(
+                                    segments=[NameSpecifier(name="Standard_Integer")]
+                                ),
+                                volatile=True,
+                            ),
+                            name="myRefCount_",
+                            mutable=True,
+                        )
+                    ],
+                )
+            ]
+        )
+    )
