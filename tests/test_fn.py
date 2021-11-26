@@ -3,10 +3,13 @@
 from cxxheaderparser.types import (
     Array,
     AutoSpecifier,
+    ClassDecl,
     Function,
     FunctionType,
     FundamentalSpecifier,
+    MoveReference,
     NameSpecifier,
+    Operator,
     PQName,
     Parameter,
     Pointer,
@@ -20,6 +23,7 @@ from cxxheaderparser.types import (
     Value,
 )
 from cxxheaderparser.simple import (
+    ClassScope,
     NamespaceScope,
     parse_string,
     ParsedData,
@@ -853,6 +857,138 @@ def test_inline_volatile_fn():
                         )
                     ],
                     inline=True,
+                )
+            ]
+        )
+    )
+
+
+def test_method_w_reference():
+    content = """
+      struct StreamBuffer
+      {
+          StreamBuffer &operator<<(std::ostream &(*fn)(std::ostream &))
+          {
+              return *this;
+          }
+      };
+      
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            classes=[
+                ClassScope(
+                    class_decl=ClassDecl(
+                        typename=PQName(
+                            segments=[NameSpecifier(name="StreamBuffer")],
+                            classkey="struct",
+                        )
+                    ),
+                    methods=[
+                        Operator(
+                            return_type=Reference(
+                                ref_to=Type(
+                                    typename=PQName(
+                                        segments=[NameSpecifier(name="StreamBuffer")]
+                                    )
+                                )
+                            ),
+                            name=PQName(segments=[NameSpecifier(name="operator<<")]),
+                            parameters=[
+                                Parameter(
+                                    type=Pointer(
+                                        ptr_to=FunctionType(
+                                            return_type=Reference(
+                                                ref_to=Type(
+                                                    typename=PQName(
+                                                        segments=[
+                                                            NameSpecifier(name="std"),
+                                                            NameSpecifier(
+                                                                name="ostream"
+                                                            ),
+                                                        ]
+                                                    )
+                                                )
+                                            ),
+                                            parameters=[
+                                                Parameter(
+                                                    type=Reference(
+                                                        ref_to=Type(
+                                                            typename=PQName(
+                                                                segments=[
+                                                                    NameSpecifier(
+                                                                        name="std"
+                                                                    ),
+                                                                    NameSpecifier(
+                                                                        name="ostream"
+                                                                    ),
+                                                                ]
+                                                            )
+                                                        )
+                                                    )
+                                                )
+                                            ],
+                                        )
+                                    ),
+                                    name="fn",
+                                )
+                            ],
+                            has_body=True,
+                            access="public",
+                            operator="<<",
+                        )
+                    ],
+                )
+            ]
+        )
+    )
+
+
+def test_fn_w_mvreference():
+    content = """
+      void fn1(int && (*)(int));
+      
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            functions=[
+                Function(
+                    return_type=Type(
+                        typename=PQName(segments=[FundamentalSpecifier(name="void")])
+                    ),
+                    name=PQName(segments=[NameSpecifier(name="fn1")]),
+                    parameters=[
+                        Parameter(
+                            type=Pointer(
+                                ptr_to=FunctionType(
+                                    return_type=MoveReference(
+                                        moveref_to=Type(
+                                            typename=PQName(
+                                                segments=[
+                                                    FundamentalSpecifier(name="int")
+                                                ]
+                                            )
+                                        )
+                                    ),
+                                    parameters=[
+                                        Parameter(
+                                            type=Type(
+                                                typename=PQName(
+                                                    segments=[
+                                                        FundamentalSpecifier(name="int")
+                                                    ]
+                                                )
+                                            )
+                                        )
+                                    ],
+                                )
+                            )
+                        )
+                    ],
                 )
             ]
         )
