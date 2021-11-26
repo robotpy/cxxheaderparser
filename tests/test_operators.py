@@ -552,3 +552,68 @@ def test_class_operators():
             ]
         )
     )
+
+
+def test_conversion_operators():
+    content = """
+      
+      class Foo
+      {
+      public:
+          operator Type1() const { return SomeMethod(); }
+          explicit operator Type2() const;
+          virtual operator bool() const;
+      };
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            classes=[
+                ClassScope(
+                    class_decl=ClassDecl(
+                        typename=PQName(
+                            segments=[NameSpecifier(name="Foo")], classkey="class"
+                        )
+                    ),
+                    methods=[
+                        Operator(
+                            return_type=Type(
+                                typename=PQName(segments=[NameSpecifier(name="Type1")])
+                            ),
+                            name=PQName(segments=[NameSpecifier(name="operator")]),
+                            parameters=[],
+                            has_body=True,
+                            access="public",
+                            const=True,
+                            operator="conversion",
+                        ),
+                        Operator(
+                            return_type=Type(
+                                typename=PQName(segments=[NameSpecifier(name="Type2")])
+                            ),
+                            name=PQName(segments=[NameSpecifier(name="operator")]),
+                            parameters=[],
+                            access="public",
+                            const=True,
+                            explicit=True,
+                            operator="conversion",
+                        ),
+                        Operator(
+                            return_type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="bool")]
+                                )
+                            ),
+                            name=PQName(segments=[NameSpecifier(name="operator")]),
+                            parameters=[],
+                            access="public",
+                            const=True,
+                            virtual=True,
+                            operator="conversion",
+                        ),
+                    ],
+                )
+            ]
+        )
+    )

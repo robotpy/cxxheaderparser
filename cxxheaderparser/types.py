@@ -542,6 +542,14 @@ class Method(Function):
 
 @dataclass
 class Operator(Method):
+    """
+    Represents an operator method
+    """
+
+    #: The operator type (+, +=, etc).
+    #:
+    #: In the case of a conversion operator (such as 'operator bool'), this
+    #: is the string "conversion" and the full Type is found in return_type
     operator: str = ""
 
 

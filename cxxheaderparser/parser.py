@@ -596,6 +596,9 @@ class CxxParser:
                 with self.lex.set_group_of_tokens(raw_toks) as remainder:
                     try:
                         parsed_type, mods = self._parse_type(None)
+                        if parsed_type is None:
+                            raise self._parse_error(None)
+
                         mods.validate(var_ok=False, meth_ok=False, msg="")
                         dtype = self._parse_cv_ptr(parsed_type, nonptr_fn=True)
                         self._next_token_must_be(PhonyEnding.type)
@@ -762,6 +765,9 @@ class CxxParser:
         """
 
         parsed_type, mods = self._parse_type(None)
+        if parsed_type is None:
+            raise self._parse_error(None)
+
         mods.validate(var_ok=False, meth_ok=False, msg="parsing typealias")
 
         dtype = self._parse_cv_ptr(parsed_type)
@@ -1475,6 +1481,9 @@ class CxxParser:
 
         # required typename + decorators
         parsed_type, mods = self._parse_type(tok)
+        if parsed_type is None:
+            raise self._parse_error(None)
+
         mods.validate(var_ok=False, meth_ok=False, msg="parsing parameter")
 
         dtype = self._parse_cv_ptr(parsed_type)
@@ -1564,6 +1573,9 @@ class CxxParser:
             )
 
         parsed_type, mods = self._parse_type(None)
+        if parsed_type is None:
+            raise self._parse_error(None)
+
         mods.validate(var_ok=False, meth_ok=False, msg="parsing trailing return type")
 
         dtype = self._parse_cv_ptr(parsed_type)
@@ -1726,9 +1738,10 @@ class CxxParser:
                 friend = FriendDecl(fn=method)
                 self.visitor.on_class_friend(state, friend)
             else:
-                # method must not have multiple segments
-                if len(pqname.segments) != 1:
-                    raise self._parse_error(None)
+                # method must not have multiple segments except for operator
+                if len(pqname.segments) > 1:
+                    if not pqname.segments[0].name == "operator":
+                        raise self._parse_error(None)
 
                 self.visitor.on_class_method(state, method)
 
@@ -1897,7 +1910,8 @@ class CxxParser:
     def _parse_type(
         self,
         tok: typing.Optional[LexToken],
-    ) -> typing.Tuple[Type, ParsedTypeModifiers]:
+        operator_ok: bool = False,
+    ) -> typing.Tuple[typing.Optional[Type], ParsedTypeModifiers]:
         """
         This parses a typename and stops parsing when it hits something
         that it doesn't understand. The caller uses the results to figure
@@ -1905,6 +1919,9 @@ class CxxParser:
 
         This only parses the base type, does not parse pointers, references,
         or additional const/volatile qualifiers
+
+        The returned type will only be None if operator_ok is True and an
+        operator is encountered.
         """
 
         const = False
@@ -1924,6 +1941,7 @@ class CxxParser:
             tok = get_token()
 
         pqname: typing.Optional[PQName] = None
+        pqname_optional = False
 
         _pqname_start_tokens = self._pqname_start_tokens
         _attribute_start = self._attribute_start_tokens
@@ -1934,6 +1952,10 @@ class CxxParser:
             if tok_type in _pqname_start_tokens:
                 if pqname is not None:
                     # found second set of names, done here
+                    break
+                if operator_ok and tok_type == "operator":
+                    # special case: conversion operators such as operator bool
+                    pqname_optional = True
                     break
                 pqname, _ = self._parse_pqname(
                     tok, compound_ok=True, fn_ok=False, fund_ok=True
@@ -1963,14 +1985,17 @@ class CxxParser:
             tok = get_token()
 
         if pqname is None:
-            raise self._parse_error(tok)
+            if not pqname_optional:
+                raise self._parse_error(tok)
+            parsed_type = None
+        else:
+            # Construct a type from the parsed name
+            parsed_type = Type(pqname, const, volatile)
 
         self.lex.return_token(tok)
 
-        # Construct a type from the parsed name
-        parsed_type = Type(pqname, const, volatile)
+        # Always return the modifiers
         mods = ParsedTypeModifiers(vars, both, meths)
-
         return parsed_type, mods
 
     def _parse_decl(
@@ -2095,6 +2120,55 @@ class CxxParser:
         self._parse_field(mods, dtype, pqname, template, doxygen, location, is_typedef)
         return False
 
+    def _parse_operator_conversion(
+        self,
+        mods: ParsedTypeModifiers,
+        location: Location,
+        doxygen: typing.Optional[str],
+        template: typing.Optional[TemplateDecl],
+        is_typedef: bool,
+        is_friend: bool,
+    ):
+        tok = self._next_token_must_be("operator")
+
+        if is_typedef:
+            raise self._parse_error(tok, "operator not permitted in typedef")
+
+        # next piece must be the conversion type
+        ctype, cmods = self._parse_type(None)
+        if ctype is None:
+            raise self._parse_error(None)
+
+        cmods.validate(var_ok=False, meth_ok=False, msg="parsing conversion operator")
+
+        # then this must be a method
+        self._next_token_must_be("(")
+
+        # make our own pqname/op here
+        segments = [NameSpecifier("operator")]
+        pqname = PQName(segments)
+        op = "conversion"
+
+        if self._parse_function(
+            mods,
+            ctype,
+            pqname,
+            op,
+            template,
+            doxygen,
+            location,
+            False,
+            False,
+            is_friend,
+            False,
+            None,
+        ):
+            # has function body and handled it
+            return
+
+        # if this is just a declaration, next token should be ;
+        self._next_token_must_be(";")
+
     _class_enum_stage2 = {":", "final", "explicit", "{"}
 
     def _parse_declarations(
@@ -2114,12 +2188,16 @@ class CxxParser:
 
         location = tok.location
 
-        # Always starts out with some kind of type name
-        parsed_type, mods = self._parse_type(tok)
+        # Almost always starts out with some kind of type name or a modifier
+        parsed_type, mods = self._parse_type(tok, operator_ok=True)
 
         # Check to see if this might be a class/enum declaration
-        if parsed_type.typename.classkey and self._maybe_parse_class_enum_decl(
-            parsed_type, mods, doxygen, template, is_typedef, is_friend, location
+        if (
+            parsed_type is not None
+            and parsed_type.typename.classkey
+            and self._maybe_parse_class_enum_decl(
+                parsed_type, mods, doxygen, template, is_typedef, is_friend, location
+            )
         ):
             return
 
@@ -2137,6 +2215,13 @@ class CxxParser:
             msg = "parsing declaration"
 
         mods.validate(var_ok=var_ok, meth_ok=meth_ok, msg=msg)
+
+        if parsed_type is None:
+            # this means an operator was encountered, deal with the special case
+            self._parse_operator_conversion(
+                mods, location, doxygen, template, is_typedef, is_friend
+            )
+            return
 
         # Ok, dealing with a variable or function/method
         while True:
