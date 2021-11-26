@@ -1503,7 +1503,6 @@ class CxxParser:
 
             param = self._parse_parameter(None, Parameter)
             params.append(param)
-
             tok = self._next_token_must_be(",", ")")
             if tok.value == ")":
                 break
@@ -1811,6 +1810,11 @@ class CxxParser:
                 dtype = Reference(dtype)
             else:
                 dtype = MoveReference(dtype)
+
+            # peek at the next token and see if it's a paren. If so, it might
+            # be a nasty function pointer
+            if self.lex.token_peek_if("("):
+                dtype = self._parse_cv_ptr(dtype, nonptr_fn)
 
         return dtype
 
