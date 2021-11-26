@@ -899,3 +899,92 @@ def test_volatile_typedef():
             ]
         )
     )
+
+
+def test_function_typedef():
+    content = """
+      typedef void fn(int);
+      typedef auto fntype(int) -> int;
+      
+      struct X {
+          typedef void fn(int);
+      };
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            classes=[
+                ClassScope(
+                    class_decl=ClassDecl(
+                        typename=PQName(
+                            segments=[NameSpecifier(name="X")], classkey="struct"
+                        )
+                    ),
+                    typedefs=[
+                        Typedef(
+                            type=FunctionType(
+                                return_type=Type(
+                                    typename=PQName(
+                                        segments=[FundamentalSpecifier(name="void")]
+                                    )
+                                ),
+                                parameters=[
+                                    Parameter(
+                                        type=Type(
+                                            typename=PQName(
+                                                segments=[
+                                                    FundamentalSpecifier(name="int")
+                                                ]
+                                            )
+                                        )
+                                    )
+                                ],
+                            ),
+                            name="fn",
+                            access="public",
+                        )
+                    ],
+                )
+            ],
+            typedefs=[
+                Typedef(
+                    type=FunctionType(
+                        return_type=Type(
+                            typename=PQName(
+                                segments=[FundamentalSpecifier(name="void")]
+                            )
+                        ),
+                        parameters=[
+                            Parameter(
+                                type=Type(
+                                    typename=PQName(
+                                        segments=[FundamentalSpecifier(name="int")]
+                                    )
+                                )
+                            )
+                        ],
+                    ),
+                    name="fn",
+                ),
+                Typedef(
+                    type=FunctionType(
+                        return_type=Type(
+                            typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                        ),
+                        parameters=[
+                            Parameter(
+                                type=Type(
+                                    typename=PQName(
+                                        segments=[FundamentalSpecifier(name="int")]
+                                    )
+                                )
+                            )
+                        ],
+                        has_trailing_return=True,
+                    ),
+                    name="fntype",
+                ),
+            ],
+        )
+    )
