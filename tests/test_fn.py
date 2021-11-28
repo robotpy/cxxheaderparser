@@ -20,6 +20,7 @@ from cxxheaderparser.types import (
     TemplateTypeParam,
     Token,
     Type,
+    Typedef,
     Value,
 )
 from cxxheaderparser.simple import (
@@ -991,5 +992,56 @@ def test_fn_w_mvreference():
                     ],
                 )
             ]
+        )
+    )
+
+
+def test_msvc_conventions():
+    content = """
+      void __cdecl fn();
+      typedef const char* (__stdcall *wglGetExtensionsStringARB_t)(HDC theDeviceContext);
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            functions=[
+                Function(
+                    return_type=Type(
+                        typename=PQName(segments=[FundamentalSpecifier(name="void")])
+                    ),
+                    name=PQName(segments=[NameSpecifier(name="fn")]),
+                    parameters=[],
+                    msvc_convention="__cdecl",
+                )
+            ],
+            typedefs=[
+                Typedef(
+                    type=Pointer(
+                        ptr_to=FunctionType(
+                            return_type=Pointer(
+                                ptr_to=Type(
+                                    typename=PQName(
+                                        segments=[FundamentalSpecifier(name="char")]
+                                    ),
+                                    const=True,
+                                )
+                            ),
+                            parameters=[
+                                Parameter(
+                                    type=Type(
+                                        typename=PQName(
+                                            segments=[NameSpecifier(name="HDC")]
+                                        )
+                                    ),
+                                    name="theDeviceContext",
+                                )
+                            ],
+                            msvc_convention="__stdcall",
+                        )
+                    ),
+                    name="wglGetExtensionsStringARB_t",
+                )
+            ],
         )
     )

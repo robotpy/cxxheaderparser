@@ -238,6 +238,14 @@ class FunctionType:
 
     noexcept: typing.Optional[Value] = None
 
+    #: Only set if an MSVC calling convention (__stdcall, etc) is explictly
+    #: specified.
+    #:
+    #: .. note::  If your code contains things like WINAPI, you will need to
+    #:            use a preprocessor to transform it to the appropriate
+    #:            calling convention
+    msvc_convention: typing.Optional[str] = None
+
 
 @dataclass
 class Type:
@@ -486,6 +494,14 @@ class Function:
 
     throw: typing.Optional[Value] = None
     noexcept: typing.Optional[Value] = None
+
+    #: Only set if an MSVC calling convention (__stdcall, etc) is explictly
+    #: specified.
+    #:
+    #: .. note::  If your code contains things like WINAPI, you will need to
+    #:            use a preprocessor to transform it to the appropriate
+    #:            calling convention
+    msvc_convention: typing.Optional[str] = None
 
 
 @dataclass

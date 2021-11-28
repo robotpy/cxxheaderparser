@@ -359,6 +359,15 @@ class CxxParser:
     # Various
     #
 
+    _msvc_conventions = {
+        "__cdecl",
+        "__clrcall",
+        "__stdcall",
+        "__fastcall",
+        "__thiscall",
+        "__vectorcall",
+    }
+
     def _parse_namespace(
         self, tok: LexToken, doxygen: typing.Optional[str], inline: bool = False
     ) -> None:
@@ -1655,6 +1664,7 @@ class CxxParser:
         destructor: bool,
         is_friend: bool,
         is_typedef: bool,
+        msvc_convention: typing.Optional[LexToken],
     ) -> bool:
         """
         Assumes the caller has already consumed the return type and name, this consumes the
@@ -1670,6 +1680,8 @@ class CxxParser:
             raise self._parse_error(None)
 
         props = dict.fromkeys(mods.both.keys(), True)
+        if msvc_convention:
+            props["msvc_convention"] = msvc_convention.value
 
         state = self.state
         state.location = location
@@ -1758,6 +1770,7 @@ class CxxParser:
                     fn.vararg,
                     fn.has_trailing_return,
                     noexcept=fn.noexcept,
+                    msvc_convention=fn.msvc_convention,
                 )
 
                 typedef = Typedef(fntype, pqname.segments[0].name, self._current_access)
@@ -1823,6 +1836,10 @@ class CxxParser:
                     self._parse_trailing_return_type(dtype)
 
             else:
+                msvc_convention = self.lex.token_if_val(*self._msvc_conventions)
+                if msvc_convention:
+                    msvc_convention = msvc_convention.value
+
                 # Check to see if this is a grouping paren or something else
                 if not self.lex.token_peek_if("*", "&"):
                     self.lex.return_token(tok)
@@ -1840,7 +1857,9 @@ class CxxParser:
                         fn_params, vararg = self._parse_parameters()
                         # the type we already have is the return type of the function pointer
 
-                        dtype = FunctionType(dtype, fn_params, vararg)
+                        dtype = FunctionType(
+                            dtype, fn_params, vararg, msvc_convention=msvc_convention
+                        )
 
                         # the inner tokens must either be a * or a pqname that ends
                         # with ::* (member function pointer)
@@ -1975,6 +1994,7 @@ class CxxParser:
         constructor = False
         destructor = False
         op = None
+        msvc_convention = None
 
         # If we have a leading (, that's either an obnoxious grouping
         # paren or it's a constructor
@@ -2021,6 +2041,8 @@ class CxxParser:
                 self.lex.return_tokens(toks[1:-1])
 
         if dtype:
+            msvc_convention = self.lex.token_if_val(*self._msvc_conventions)
+
             tok = self.lex.token_if_in_set(self._pqname_start_tokens)
             if tok:
                 pqname, op = self._parse_pqname(tok, fn_ok=True)
@@ -2046,7 +2068,10 @@ class CxxParser:
                 destructor,
                 is_friend,
                 is_typedef,
+                msvc_convention,
             )
+        elif msvc_convention:
+            raise self._parse_error(msvc_convention)
 
         # anything else is a field/variable
         if is_friend:
