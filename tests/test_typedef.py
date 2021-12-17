@@ -713,7 +713,7 @@ def test_enum_typedef_3():
     )
 
 
-def test_enum_typedef_3():
+def test_enum_typedef_3_1():
     content = """
       typedef enum { E1 } * PBE;
     """
