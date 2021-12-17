@@ -327,9 +327,9 @@ class CxxParser:
 
             if tok:
                 filename, lineno = tok.location
-                msg = f"Not able to parse {filename} on line {lineno} evaluating '{tok.value}'{context}"
+                msg = f"{filename}:{lineno}: parse error evaluating '{tok.value}'{context}"
             else:
-                msg = f"Error parsing {self.filename}{context}"
+                msg = f"{self.filename}: parse error{context}"
 
             raise CxxParseError(msg) from e
 
