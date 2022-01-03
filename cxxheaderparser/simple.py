@@ -93,7 +93,7 @@ class NamespaceScope:
 
     classes: typing.List["ClassScope"] = field(default_factory=list)
     enums: typing.List[EnumDecl] = field(default_factory=list)
-    functions: typing.List[Method] = field(default_factory=list)
+    functions: typing.List[Function] = field(default_factory=list)
     typedefs: typing.List[Typedef] = field(default_factory=list)
     variables: typing.List[Variable] = field(default_factory=list)
 
