@@ -1749,6 +1749,7 @@ class CxxParser:
             return method.has_body or method.has_trailing_return
 
         else:
+            assert return_type is not None
             fn = Function(
                 return_type,
                 pqname,
@@ -1778,8 +1779,12 @@ class CxxParser:
                 if fn.template:
                     raise CxxParseError("typedef function may not have a template")
 
+                return_type = fn.return_type
+                if return_type is None:
+                    raise CxxParseError("typedef function must have return type")
+
                 fntype = FunctionType(
-                    fn.return_type,
+                    return_type,
                     fn.parameters,
                     fn.vararg,
                     fn.has_trailing_return,

@@ -468,7 +468,9 @@ class Function:
     A function declaration, potentially with the function body
     """
 
-    return_type: DecoratedType
+    #: Only constructors and destructors don't have a return type
+    return_type: typing.Optional[DecoratedType]
+
     name: PQName
     parameters: typing.List[Parameter]
 
@@ -509,9 +511,6 @@ class Method(Function):
     """
     A method declaration, potentially with the method body
     """
-
-    #: constructors and destructors don't have a return type
-    return_type: typing.Optional[DecoratedType]
 
     access: str = ""
 
