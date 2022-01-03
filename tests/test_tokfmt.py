@@ -2,6 +2,7 @@ import pytest
 
 from cxxheaderparser.lexer import Lexer
 from cxxheaderparser.tokfmt import tokfmt
+from cxxheaderparser.types import Token
 
 
 @pytest.mark.parametrize(
@@ -34,7 +35,7 @@ from cxxheaderparser.tokfmt import tokfmt
         "operator>=",
     ],
 )
-def test_tokfmt(instr):
+def test_tokfmt(instr: str) -> None:
     """
     Each input string is exactly what the output of tokfmt should be
     """
@@ -47,6 +48,6 @@ def test_tokfmt(instr):
         if not tok:
             break
 
-        toks.append(tok)
+        toks.append(Token(tok.value, tok.type))
 
     assert tokfmt(toks) == instr

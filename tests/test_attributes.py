@@ -28,7 +28,7 @@ from cxxheaderparser.simple import (
 )
 
 
-def test_attributes_everywhere():
+def test_attributes_everywhere() -> None:
     # TODO: someday we'll actually support storing attributes,
     #       but for now just make sure they don't get in the way
 
@@ -124,7 +124,7 @@ def test_attributes_everywhere():
     )
 
 
-def test_attributes_gcc_enum_packed():
+def test_attributes_gcc_enum_packed() -> None:
     content = """
       enum Wheat {
         w1,
@@ -152,7 +152,7 @@ def test_attributes_gcc_enum_packed():
     )
 
 
-def test_friendly_declspec():
+def test_friendly_declspec() -> None:
     content = """
       struct D {
           friend __declspec(dllexport) void my_friend();
@@ -205,7 +205,7 @@ def test_friendly_declspec():
     )
 
 
-def test_declspec_template():
+def test_declspec_template() -> None:
     content = """
       template <class T2>
       __declspec(deprecated("message"))

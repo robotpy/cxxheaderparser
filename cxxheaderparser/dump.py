@@ -9,7 +9,7 @@ from .options import ParserOptions
 from .simple import parse_file
 
 
-def dumpmain():
+def dumpmain() -> None:
 
     parser = argparse.ArgumentParser()
     parser.add_argument("header")

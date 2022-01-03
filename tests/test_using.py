@@ -30,7 +30,7 @@ from cxxheaderparser.simple import (
 )
 
 
-def test_using_namespace():
+def test_using_namespace() -> None:
     content = """
       using namespace foo;
       using namespace foo::bar;
@@ -52,7 +52,7 @@ def test_using_namespace():
     )
 
 
-def test_using_declaration():
+def test_using_declaration() -> None:
     content = """
       using ::foo;
       using foo::bar;
@@ -104,7 +104,7 @@ def test_using_declaration():
 
 
 # alias-declaration
-def test_alias_declaration_1():
+def test_alias_declaration_1() -> None:
     content = """
       using alias = foo;
     """
@@ -122,7 +122,7 @@ def test_alias_declaration_1():
     )
 
 
-def test_alias_declaration_2():
+def test_alias_declaration_2() -> None:
     content = """
       template <typename T> using alias = foo<T>;
     """
@@ -164,7 +164,7 @@ def test_alias_declaration_2():
     )
 
 
-def test_alias_declaration_3():
+def test_alias_declaration_3() -> None:
     content = """
       using alias = ::foo::bar;
     """
@@ -190,7 +190,7 @@ def test_alias_declaration_3():
     )
 
 
-def test_alias_declaration_4():
+def test_alias_declaration_4() -> None:
     content = """
       template <typename T> using alias = ::foo::bar<T>;
     """
@@ -234,7 +234,7 @@ def test_alias_declaration_4():
     )
 
 
-def test_alias_declaration_5():
+def test_alias_declaration_5() -> None:
     content = """
       using alias = foo::bar;
     """
@@ -259,7 +259,7 @@ def test_alias_declaration_5():
     )
 
 
-def test_alias_declaration_6():
+def test_alias_declaration_6() -> None:
     content = """
       template <typename T> using alias = foo<T>::bar;
     """
@@ -302,7 +302,7 @@ def test_alias_declaration_6():
     )
 
 
-def test_using_many_things():
+def test_using_many_things() -> None:
     content = """
       // clang-format off
       

@@ -29,7 +29,7 @@ from cxxheaderparser.types import (
 from cxxheaderparser.simple import ClassScope, NamespaceScope, ParsedData, parse_string
 
 
-def test_template_base_template_ns():
+def test_template_base_template_ns() -> None:
     content = """
       class A : public B<int, int>::C {};
     """
@@ -89,7 +89,7 @@ def test_template_base_template_ns():
     )
 
 
-def test_template_non_type_various():
+def test_template_non_type_various() -> None:
     content = """
       // simple non-type template parameter
       template <int N> struct S { int a[N]; };
@@ -257,7 +257,7 @@ def test_template_non_type_various():
     )
 
 
-def test_template_dependent_nontype_default():
+def test_template_dependent_nontype_default() -> None:
     content = """
       template <class T, typename T::type n = 0> class X;
     """
@@ -293,7 +293,7 @@ def test_template_dependent_nontype_default():
     )
 
 
-def test_template_optional_names():
+def test_template_optional_names() -> None:
     content = """
       template <class> class My_vector;
       template <class = void> struct My_op_functor;
@@ -337,7 +337,7 @@ def test_template_optional_names():
     )
 
 
-def test_template_template_template():
+def test_template_template_template() -> None:
     content = """
       template<typename T> struct eval; // primary template 
  
@@ -438,7 +438,7 @@ def test_template_template_template():
     )
 
 
-def test_template_static_var():
+def test_template_static_var() -> None:
     content = """
       template <typename T>
       struct X {
@@ -510,7 +510,7 @@ def test_template_static_var():
     )
 
 
-def test_template_fn_template():
+def test_template_fn_template() -> None:
     content = """
       class S {
         template <typename Allocator> StringRef copy(Allocator &A) const {
@@ -574,7 +574,7 @@ def test_template_fn_template():
     )
 
 
-def test_template_fn_param_initializer():
+def test_template_fn_param_initializer() -> None:
     content = """
       template <typename T, typename U>
       void fn(something<T, U> s = something<T, U>{1, 2, 3});
@@ -658,7 +658,7 @@ def test_template_fn_param_initializer():
     )
 
 
-def test_template_huge():
+def test_template_huge() -> None:
     content = """
       // clang-format off
       class AlmondClass
@@ -872,7 +872,7 @@ def test_template_huge():
     )
 
 
-def test_template_specialized():
+def test_template_specialized() -> None:
     content = """
       template <> class FruitFly<int> : public Fly {};
     """
@@ -920,7 +920,7 @@ def test_template_specialized():
     )
 
 
-def test_template_class_defaults():
+def test_template_class_defaults() -> None:
     content = """
       template <typename VALUE, typename VALUE_SET_ITERATOR,
                 typename ACCESSOR = Raddish::SimpleAccessor<VALUE, VALUE_SET_ITERATOR>>
@@ -1068,7 +1068,7 @@ def test_template_class_defaults():
     )
 
 
-def test_template_many_packs():
+def test_template_many_packs() -> None:
     content = """
       // clang-format off
       
@@ -1651,7 +1651,7 @@ def test_template_many_packs():
     )
 
 
-def test_template_specialized_fn_typename():
+def test_template_specialized_fn_typename() -> None:
     content = """
       // clang-format off
       struct T{};
@@ -1723,7 +1723,7 @@ def test_template_specialized_fn_typename():
     )
 
 
-def test_template_specialized_fn_typename_template():
+def test_template_specialized_fn_typename_template() -> None:
     content = """
       // clang-format off
       template <typename X>

@@ -46,7 +46,7 @@ def nondefault_repr(data):
     return _inner_repr(data)
 
 
-def gentest(infile: str, name: str, outfile: str, verbose: bool):
+def gentest(infile: str, name: str, outfile: str, verbose: bool) -> None:
     # Goal is to allow making a unit test as easy as running this dumper
     # on a file and copy/pasting this into a test
 
@@ -64,7 +64,7 @@ def gentest(infile: str, name: str, outfile: str, verbose: bool):
     stmt = inspect.cleandoc(
         f'''
     
-        def test_{name}():
+        def test_{name}() -> None:
             content = """
               {content}
             """

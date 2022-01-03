@@ -17,7 +17,7 @@ from cxxheaderparser.simple import (
 )
 
 
-def test_union_basic():
+def test_union_basic() -> None:
     content = """
       
       struct HAL_Value {
@@ -86,7 +86,7 @@ def test_union_basic():
     )
 
 
-def test_union_anon_in_struct():
+def test_union_anon_in_struct() -> None:
     content = """
       struct Outer {
         union {

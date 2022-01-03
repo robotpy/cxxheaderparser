@@ -23,7 +23,7 @@ from cxxheaderparser.simple import (
 )
 
 # friends
-def test_various_friends():
+def test_various_friends() -> None:
     content = """
       class FX {
       public:
@@ -170,7 +170,7 @@ def test_various_friends():
     )
 
 
-def test_more_friends():
+def test_more_friends() -> None:
     content = """
       template <typename T> struct X { static int x; };
       
@@ -285,7 +285,7 @@ def test_more_friends():
     )
 
 
-def test_friend_type_no_class():
+def test_friend_type_no_class() -> None:
     content = """
       class DogClass;
       class CatClass {
@@ -327,7 +327,7 @@ def test_friend_type_no_class():
     )
 
 
-def test_friend_with_impl():
+def test_friend_with_impl() -> None:
     content = """
       // clang-format off
       class Garlic {

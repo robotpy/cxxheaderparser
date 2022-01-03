@@ -31,7 +31,7 @@ from cxxheaderparser.simple import (
 )
 
 
-def test_fn_returns_class():
+def test_fn_returns_class() -> None:
     content = """
       class X *fn1();
       struct Y fn2();
@@ -77,7 +77,7 @@ def test_fn_returns_class():
     )
 
 
-def test_fn_returns_typename():
+def test_fn_returns_typename() -> None:
     content = """
       typename ns::X fn();
     """
@@ -104,7 +104,7 @@ def test_fn_returns_typename():
     )
 
 
-def test_fn_returns_typename_const():
+def test_fn_returns_typename_const() -> None:
     content = """
       const typename ns::X fn();
     """
@@ -132,7 +132,7 @@ def test_fn_returns_typename_const():
     )
 
 
-def test_fn_pointer_params():
+def test_fn_pointer_params() -> None:
     content = """
       int fn1(int *);
       int fn2(int *p);
@@ -201,7 +201,7 @@ def test_fn_pointer_params():
     )
 
 
-def test_fn_void_is_no_params():
+def test_fn_void_is_no_params() -> None:
     content = """
       int fn(void);
     """
@@ -222,7 +222,7 @@ def test_fn_void_is_no_params():
     )
 
 
-def test_fn_array_param():
+def test_fn_array_param() -> None:
     content = """
       void fn(int array[]);
     """
@@ -255,7 +255,7 @@ def test_fn_array_param():
     )
 
 
-def test_fn_typename_param():
+def test_fn_typename_param() -> None:
     content = """
       void MethodA(const mynamespace::SomeObject &x,
                    typename mynamespace::SomeObject * = 0);
@@ -307,7 +307,7 @@ def test_fn_typename_param():
     )
 
 
-def test_fn_weird_refs():
+def test_fn_weird_refs() -> None:
     content = """
       int aref(int(&x));
       void ptr_ref(int(*&name));
@@ -382,7 +382,7 @@ def test_fn_weird_refs():
     )
 
 
-def test_fn_too_many_parens():
+def test_fn_too_many_parens() -> None:
     content = """
       int fn1(int (x));
       void (fn2 (int (*const (name))));
@@ -439,7 +439,7 @@ void (__stdcall * fn)
 """
 
 
-def test_fn_same_line():
+def test_fn_same_line() -> None:
     # multiple functions on the same line
     content = """
       void fn1(), fn2();
@@ -487,7 +487,7 @@ def test_fn_same_line():
     )
 
 
-def test_fn_auto_template():
+def test_fn_auto_template() -> None:
     content = """
       template<class T, class U>
       auto add(T t, U u) { return t + u; }
@@ -527,7 +527,7 @@ def test_fn_auto_template():
     )
 
 
-def test_fn_template_ptr():
+def test_fn_template_ptr() -> None:
     content = """
       std::vector<Pointer *> *fn(std::vector<Pointer *> *ps);
     """
@@ -607,7 +607,7 @@ def test_fn_template_ptr():
     )
 
 
-def test_fn_with_impl():
+def test_fn_with_impl() -> None:
     content = """
       // clang-format off
       void termite(void)
@@ -634,7 +634,7 @@ def test_fn_with_impl():
     )
 
 
-def test_fn_return_std_function():
+def test_fn_return_std_function() -> None:
     content = """
       std::function<void(int)> fn();
     """
@@ -700,7 +700,7 @@ def test_fn_return_std_function():
     assert data2 == expected
 
 
-def test_fn_return_std_function_trailing():
+def test_fn_return_std_function_trailing() -> None:
     content = """
       std::function<auto(int)->int> fn();
     """
@@ -759,7 +759,7 @@ def test_fn_return_std_function_trailing():
     )
 
 
-def test_fn_trailing_return_simple():
+def test_fn_trailing_return_simple() -> None:
     content = """
       auto fn() -> int;
     """
@@ -781,7 +781,7 @@ def test_fn_trailing_return_simple():
     )
 
 
-def test_fn_trailing_return_std_function():
+def test_fn_trailing_return_std_function() -> None:
     content = """
       auto fn() -> std::function<int()>;
     """
@@ -828,7 +828,7 @@ def test_fn_trailing_return_std_function():
     )
 
 
-def test_inline_volatile_fn():
+def test_inline_volatile_fn() -> None:
     content = """
       inline int Standard_Atomic_Increment (volatile int* theValue);
     """
@@ -864,7 +864,7 @@ def test_inline_volatile_fn():
     )
 
 
-def test_method_w_reference():
+def test_method_w_reference() -> None:
     content = """
       struct StreamBuffer
       {
@@ -947,7 +947,7 @@ def test_method_w_reference():
     )
 
 
-def test_fn_w_mvreference():
+def test_fn_w_mvreference() -> None:
     content = """
       void fn1(int && (*)(int));
       
@@ -996,7 +996,7 @@ def test_fn_w_mvreference():
     )
 
 
-def test_msvc_conventions():
+def test_msvc_conventions() -> None:
     content = """
       void __cdecl fn();
       typedef const char* (__stdcall *wglGetExtensionsStringARB_t)(HDC theDeviceContext);

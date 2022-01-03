@@ -38,7 +38,7 @@ from cxxheaderparser.simple import (
 )
 
 
-def test_doxygen_class():
+def test_doxygen_class() -> None:
     content = """
       // clang-format off
       
@@ -107,7 +107,7 @@ def test_doxygen_class():
     )
 
 
-def test_doxygen_class_template():
+def test_doxygen_class_template() -> None:
     content = """
       // clang-format off
       
@@ -136,7 +136,7 @@ def test_doxygen_class_template():
     )
 
 
-def test_doxygen_enum():
+def test_doxygen_enum() -> None:
     content = """
       // clang-format off
       
@@ -182,7 +182,7 @@ def test_doxygen_enum():
     )
 
 
-def test_doxygen_fn_3slash():
+def test_doxygen_fn_3slash() -> None:
     content = """
       // clang-format off
       
@@ -209,7 +209,7 @@ def test_doxygen_fn_3slash():
     )
 
 
-def test_doxygen_fn_cstyle():
+def test_doxygen_fn_cstyle() -> None:
     content = """
       // clang-format off
       
@@ -238,7 +238,7 @@ def test_doxygen_fn_cstyle():
     )
 
 
-def test_doxygen_var_above():
+def test_doxygen_var_above() -> None:
     content = """
       // clang-format off
       
@@ -267,7 +267,7 @@ def test_doxygen_var_above():
     )
 
 
-def test_doxygen_var_after():
+def test_doxygen_var_after() -> None:
     content = """
       // clang-format off
       

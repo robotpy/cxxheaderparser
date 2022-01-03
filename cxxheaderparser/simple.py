@@ -185,7 +185,7 @@ class SimpleCxxVisitor:
     namespace: NamespaceScope
     block: Block
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.namespace = NamespaceScope("")
         self.block = self.namespace
 
@@ -259,7 +259,7 @@ class SimpleCxxVisitor:
         ns = UsingNamespace("::".join(namespace))
         self.block.using_ns.append(ns)
 
-    def on_using_alias(self, state: State, using: UsingAlias):
+    def on_using_alias(self, state: State, using: UsingAlias) -> None:
         self.block.using_alias.append(using)
 
     def on_using_declaration(self, state: State, using: UsingDecl) -> None:
@@ -288,7 +288,7 @@ class SimpleCxxVisitor:
     def on_class_method(self, state: ClassBlockState, method: Method) -> None:
         self.block.methods.append(method)
 
-    def on_class_friend(self, state: ClassBlockState, friend: FriendDecl):
+    def on_class_friend(self, state: ClassBlockState, friend: FriendDecl) -> None:
         self.block.friends.append(friend)
 
     def on_class_end(self, state: ClassBlockState) -> None:

@@ -16,7 +16,7 @@ from cxxheaderparser.simple import (
 )
 
 
-def test_dups_in_different_ns():
+def test_dups_in_different_ns() -> None:
     content = """
       
       namespace {
@@ -58,7 +58,7 @@ def test_dups_in_different_ns():
     )
 
 
-def test_correct_ns():
+def test_correct_ns() -> None:
     content = """
       namespace a::b::c {
         int i1;

@@ -544,7 +544,7 @@ class CxxParser:
 
         return TemplateDecl(params)
 
-    def _parse_template(self, tok: LexToken, doxygen: typing.Optional[str]):
+    def _parse_template(self, tok: LexToken, doxygen: typing.Optional[str]) -> None:
 
         template = self._parse_template_decl()
 
@@ -2128,7 +2128,7 @@ class CxxParser:
         template: typing.Optional[TemplateDecl],
         is_typedef: bool,
         is_friend: bool,
-    ):
+    ) -> None:
         tok = self._next_token_must_be("operator")
 
         if is_typedef:

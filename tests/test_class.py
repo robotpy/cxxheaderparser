@@ -38,7 +38,7 @@ from cxxheaderparser.simple import (
 )
 
 
-def test_class_member_spec_1():
+def test_class_member_spec_1() -> None:
     content = """
       class S {
         int d1;                   // non-static data member
@@ -266,7 +266,7 @@ def test_class_member_spec_1():
     )
 
 
-def test_class_member_spec_2():
+def test_class_member_spec_2() -> None:
     content = """
       class M {
         std::size_t C;
@@ -437,7 +437,7 @@ def test_class_member_spec_2():
     )
 
 
-def test_class_member_spec_3():
+def test_class_member_spec_3() -> None:
     content = """
       class S {
       public:
@@ -513,7 +513,7 @@ def test_class_member_spec_3():
     )
 
 
-def test_class_using():
+def test_class_using() -> None:
     content = """
       class Base {
       protected:
@@ -586,7 +586,7 @@ def test_class_using():
     )
 
 
-def test_class_member_spec_6():
+def test_class_member_spec_6() -> None:
     content = """
       struct S {
         template<typename T>
@@ -688,7 +688,7 @@ def test_class_member_spec_6():
     )
 
 
-def test_class_fn_default_params():
+def test_class_fn_default_params() -> None:
     content = """
       // clang-format off
       class Hen
@@ -796,7 +796,7 @@ def test_class_fn_default_params():
     )
 
 
-def test_class_fn_inline_virtual():
+def test_class_fn_inline_virtual() -> None:
     content = """
       class B {
       public:
@@ -834,7 +834,7 @@ def test_class_fn_inline_virtual():
     )
 
 
-def test_class_fn_pure_virtual_const():
+def test_class_fn_pure_virtual_const() -> None:
     content = """
       class StoneClass {
         virtual int getNum2() const = 0;
@@ -884,7 +884,7 @@ def test_class_fn_pure_virtual_const():
     )
 
 
-def test_class_fn_return_global_ns():
+def test_class_fn_return_global_ns() -> None:
     content = """
       struct Avacado {
         uint8_t foo() { return 4; }
@@ -935,7 +935,7 @@ def test_class_fn_return_global_ns():
     )
 
 
-def test_class_ns_class():
+def test_class_ns_class() -> None:
     content = """
       namespace ns {
         class N;
@@ -976,7 +976,7 @@ def test_class_ns_class():
     )
 
 
-def test_class_ns_w_base():
+def test_class_ns_w_base() -> None:
     content = """
       class Herb::Cilantro : public Plant {};
     """
@@ -1007,7 +1007,7 @@ def test_class_ns_w_base():
     )
 
 
-def test_class_inner_class():
+def test_class_inner_class() -> None:
     content = """
       class C {
         class Inner {};
@@ -1042,7 +1042,7 @@ def test_class_inner_class():
     )
 
 
-def test_class_inner_fwd_class():
+def test_class_inner_fwd_class() -> None:
     content = """
       class C {
         class N;
@@ -1083,7 +1083,7 @@ def test_class_inner_fwd_class():
     )
 
 
-def test_class_inner_var_access():
+def test_class_inner_var_access() -> None:
     content = """
       class Bug_3488053 {
       public:
@@ -1133,7 +1133,7 @@ def test_class_inner_var_access():
     )
 
 
-def test_class_ns_and_inner():
+def test_class_ns_and_inner() -> None:
     content = """
       namespace RoosterNamespace {
       class RoosterOuterClass {
@@ -1275,7 +1275,7 @@ def test_class_ns_and_inner():
     )
 
 
-def test_class_struct_access():
+def test_class_struct_access() -> None:
     content = """
       struct SampleStruct {
         unsigned int meth();
@@ -1325,7 +1325,7 @@ def test_class_struct_access():
     )
 
 
-def test_class_volatile_move_deleted_fn():
+def test_class_volatile_move_deleted_fn() -> None:
     content = """
       struct C {
         void foo() volatile && = delete;
@@ -1363,7 +1363,7 @@ def test_class_volatile_move_deleted_fn():
     )
 
 
-def test_class_bitfield_1():
+def test_class_bitfield_1() -> None:
     content = """
       struct S {
         // will usually occupy 2 bytes:
@@ -1441,7 +1441,7 @@ def test_class_bitfield_1():
     )
 
 
-def test_class_bitfield_2():
+def test_class_bitfield_2() -> None:
     content = """
       struct HAL_ControlWord {
         int x : 1;
@@ -1521,7 +1521,7 @@ def test_class_bitfield_2():
     )
 
 
-def test_class_anon_struct_as_globalvar():
+def test_class_anon_struct_as_globalvar() -> None:
     content = """
       struct {
         int m;
@@ -1575,7 +1575,7 @@ def test_class_anon_struct_as_globalvar():
     )
 
 
-def test_class_anon_struct_as_classvar():
+def test_class_anon_struct_as_classvar() -> None:
     content = """
       struct AnonHolderClass {
         struct {
@@ -1633,7 +1633,7 @@ def test_class_anon_struct_as_classvar():
     )
 
 
-def test_initializer_with_initializer_list_1():
+def test_initializer_with_initializer_list_1() -> None:
     content = """
       struct ComplexInit : SomeBase {
         ComplexInit(int i) : m_stuff{i, 2} { auto i = something(); }
@@ -1730,7 +1730,7 @@ def test_initializer_with_initializer_list_1():
     )
 
 
-def test_initializer_with_initializer_list_2():
+def test_initializer_with_initializer_list_2() -> None:
     content = """
       template <typename T> class future final {
       public:
@@ -1804,7 +1804,7 @@ def test_initializer_with_initializer_list_2():
     )
 
 
-def test_class_with_arrays():
+def test_class_with_arrays() -> None:
     content = """
       const int MAX_ITEM = 7;
       class Bird {
@@ -1875,7 +1875,7 @@ def test_class_with_arrays():
     )
 
 
-def test_class_fn_inline_impl():
+def test_class_fn_inline_impl() -> None:
     content = """
       class Monkey {
       private:
@@ -1929,7 +1929,7 @@ def test_class_fn_inline_impl():
     )
 
 
-def test_class_fn_virtual_final_override():
+def test_class_fn_virtual_final_override() -> None:
     content = """
       struct Lemon {
         virtual void foo() final;
@@ -2020,7 +2020,7 @@ def test_class_fn_virtual_final_override():
     )
 
 
-def test_class_fn_return_class():
+def test_class_fn_return_class() -> None:
     content = """
       class Peach {
         int abc;
@@ -2144,7 +2144,7 @@ def test_class_fn_return_class():
     )
 
 
-def test_class_fn_template_impl():
+def test_class_fn_template_impl() -> None:
     content = """
       class Owl {
       private:
@@ -2231,7 +2231,7 @@ def test_class_fn_template_impl():
     )
 
 
-def test_class_fn_inline_template_impl():
+def test_class_fn_inline_template_impl() -> None:
     content = """
       class Chicken {
         template <typename T> static T Get();
@@ -2287,7 +2287,7 @@ def test_class_fn_inline_template_impl():
     )
 
 
-def test_class_fn_explicit_constructors():
+def test_class_fn_explicit_constructors() -> None:
     content = """
       class Lizzard {
         Lizzard();
@@ -2337,7 +2337,7 @@ def test_class_fn_explicit_constructors():
     )
 
 
-def test_class_fn_default_constructor():
+def test_class_fn_default_constructor() -> None:
     content = """
       class DefaultConstDest {
       public:
@@ -2374,7 +2374,7 @@ def test_class_fn_default_constructor():
     )
 
 
-def test_class_fn_delete_constructor():
+def test_class_fn_delete_constructor() -> None:
     content = """
       class A {
       public:
@@ -2408,7 +2408,7 @@ def test_class_fn_delete_constructor():
     )
 
 
-def test_class_multi_vars():
+def test_class_multi_vars() -> None:
     content = """
       class Grape {
       public:
@@ -2580,7 +2580,7 @@ def test_class_multi_vars():
     )
 
 
-def test_class_static_const_var_expr():
+def test_class_static_const_var_expr() -> None:
     content = """
       class PandaClass {
         static const int CONST_A = (1 << 7) - 1;
@@ -2648,7 +2648,7 @@ def test_class_static_const_var_expr():
     )
 
 
-def test_class_fwd_struct():
+def test_class_fwd_struct() -> None:
     content = """
       class PotatoClass {
         struct FwdStruct;
@@ -2720,7 +2720,7 @@ def test_class_fwd_struct():
     )
 
 
-def test_class_multi_array():
+def test_class_multi_array() -> None:
     content = """
       struct Picture {
         char name[25];
@@ -2777,7 +2777,7 @@ def test_class_multi_array():
     )
 
 
-def test_class_noexcept():
+def test_class_noexcept() -> None:
     content = """
       struct Grackle {
         void no_noexcept();
@@ -2919,7 +2919,7 @@ def test_class_noexcept():
     )
 
 
-def test_class_volatile():
+def test_class_volatile() -> None:
     content = """
       class Foo
       {
@@ -2960,7 +2960,7 @@ def test_class_volatile():
     )
 
 
-def test_class_mutable():
+def test_class_mutable() -> None:
     content = """
       class Foo
       {

@@ -57,7 +57,7 @@ class ExternBlockState(State):
         super().__init__(parent)
         self.linkage = linkage
 
-    def _finish(self, visitor: "CxxVisitor"):
+    def _finish(self, visitor: "CxxVisitor") -> None:
         visitor.on_extern_block_end(self)
 
 
