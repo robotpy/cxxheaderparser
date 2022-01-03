@@ -236,6 +236,8 @@ class SimpleCxxVisitor:
                 parent_ns.namespaces[name] = ns
             parent_ns = ns
 
+        assert ns is not None
+
         self.block = ns
         self.namespace = ns
 
@@ -247,15 +249,18 @@ class SimpleCxxVisitor:
         self.block.forward_decls.append(fdecl)
 
     def on_variable(self, state: State, v: Variable) -> None:
+        assert isinstance(self.block, NamespaceScope)
         self.block.variables.append(v)
 
     def on_function(self, state: State, fn: Function) -> None:
+        assert isinstance(self.block, NamespaceScope)
         self.block.functions.append(fn)
 
     def on_typedef(self, state: State, typedef: Typedef) -> None:
         self.block.typedefs.append(typedef)
 
     def on_using_namespace(self, state: State, namespace: typing.List[str]) -> None:
+        assert isinstance(self.block, NamespaceScope)
         ns = UsingNamespace("::".join(namespace))
         self.block.using_ns.append(ns)
 
@@ -283,12 +288,15 @@ class SimpleCxxVisitor:
         self.block = block
 
     def on_class_field(self, state: State, f: Field) -> None:
+        assert isinstance(self.block, ClassScope)
         self.block.fields.append(f)
 
     def on_class_method(self, state: ClassBlockState, method: Method) -> None:
+        assert isinstance(self.block, ClassScope)
         self.block.methods.append(method)
 
     def on_class_friend(self, state: ClassBlockState, friend: FriendDecl) -> None:
+        assert isinstance(self.block, ClassScope)
         self.block.friends.append(friend)
 
     def on_class_end(self, state: ClassBlockState) -> None:

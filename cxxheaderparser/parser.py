@@ -1133,7 +1133,11 @@ class CxxParser:
 
         state = self.state
         state.location = location
-        is_class_block = isinstance(state, ClassBlockState)
+        if isinstance(state, ClassBlockState):
+            is_class_block = True
+            class_state = state
+        else:
+            is_class_block = False
         name = None
         bits = None
         default = None
@@ -1207,7 +1211,7 @@ class CxxParser:
                     doxygen=doxygen,
                     **props,
                 )
-                self.visitor.on_class_field(state, f)
+                self.visitor.on_class_field(class_state, f)
             else:
                 v = Variable(
                     pqname, dtype, default, doxygen=doxygen, template=template, **props
@@ -1703,6 +1707,8 @@ class CxxParser:
         params, vararg = self._parse_parameters()
 
         if is_class_block and not is_typedef:
+            assert isinstance(state, ClassBlockState)
+
             props.update(dict.fromkeys(mods.meths.keys(), True))
 
             method: Method
@@ -2111,6 +2117,8 @@ class CxxParser:
             if not self.lex.token_if(";"):
                 raise self._parse_error(None)
 
+            assert isinstance(state, ClassBlockState)
+
             fwd = ForwardDecl(
                 parsed_type.typename,
                 template,
@@ -2283,12 +2291,14 @@ class CxxParser:
             fdecl = ForwardDecl(
                 parsed_type.typename, template, doxygen, access=self._current_access
             )
-            self.state.location = location
+            state = self.state
+            state.location = location
             if is_friend:
+                assert isinstance(state, ClassBlockState)
                 friend = FriendDecl(cls=fdecl)
-                self.visitor.on_class_friend(self.state, friend)
+                self.visitor.on_class_friend(state, friend)
             else:
-                self.visitor.on_forward_decl(self.state, fdecl)
+                self.visitor.on_forward_decl(state, fdecl)
             return True
 
         tok = self.lex.token_if_in_set(self._class_enum_stage2)
