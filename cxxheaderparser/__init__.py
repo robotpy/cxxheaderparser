@@ -1,4 +1,4 @@
 try:
-    from .version import __version__
+    from .version import __version__  # type: ignore
 except ImportError:
     __version__ = "master"

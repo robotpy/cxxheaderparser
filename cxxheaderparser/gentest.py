@@ -2,12 +2,13 @@ import argparse
 import dataclasses
 import inspect
 import subprocess
+import typing
 
 from .options import ParserOptions
-from .simple import parse_string
+from .simple import parse_string, ParsedData
 
 
-def nondefault_repr(data):
+def nondefault_repr(data: ParsedData) -> str:
     """
     Similar to the default dataclass repr, but exclude any
     default parameters or parameters with compare=False
@@ -17,7 +18,7 @@ def nondefault_repr(data):
     get_fields = dataclasses.fields
     MISSING = dataclasses.MISSING
 
-    def _inner_repr(o) -> str:
+    def _inner_repr(o: typing.Any) -> str:
         if is_dataclass(o):
             vals = []
             for f in get_fields(o):

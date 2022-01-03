@@ -42,6 +42,9 @@ class LexToken(Protocol):
     #: Location token was found at
     location: Location
 
+    #: private
+    lexer: "Lexer"
+
 
 PhonyEnding: LexToken = lex.LexToken()  # type: ignore
 PhonyEnding.type = "PLACEHOLDER"
@@ -183,13 +186,13 @@ class Lexer:
     t_NUMBER = r"[0-9][0-9XxA-Fa-f]*"
     t_FLOAT_NUMBER = r"[-+]?[0-9]*\.[0-9]+([eE][-+]?[0-9]+)?"
 
-    def t_NAME(self, t):
+    def t_NAME(self, t: LexToken) -> LexToken:
         r"[A-Za-z_~][A-Za-z0-9_]*"
         if t.value in self.keywords:
             t.type = t.value
         return t
 
-    def t_PRECOMP_MACRO(self, t):
+    def t_PRECOMP_MACRO(self, t: LexToken) -> typing.Optional[LexToken]:
         r"\#.*"
         m = _line_re.match(t.value)
         if m:
@@ -200,11 +203,11 @@ class Lexer:
             self.filename = filename
 
             self.line_offset = 1 + self.lex.lineno - int(m.group(1))
-
+            return None
         else:
             return t
 
-    def t_COMMENT_SINGLELINE(self, t):
+    def t_COMMENT_SINGLELINE(self, t: LexToken) -> LexToken:
         r"\/\/.*\n?"
         if t.value.startswith("///") or t.value.startswith("//!"):
             self.comments.append(t.value.lstrip("\t ").rstrip("\n"))
@@ -227,7 +230,7 @@ class Lexer:
     t_STRING_LITERAL = r'"([^"\\]|\\.)*"'
 
     # Found at http://ostermiller.org/findcomment.html
-    def t_COMMENT_MULTILINE(self, t):
+    def t_COMMENT_MULTILINE(self, t: LexToken) -> LexToken:
         r"/\*([^*]|[\r\n]|(\*+([^*/]|[\r\n])))*\*+/\n?"
         if t.value.startswith("/**") or t.value.startswith("/*!"):
             # not sure why, but get double new lines
@@ -238,19 +241,20 @@ class Lexer:
         t.lexer.lineno += t.value.count("\n")
         return t
 
-    def t_NEWLINE(self, t):
+    def t_NEWLINE(self, t: LexToken) -> LexToken:
         r"\n+"
         t.lexer.lineno += len(t.value)
         del self.comments[:]
         return t
 
-    def t_error(self, v):
-        print("Lex error: ", v)
+    def t_error(self, t: LexToken) -> None:
+        print("Lex error: ", t)
 
     _lexer = None
     lex: lex.Lexer
+    lineno: int
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args, **kwargs) -> "Lexer":
         # only build the lexer once
         inst = super().__new__(cls)
         if cls._lexer is None:
@@ -261,14 +265,14 @@ class Lexer:
         return inst
 
     def __init__(self, filename: typing.Optional[str] = None):
-        self.input = self.lex.input
+        self.input: typing.Callable[[str], None] = self.lex.input
 
         # For tracking current file/line position
         self.filename = filename
         self.line_offset = 0
 
-        self.filenames = []
-        self._filenames_set = set()
+        self.filenames: typing.List[str] = []
+        self._filenames_set: typing.Set[str] = set()
 
         if self.filename:
             self.filenames.append(filename)
@@ -339,13 +343,15 @@ class Lexer:
 
     _discard_types = {"NEWLINE", "COMMENT_SINGLELINE", "COMMENT_MULTILINE"}
 
-    def _token_limit_exceeded(self):
+    def _token_limit_exceeded(self) -> typing.NoReturn:
         from .errors import CxxParseError
 
         raise CxxParseError("no more tokens left in this group")
 
     @contextlib.contextmanager
-    def set_group_of_tokens(self, toks: typing.List[LexToken]):
+    def set_group_of_tokens(
+        self, toks: typing.List[LexToken]
+    ) -> typing.Generator[typing.Deque[LexToken], None, None]:
         # intended for use when you have a set of tokens that you know
         # must be consumed, such as a paren grouping or some type of
         # lookahead case

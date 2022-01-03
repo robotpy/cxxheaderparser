@@ -93,9 +93,9 @@ class CxxParser:
         self.verbose = True if self.options.verbose else False
         if self.verbose:
 
-            def debug_print(fmt: str, *args: typing.Any):
+            def debug_print(fmt: str, *args: typing.Any) -> None:
                 fmt = f"[%4d] {fmt}"
-                args = (inspect.currentframe().f_back.f_lineno,) + args
+                args = (inspect.currentframe().f_back.f_lineno,) + args  # type: ignore
                 print(fmt % args)
 
             self.debug_print = debug_print
@@ -135,7 +135,7 @@ class CxxParser:
     #
 
     def _parse_error(
-        self, tok: typing.Optional[LexToken], expected=""
+        self, tok: typing.Optional[LexToken], expected: str = ""
     ) -> CxxParseError:
         if not tok:
             # common case after a failed token_if
@@ -982,7 +982,7 @@ class CxxParser:
         template: typing.Optional[TemplateDecl],
         typedef: bool,
         location: Location,
-        props: typing.Dict[str, LexToken],
+        mods: ParsedTypeModifiers,
     ) -> None:
         """
         class_specifier: class_head "{" [member_specification] "}"
@@ -1038,7 +1038,7 @@ class CxxParser:
             typename, bases, template, explicit, final, doxygen, self._current_access
         )
         state = self._push_state(
-            ClassBlockState, clsdecl, default_access, typedef, props
+            ClassBlockState, clsdecl, default_access, typedef, mods
         )
         state.location = location
         self.visitor.on_class_start(state)
@@ -1691,6 +1691,7 @@ class CxxParser:
         if not isinstance(pqname.segments[-1], NameSpecifier):
             raise self._parse_error(None)
 
+        props: typing.Dict
         props = dict.fromkeys(mods.both.keys(), True)
         if msvc_convention:
             props["msvc_convention"] = msvc_convention.value
@@ -2011,6 +2012,7 @@ class CxxParser:
         toks = []
 
         # On entry we only have the base type, decorate it
+        dtype: typing.Optional[DecoratedType]
         dtype = self._parse_cv_ptr(parsed_type)
 
         state = self.state
@@ -2145,7 +2147,7 @@ class CxxParser:
         self._next_token_must_be("(")
 
         # make our own pqname/op here
-        segments = [NameSpecifier("operator")]
+        segments: typing.List[PQNameSegment] = [NameSpecifier("operator")]
         pqname = PQName(segments)
         op = "conversion"
 

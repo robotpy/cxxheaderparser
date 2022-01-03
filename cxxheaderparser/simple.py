@@ -298,7 +298,7 @@ class SimpleCxxVisitor:
 def parse_string(
     content: str,
     *,
-    filename="<str>",
+    filename: str = "<str>",
     options: typing.Optional[ParserOptions] = None,
     cleandoc: bool = False,
 ) -> ParsedData:
