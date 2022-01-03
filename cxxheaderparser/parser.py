@@ -93,9 +93,9 @@ class CxxParser:
         self.verbose = True if self.options.verbose else False
         if self.verbose:
 
-            def debug_print(fmt: str, *args: typing.Any):
+            def debug_print(fmt: str, *args: typing.Any) -> None:
                 fmt = f"[%4d] {fmt}"
-                args = (inspect.currentframe().f_back.f_lineno,) + args
+                args = (inspect.currentframe().f_back.f_lineno,) + args  # type: ignore
                 print(fmt % args)
 
             self.debug_print = debug_print
@@ -135,7 +135,7 @@ class CxxParser:
     #
 
     def _parse_error(
-        self, tok: typing.Optional[LexToken], expected=""
+        self, tok: typing.Optional[LexToken], expected: str = ""
     ) -> CxxParseError:
         if not tok:
             # common case after a failed token_if
@@ -219,6 +219,8 @@ class CxxParser:
         consumed = list(init_tokens)
         match_stack = deque((token_map[tok.type] for tok in consumed))
         get_token = self.lex.token
+
+        tok: typing.Optional[LexToken]
 
         while True:
             tok = get_token()
@@ -544,7 +546,7 @@ class CxxParser:
 
         return TemplateDecl(params)
 
-    def _parse_template(self, tok: LexToken, doxygen: typing.Optional[str]):
+    def _parse_template(self, tok: LexToken, doxygen: typing.Optional[str]) -> None:
 
         template = self._parse_template_decl()
 
@@ -600,7 +602,7 @@ class CxxParser:
                             raise self._parse_error(None)
 
                         mods.validate(var_ok=False, meth_ok=False, msg="")
-                        dtype = self._parse_cv_ptr(parsed_type, nonptr_fn=True)
+                        dtype = self._parse_cv_ptr_or_fn(parsed_type, nonptr_fn=True)
                         self._next_token_must_be(PhonyEnding.type)
                     except CxxParseError:
                         dtype = None
@@ -710,9 +712,11 @@ class CxxParser:
                 break
 
             # multiple attributes can be specified
-            tok = self.lex.token_if(*self._attribute_specifier_seq_start_types)
-            if tok is None:
+            maybe_tok = self.lex.token_if(*self._attribute_specifier_seq_start_types)
+            if maybe_tok is None:
                 break
+
+            tok = maybe_tok
 
         # TODO return attrs
 
@@ -982,7 +986,7 @@ class CxxParser:
         template: typing.Optional[TemplateDecl],
         typedef: bool,
         location: Location,
-        props: typing.Dict[str, LexToken],
+        mods: ParsedTypeModifiers,
     ) -> None:
         """
         class_specifier: class_head "{" [member_specification] "}"
@@ -1038,7 +1042,7 @@ class CxxParser:
             typename, bases, template, explicit, final, doxygen, self._current_access
         )
         state = self._push_state(
-            ClassBlockState, clsdecl, default_access, typedef, props
+            ClassBlockState, clsdecl, default_access, typedef, mods
         )
         state.location = location
         self.visitor.on_class_start(state)
@@ -1133,7 +1137,11 @@ class CxxParser:
 
         state = self.state
         state.location = location
-        is_class_block = isinstance(state, ClassBlockState)
+        if isinstance(state, ClassBlockState):
+            is_class_block = True
+            class_state = state
+        else:
+            is_class_block = False
         name = None
         bits = None
         default = None
@@ -1198,17 +1206,21 @@ class CxxParser:
             props.update(dict.fromkeys(mods.vars.keys(), True))
 
             if is_class_block:
+                access = self._current_access
+                assert access is not None
+
                 f = Field(
                     name=name,
                     type=dtype,
-                    access=self._current_access,
+                    access=access,
                     value=default,
                     bits=bits,
                     doxygen=doxygen,
                     **props,
                 )
-                self.visitor.on_class_field(state, f)
+                self.visitor.on_class_field(class_state, f)
             else:
+                assert pqname is not None
                 v = Variable(
                     pqname, dtype, default, doxygen=doxygen, template=template, **props
                 )
@@ -1691,6 +1703,7 @@ class CxxParser:
         if not isinstance(pqname.segments[-1], NameSpecifier):
             raise self._parse_error(None)
 
+        props: typing.Dict
         props = dict.fromkeys(mods.both.keys(), True)
         if msvc_convention:
             props["msvc_convention"] = msvc_convention.value
@@ -1702,9 +1715,14 @@ class CxxParser:
         params, vararg = self._parse_parameters()
 
         if is_class_block and not is_typedef:
+            assert isinstance(state, ClassBlockState)
+
             props.update(dict.fromkeys(mods.meths.keys(), True))
 
             method: Method
+
+            current_access = self._current_access
+            assert current_access is not None
 
             if op:
                 method = Operator(
@@ -1715,8 +1733,8 @@ class CxxParser:
                     doxygen=doxygen,
                     operator=op,
                     template=template,
-                    access=self._current_access,
-                    **props,
+                    access=current_access,
+                    **props,  # type: ignore
                 )
             else:
                 method = Method(
@@ -1728,8 +1746,8 @@ class CxxParser:
                     constructor=constructor,
                     destructor=destructor,
                     template=template,
-                    access=self._current_access,
-                    **props,
+                    access=current_access,
+                    **props,  # type: ignore
                 )
 
             self._parse_method_end(method)
@@ -1740,7 +1758,7 @@ class CxxParser:
             else:
                 # method must not have multiple segments except for operator
                 if len(pqname.segments) > 1:
-                    if not pqname.segments[0].name == "operator":
+                    if getattr(pqname.segments[0], "name", None) != "operator":
                         raise self._parse_error(None)
 
                 self.visitor.on_class_method(state, method)
@@ -1748,6 +1766,7 @@ class CxxParser:
             return method.has_body or method.has_trailing_return
 
         else:
+            assert return_type is not None
             fn = Function(
                 return_type,
                 pqname,
@@ -1764,6 +1783,10 @@ class CxxParser:
                     raise CxxParseError(
                         "typedef name may not be a nested-name-specifier"
                     )
+                name: typing.Optional[str] = getattr(pqname.segments[0], "name", None)
+                if not name:
+                    raise CxxParseError("typedef function must have a name")
+
                 if fn.constexpr:
                     raise CxxParseError("typedef function may not be constexpr")
                 if fn.extern:
@@ -1777,8 +1800,12 @@ class CxxParser:
                 if fn.template:
                     raise CxxParseError("typedef function may not have a template")
 
+                return_type = fn.return_type
+                if return_type is None:
+                    raise CxxParseError("typedef function must have return type")
+
                 fntype = FunctionType(
-                    fn.return_type,
+                    return_type,
                     fn.parameters,
                     fn.vararg,
                     fn.has_trailing_return,
@@ -1786,7 +1813,7 @@ class CxxParser:
                     msvc_convention=fn.msvc_convention,
                 )
 
-                typedef = Typedef(fntype, pqname.segments[0].name, self._current_access)
+                typedef = Typedef(fntype, name, self._current_access)
                 self.visitor.on_typedef(state, typedef)
                 return False
             else:
@@ -1800,6 +1827,9 @@ class CxxParser:
     def _parse_array_type(self, tok: LexToken, dtype: DecoratedType) -> Array:
 
         assert tok.type == "["
+
+        if isinstance(dtype, (Reference, MoveReference)):
+            raise CxxParseError("arrays of references are illegal", tok)
 
         toks = self._consume_balanced_tokens(tok)
         otok = self.lex.token_if("[")
@@ -1817,9 +1847,20 @@ class CxxParser:
 
     def _parse_cv_ptr(
         self,
-        dtype: typing.Union[Array, FunctionType, Pointer, Type],
-        nonptr_fn: bool = False,
+        dtype: DecoratedType,
     ) -> DecoratedType:
+        dtype_or_fn = self._parse_cv_ptr_or_fn(dtype)
+        if isinstance(dtype_or_fn, FunctionType):
+            raise CxxParseError("unexpected function type")
+        return dtype_or_fn
+
+    def _parse_cv_ptr_or_fn(
+        self,
+        dtype: typing.Union[
+            Array, Pointer, MoveReference, Reference, Type, FunctionType
+        ],
+        nonptr_fn: bool = False,
+    ) -> typing.Union[Array, Pointer, MoveReference, Reference, Type, FunctionType]:
         # nonptr_fn is for parsing function types directly in template specialization
 
         while True:
@@ -1828,10 +1869,16 @@ class CxxParser:
                 break
 
             if tok.type == "*":
+                if isinstance(dtype, (Reference, MoveReference)):
+                    raise self._parse_error(tok)
                 dtype = Pointer(dtype)
             elif tok.type == "const":
+                if not isinstance(dtype, (Pointer, Type)):
+                    raise self._parse_error(tok)
                 dtype.const = True
             elif tok.type == "volatile":
+                if not isinstance(dtype, (Pointer, Type)):
+                    raise self._parse_error(tok)
                 dtype.volatile = True
             elif nonptr_fn:
                 # remove any inner grouping parens
@@ -1844,14 +1891,17 @@ class CxxParser:
                     self.lex.return_tokens(toks[1:-1])
 
                 fn_params, vararg = self._parse_parameters()
-                dtype = FunctionType(dtype, fn_params, vararg)
+
+                assert not isinstance(dtype, FunctionType)
+                dtype = dtype_fn = FunctionType(dtype, fn_params, vararg)
                 if self.lex.token_if("ARROW"):
-                    self._parse_trailing_return_type(dtype)
+                    self._parse_trailing_return_type(dtype_fn)
 
             else:
-                msvc_convention = self.lex.token_if_val(*self._msvc_conventions)
-                if msvc_convention:
-                    msvc_convention = msvc_convention.value
+                msvc_convention = None
+                msvc_convention_tok = self.lex.token_if_val(*self._msvc_conventions)
+                if msvc_convention_tok:
+                    msvc_convention = msvc_convention_tok.value
 
                 # Check to see if this is a grouping paren or something else
                 if not self.lex.token_peek_if("*", "&"):
@@ -1865,10 +1915,13 @@ class CxxParser:
                 aptok = self.lex.token_if("[", "(")
                 if aptok:
                     if aptok.type == "[":
+                        assert not isinstance(dtype, FunctionType)
                         dtype = self._parse_array_type(aptok, dtype)
                     elif aptok.type == "(":
                         fn_params, vararg = self._parse_parameters()
                         # the type we already have is the return type of the function pointer
+
+                        assert not isinstance(dtype, FunctionType)
 
                         dtype = FunctionType(
                             dtype, fn_params, vararg, msvc_convention=msvc_convention
@@ -1882,11 +1935,13 @@ class CxxParser:
                 # -> this could return some weird results for invalid code, but
                 #    we don't support that anyways so it's fine?
                 self.lex.return_tokens(toks[1:-1])
-                dtype = self._parse_cv_ptr(dtype)
+                dtype = self._parse_cv_ptr_or_fn(dtype, nonptr_fn)
                 break
 
         tok = self.lex.token_if("&", "DBL_AMP")
         if tok:
+            assert not isinstance(dtype, (Reference, MoveReference))
+
             if tok.type == "&":
                 dtype = Reference(dtype)
             else:
@@ -1895,7 +1950,7 @@ class CxxParser:
             # peek at the next token and see if it's a paren. If so, it might
             # be a nasty function pointer
             if self.lex.token_peek_if("("):
-                dtype = self._parse_cv_ptr(dtype, nonptr_fn)
+                dtype = self._parse_cv_ptr_or_fn(dtype, nonptr_fn)
 
         return dtype
 
@@ -2011,6 +2066,7 @@ class CxxParser:
         toks = []
 
         # On entry we only have the base type, decorate it
+        dtype: typing.Optional[DecoratedType]
         dtype = self._parse_cv_ptr(parsed_type)
 
         state = self.state
@@ -2104,6 +2160,8 @@ class CxxParser:
             if not self.lex.token_if(";"):
                 raise self._parse_error(None)
 
+            assert isinstance(state, ClassBlockState)
+
             fwd = ForwardDecl(
                 parsed_type.typename,
                 template,
@@ -2117,6 +2175,9 @@ class CxxParser:
         if op:
             raise self._parse_error(None)
 
+        if not dtype:
+            raise CxxParseError("appear to be parsing a field without a type")
+
         self._parse_field(mods, dtype, pqname, template, doxygen, location, is_typedef)
         return False
 
@@ -2128,7 +2189,7 @@ class CxxParser:
         template: typing.Optional[TemplateDecl],
         is_typedef: bool,
         is_friend: bool,
-    ):
+    ) -> None:
         tok = self._next_token_must_be("operator")
 
         if is_typedef:
@@ -2145,7 +2206,7 @@ class CxxParser:
         self._next_token_must_be("(")
 
         # make our own pqname/op here
-        segments = [NameSpecifier("operator")]
+        segments: typing.List[PQNameSegment] = [NameSpecifier("operator")]
         pqname = PQName(segments)
         op = "conversion"
 
@@ -2276,12 +2337,14 @@ class CxxParser:
             fdecl = ForwardDecl(
                 parsed_type.typename, template, doxygen, access=self._current_access
             )
-            self.state.location = location
+            state = self.state
+            state.location = location
             if is_friend:
+                assert isinstance(state, ClassBlockState)
                 friend = FriendDecl(cls=fdecl)
-                self.visitor.on_class_friend(self.state, friend)
+                self.visitor.on_class_friend(state, friend)
             else:
-                self.visitor.on_forward_decl(self.state, fdecl)
+                self.visitor.on_forward_decl(state, fdecl)
             return True
 
         tok = self.lex.token_if_in_set(self._class_enum_stage2)

@@ -25,7 +25,7 @@ from cxxheaderparser.simple import (
 )
 
 
-def test_basic_enum():
+def test_basic_enum() -> None:
     content = """
       enum Foo {
         A,
@@ -48,7 +48,7 @@ def test_basic_enum():
     )
 
 
-def test_enum_w_expr():
+def test_enum_w_expr() -> None:
     content = """
       enum Foo {
         A = (1 / 2),
@@ -85,7 +85,7 @@ def test_enum_w_expr():
     )
 
 
-def test_enum_w_multiline_expr():
+def test_enum_w_multiline_expr() -> None:
     content = r"""
       // clang-format off
       enum Author
@@ -139,7 +139,7 @@ def test_enum_w_multiline_expr():
     )
 
 
-def test_basic_enum_class():
+def test_basic_enum_class() -> None:
     content = """
       enum class BE { BEX };
     """
@@ -159,7 +159,7 @@ def test_basic_enum_class():
     )
 
 
-def test_basic_enum_struct():
+def test_basic_enum_struct() -> None:
     content = """
       enum struct BE { BEX };
     """
@@ -179,7 +179,7 @@ def test_basic_enum_struct():
     )
 
 
-def test_enum_base():
+def test_enum_base() -> None:
     content = """
       enum class E : int {};
     """
@@ -203,7 +203,7 @@ def test_enum_base():
 # instances
 
 
-def test_enum_instance_1():
+def test_enum_instance_1() -> None:
     content = """
       enum class BE { BEX } be1;
     """
@@ -233,7 +233,7 @@ def test_enum_instance_1():
     )
 
 
-def test_enum_instance_2():
+def test_enum_instance_2() -> None:
     content = """
       enum class BE { BEX } be1, *be2;
     """
@@ -277,7 +277,7 @@ def test_enum_instance_2():
 # bases in namespaces
 
 
-def test_enum_base_in_ns():
+def test_enum_base_in_ns() -> None:
     content = """
       namespace EN {
       typedef int EINT;
@@ -322,7 +322,7 @@ def test_enum_base_in_ns():
 # forward declarations
 
 
-def test_enum_fwd():
+def test_enum_fwd() -> None:
     content = """
       enum class BE1;
       enum class BE2 : EN::EINT;
@@ -350,7 +350,7 @@ def test_enum_fwd():
     )
 
 
-def test_enum_private_in_class():
+def test_enum_private_in_class() -> None:
     content = """
       
       class C {
@@ -383,7 +383,7 @@ def test_enum_private_in_class():
     )
 
 
-def test_enum_public_in_class():
+def test_enum_public_in_class() -> None:
     content = """
       
       class C {
@@ -417,7 +417,7 @@ def test_enum_public_in_class():
     )
 
 
-def test_default_enum():
+def test_default_enum() -> None:
     content = """
       class A {
         enum {
@@ -497,7 +497,7 @@ def test_default_enum():
     )
 
 
-def test_enum_template_vals():
+def test_enum_template_vals() -> None:
     content = """
       enum {
         IsRandomAccess = std::is_base_of<std::random_access_iterator_tag,
@@ -559,7 +559,7 @@ def test_enum_template_vals():
     )
 
 
-def test_enum_fn():
+def test_enum_fn() -> None:
     content = """
       enum E {
         VALUE,

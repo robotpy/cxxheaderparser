@@ -21,7 +21,7 @@ from cxxheaderparser.simple import (
 )
 
 
-def test_class_private_base():
+def test_class_private_base() -> None:
     content = """
       namespace Citrus
       {
@@ -108,7 +108,7 @@ def test_class_private_base():
     )
 
 
-def test_class_virtual_base():
+def test_class_virtual_base() -> None:
     content = """
       class BaseMangoClass {};
       class MangoClass : virtual public BaseMangoClass {};
@@ -148,7 +148,7 @@ def test_class_virtual_base():
     )
 
 
-def test_class_multiple_base_with_virtual():
+def test_class_multiple_base_with_virtual() -> None:
     content = """
       class BlueJay : public Bird, public virtual Food {
       public:
@@ -193,7 +193,7 @@ def test_class_multiple_base_with_virtual():
     )
 
 
-def test_class_base_specialized():
+def test_class_base_specialized() -> None:
     content = """
       class Pea : public Vegetable<Green> {
         int i;

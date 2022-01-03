@@ -119,7 +119,7 @@ class CxxVisitor(Protocol):
             using namespace std;
         """
 
-    def on_using_alias(self, state: State, using: UsingAlias):
+    def on_using_alias(self, state: State, using: UsingAlias) -> None:
         """
         .. code-block:: c++
 
@@ -171,7 +171,7 @@ class CxxVisitor(Protocol):
         Called when a field of a class is encountered
         """
 
-    def on_class_friend(self, state: ClassBlockState, friend: FriendDecl):
+    def on_class_friend(self, state: ClassBlockState, friend: FriendDecl) -> None:
         """
         Called when a friend declaration is encountered
         """

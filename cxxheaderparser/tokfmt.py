@@ -56,7 +56,7 @@ if __name__ == "__main__":
 
     lexer = Lexer(args.header)
     with open(lexer.filename) as fp:
-        lexer.input(fp.read())
+        lexer.input(fp.read())  # type: ignore
 
     toks: typing.List[Token] = []
     while True:

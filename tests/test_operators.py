@@ -18,7 +18,7 @@ from cxxheaderparser.simple import (
 )
 
 
-def test_class_operators():
+def test_class_operators() -> None:
     content = r"""
       class OperatorClass {
       public:
@@ -554,7 +554,7 @@ def test_class_operators():
     )
 
 
-def test_conversion_operators():
+def test_conversion_operators() -> None:
     content = """
       
       class Foo

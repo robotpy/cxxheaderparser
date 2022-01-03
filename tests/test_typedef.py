@@ -26,7 +26,7 @@ from cxxheaderparser.types import (
 from cxxheaderparser.simple import ClassScope, NamespaceScope, ParsedData, parse_string
 
 
-def test_simple_typedef():
+def test_simple_typedef() -> None:
     content = """
       typedef std::vector<int> IntVector;
     """
@@ -68,7 +68,7 @@ def test_simple_typedef():
     )
 
 
-def test_struct_typedef_1():
+def test_struct_typedef_1() -> None:
     content = """
       typedef struct {
         int m;
@@ -122,7 +122,7 @@ def test_struct_typedef_1():
     )
 
 
-def test_struct_typedef_2():
+def test_struct_typedef_2() -> None:
     content = """
       typedef struct {
         int m;
@@ -176,7 +176,7 @@ def test_struct_typedef_2():
     )
 
 
-def test_typedef_array():
+def test_typedef_array() -> None:
     content = """
       typedef char TenCharArray[10];
     """
@@ -201,7 +201,7 @@ def test_typedef_array():
     )
 
 
-def test_typedef_array_of_struct():
+def test_typedef_array_of_struct() -> None:
     content = """
       typedef struct{} tx[3], ty;
     """
@@ -243,7 +243,7 @@ def test_typedef_array_of_struct():
     )
 
 
-def test_typedef_class_w_base():
+def test_typedef_class_w_base() -> None:
     content = """
       typedef class XX : public F {} G;
     """
@@ -280,7 +280,7 @@ def test_typedef_class_w_base():
     )
 
 
-def test_complicated_typedef():
+def test_complicated_typedef() -> None:
     content = """
       typedef int int_t, *intp_t, (&fp)(int, ulong), arr_t[10];
     """
@@ -345,7 +345,7 @@ def test_complicated_typedef():
     )
 
 
-def test_typedef_c_struct_idiom():
+def test_typedef_c_struct_idiom() -> None:
     content = """
       // common C idiom to avoid having to write "struct S"
       typedef struct {int a; int b;} S, *pS;
@@ -407,7 +407,7 @@ def test_typedef_c_struct_idiom():
     )
 
 
-def test_typedef_struct_same_name():
+def test_typedef_struct_same_name() -> None:
     content = """
       typedef struct Fig {
         int a;
@@ -451,7 +451,7 @@ def test_typedef_struct_same_name():
     )
 
 
-def test_typedef_struct_w_enum():
+def test_typedef_struct_w_enum() -> None:
     content = """
       typedef struct {
         enum BeetEnum : int { FAIL = 0, PASS = 1 };
@@ -502,7 +502,7 @@ def test_typedef_struct_w_enum():
     )
 
 
-def test_typedef_union():
+def test_typedef_union() -> None:
     content = """
       typedef union apricot_t {
         int i;
@@ -569,7 +569,7 @@ def test_typedef_union():
     )
 
 
-def test_typedef_fnptr():
+def test_typedef_fnptr() -> None:
     content = """
       typedef void *(*fndef)(int);
     """
@@ -606,7 +606,7 @@ def test_typedef_fnptr():
     )
 
 
-def test_typedef_const():
+def test_typedef_const() -> None:
     content = """
       typedef int theint, *const ptheint;
     """
@@ -635,7 +635,7 @@ def test_typedef_const():
     )
 
 
-def test_enum_typedef_1():
+def test_enum_typedef_1() -> None:
     content = """
       typedef enum {} E;
     """
@@ -661,7 +661,7 @@ def test_enum_typedef_1():
     )
 
 
-def test_enum_typedef_2():
+def test_enum_typedef_2() -> None:
     content = """
       typedef enum { E1 } BE;
     """
@@ -687,7 +687,7 @@ def test_enum_typedef_2():
     )
 
 
-def test_enum_typedef_3():
+def test_enum_typedef_3() -> None:
     content = """
       typedef enum { E1, E2, } E;
     """
@@ -713,7 +713,7 @@ def test_enum_typedef_3():
     )
 
 
-def test_enum_typedef_3_1():
+def test_enum_typedef_3_1() -> None:
     content = """
       typedef enum { E1 } * PBE;
     """
@@ -743,7 +743,7 @@ def test_enum_typedef_3_1():
     )
 
 
-def test_enum_typedef_4():
+def test_enum_typedef_4() -> None:
     content = """
       typedef enum { E1 } * PBE, BE;
     """
@@ -779,7 +779,7 @@ def test_enum_typedef_4():
     )
 
 
-def test_enum_typedef_5():
+def test_enum_typedef_5() -> None:
     content = """
       typedef enum { E1 } BE, *PBE;
     """
@@ -815,7 +815,7 @@ def test_enum_typedef_5():
     )
 
 
-def test_enum_typedef_fwd():
+def test_enum_typedef_fwd() -> None:
     content = """
       typedef enum BE BET;
     """
@@ -837,7 +837,7 @@ def test_enum_typedef_fwd():
     )
 
 
-def test_typedef_enum_expr():
+def test_typedef_enum_expr() -> None:
     content = """
       typedef enum { StarFruit = (2 + 2) / 2 } Carambola;
     """
@@ -878,7 +878,7 @@ def test_typedef_enum_expr():
     )
 
 
-def test_volatile_typedef():
+def test_volatile_typedef() -> None:
     content = """
       typedef volatile signed short vint16;
     """
@@ -901,7 +901,7 @@ def test_volatile_typedef():
     )
 
 
-def test_function_typedef():
+def test_function_typedef() -> None:
     content = """
       typedef void fn(int);
       typedef auto fntype(int) -> int;

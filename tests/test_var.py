@@ -22,7 +22,7 @@ from cxxheaderparser.types import (
 from cxxheaderparser.simple import ClassScope, NamespaceScope, ParsedData, parse_string
 
 
-def test_var_unixwiz_ridiculous():
+def test_var_unixwiz_ridiculous() -> None:
     # http://unixwiz.net/techtips/reading-cdecl.html
     #
     # .. "we have no idea how this variable is useful, but at least we can
@@ -73,7 +73,7 @@ def test_var_unixwiz_ridiculous():
     )
 
 
-def test_var_ptr_to_array15_of_ptr_to_int():
+def test_var_ptr_to_array15_of_ptr_to_int() -> None:
     content = """
       int *(*crocodile)[15];
     """
@@ -102,7 +102,7 @@ def test_var_ptr_to_array15_of_ptr_to_int():
     )
 
 
-def test_var_ref_to_array():
+def test_var_ref_to_array() -> None:
     content = """
       int abase[3];
       int (&aname)[3] = abase;
@@ -140,7 +140,7 @@ def test_var_ref_to_array():
     )
 
 
-def test_var_ptr_to_array():
+def test_var_ptr_to_array() -> None:
     content = """
       int zz, (*aname)[3] = &abase;
     """
@@ -174,7 +174,7 @@ def test_var_ptr_to_array():
     )
 
 
-def test_var_multi_1():
+def test_var_multi_1() -> None:
     content = """
       int zz, (&aname)[3] = abase;
     """
@@ -208,7 +208,7 @@ def test_var_multi_1():
     )
 
 
-def test_var_array_of_fnptr_varargs():
+def test_var_array_of_fnptr_varargs() -> None:
     content = """
       void (*a3[3])(int, ...);
     """
@@ -249,7 +249,7 @@ def test_var_array_of_fnptr_varargs():
     )
 
 
-def test_var_double_fnptr_varargs():
+def test_var_double_fnptr_varargs() -> None:
     content = """
       void (*(*a4))(int, ...);
     """
@@ -289,7 +289,7 @@ def test_var_double_fnptr_varargs():
     )
 
 
-def test_var_fnptr_voidstar():
+def test_var_fnptr_voidstar() -> None:
     content = """
       void(*(*a5)(int));
     """
@@ -326,7 +326,7 @@ def test_var_fnptr_voidstar():
     )
 
 
-def test_var_fnptr_moreparens():
+def test_var_fnptr_moreparens() -> None:
     content = """
       void (*x)(int(p1), int);
     """
@@ -384,7 +384,7 @@ def test_var_fnptr_moreparens():
 # Means "const pointer to pointer to char"
 
 
-def test_var_ptr_to_const_ptr_to_char():
+def test_var_ptr_to_const_ptr_to_char() -> None:
     content = """
       char *const *p;
     """
@@ -411,7 +411,7 @@ def test_var_ptr_to_const_ptr_to_char():
     )
 
 
-def test_var_const_ptr_to_ptr_to_char():
+def test_var_const_ptr_to_ptr_to_char() -> None:
     content = """
       char **const p;
     """
@@ -438,7 +438,7 @@ def test_var_const_ptr_to_ptr_to_char():
     )
 
 
-def test_var_array_initializer1():
+def test_var_array_initializer1() -> None:
     content = """
       int x[3]{1, 2, 3};
     """
@@ -472,7 +472,7 @@ def test_var_array_initializer1():
     )
 
 
-def test_var_array_initializer2():
+def test_var_array_initializer2() -> None:
     content = """
       int x[3] = {1, 2, 3};
     """
@@ -506,7 +506,7 @@ def test_var_array_initializer2():
     )
 
 
-def test_var_extern_c():
+def test_var_extern_c() -> None:
     content = """
       extern "C" int x;
     """
@@ -528,7 +528,7 @@ def test_var_extern_c():
     )
 
 
-def test_var_ns_1():
+def test_var_ns_1() -> None:
     content = """
       int N::x;
     """
@@ -550,7 +550,7 @@ def test_var_ns_1():
     )
 
 
-def test_var_ns_2():
+def test_var_ns_2() -> None:
     content = """
       int N::x = 4;
     """
@@ -573,7 +573,7 @@ def test_var_ns_2():
     )
 
 
-def test_var_ns_3():
+def test_var_ns_3() -> None:
     content = """
       int N::x{4};
     """
@@ -598,7 +598,7 @@ def test_var_ns_3():
     )
 
 
-def test_var_static_struct():
+def test_var_static_struct() -> None:
     content = """
       constexpr static struct SS {} s;
     """
@@ -631,7 +631,7 @@ def test_var_static_struct():
     )
 
 
-def test_var_constexpr_enum():
+def test_var_constexpr_enum() -> None:
     content = """
       constexpr enum E { EE } e = EE;
     """
@@ -663,7 +663,7 @@ def test_var_constexpr_enum():
     )
 
 
-def test_var_fnptr_in_class():
+def test_var_fnptr_in_class() -> None:
     content = """
       struct DriverFuncs {
         void *(*init)();
@@ -747,7 +747,7 @@ def test_var_fnptr_in_class():
     )
 
 
-def test_var_extern():
+def test_var_extern() -> None:
     content = """
       extern int externVar;
     """

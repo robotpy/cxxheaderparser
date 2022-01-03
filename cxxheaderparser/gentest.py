@@ -2,12 +2,13 @@ import argparse
 import dataclasses
 import inspect
 import subprocess
+import typing
 
 from .options import ParserOptions
-from .simple import parse_string
+from .simple import parse_string, ParsedData
 
 
-def nondefault_repr(data):
+def nondefault_repr(data: ParsedData) -> str:
     """
     Similar to the default dataclass repr, but exclude any
     default parameters or parameters with compare=False
@@ -17,7 +18,7 @@ def nondefault_repr(data):
     get_fields = dataclasses.fields
     MISSING = dataclasses.MISSING
 
-    def _inner_repr(o) -> str:
+    def _inner_repr(o: typing.Any) -> str:
         if is_dataclass(o):
             vals = []
             for f in get_fields(o):
@@ -46,7 +47,7 @@ def nondefault_repr(data):
     return _inner_repr(data)
 
 
-def gentest(infile: str, name: str, outfile: str, verbose: bool):
+def gentest(infile: str, name: str, outfile: str, verbose: bool) -> None:
     # Goal is to allow making a unit test as easy as running this dumper
     # on a file and copy/pasting this into a test
 
@@ -64,7 +65,7 @@ def gentest(infile: str, name: str, outfile: str, verbose: bool):
     stmt = inspect.cleandoc(
         f'''
     
-        def test_{name}():
+        def test_{name}() -> None:
             content = """
               {content}
             """

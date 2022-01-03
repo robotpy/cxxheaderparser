@@ -28,7 +28,7 @@ from cxxheaderparser.simple import (
 #
 
 
-def test_define():
+def test_define() -> None:
     content = """
         #define simple
         #define complex(thing) stuff(thing)
@@ -45,7 +45,7 @@ def test_define():
     )
 
 
-def test_includes():
+def test_includes() -> None:
     content = """
         #include <global.h>
         #include "local.h"
@@ -55,7 +55,7 @@ def test_includes():
     assert data == ParsedData(includes=[Include("<global.h>"), Include('"local.h"')])
 
 
-def test_pragma():
+def test_pragma() -> None:
     content = """
 
         #pragma once
@@ -71,7 +71,7 @@ def test_pragma():
 #
 
 
-def test_extern_c():
+def test_extern_c() -> None:
     content = """
       extern "C" {
       int x;
@@ -101,7 +101,7 @@ def test_extern_c():
     )
 
 
-def test_misc_extern_inline():
+def test_misc_extern_inline() -> None:
     content = """
       extern "C++" {
       inline HAL_Value HAL_GetSimValue(HAL_SimValueHandle handle) {
@@ -143,7 +143,7 @@ def test_misc_extern_inline():
 #
 
 
-def test_static_assert_1():
+def test_static_assert_1() -> None:
     # static_assert should be ignored
     content = """
         static_assert(x == 1);
@@ -153,7 +153,7 @@ def test_static_assert_1():
     assert data == ParsedData()
 
 
-def test_static_assert_2():
+def test_static_assert_2() -> None:
     # static_assert should be ignored
     content = """
         static_assert(sizeof(int) == 4, 
@@ -165,7 +165,7 @@ def test_static_assert_2():
     assert data == ParsedData()
 
 
-def test_comment_eof():
+def test_comment_eof() -> None:
     content = """
       namespace a {} // namespace a"""
     data = parse_string(content, cleandoc=True)
@@ -175,7 +175,7 @@ def test_comment_eof():
     )
 
 
-def test_final():
+def test_final() -> None:
     content = """
       // ok here
       int fn(const int final);

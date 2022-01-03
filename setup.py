@@ -71,6 +71,7 @@ setup(
     license="BSD",
     platforms="Platform Independent",
     packages=find_packages(),
+    package_data={"cxxheaderparser": ["py.typed"]},
     keywords="c++ header parser ply",
     python_requires=">= 3.6",
     classifiers=CLASSIFIERS,

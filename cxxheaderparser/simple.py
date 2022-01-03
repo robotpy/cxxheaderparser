@@ -93,7 +93,7 @@ class NamespaceScope:
 
     classes: typing.List["ClassScope"] = field(default_factory=list)
     enums: typing.List[EnumDecl] = field(default_factory=list)
-    functions: typing.List[Method] = field(default_factory=list)
+    functions: typing.List[Function] = field(default_factory=list)
     typedefs: typing.List[Typedef] = field(default_factory=list)
     variables: typing.List[Variable] = field(default_factory=list)
 
@@ -185,7 +185,7 @@ class SimpleCxxVisitor:
     namespace: NamespaceScope
     block: Block
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.namespace = NamespaceScope("")
         self.block = self.namespace
 
@@ -236,6 +236,8 @@ class SimpleCxxVisitor:
                 parent_ns.namespaces[name] = ns
             parent_ns = ns
 
+        assert ns is not None
+
         self.block = ns
         self.namespace = ns
 
@@ -247,19 +249,22 @@ class SimpleCxxVisitor:
         self.block.forward_decls.append(fdecl)
 
     def on_variable(self, state: State, v: Variable) -> None:
+        assert isinstance(self.block, NamespaceScope)
         self.block.variables.append(v)
 
     def on_function(self, state: State, fn: Function) -> None:
+        assert isinstance(self.block, NamespaceScope)
         self.block.functions.append(fn)
 
     def on_typedef(self, state: State, typedef: Typedef) -> None:
         self.block.typedefs.append(typedef)
 
     def on_using_namespace(self, state: State, namespace: typing.List[str]) -> None:
+        assert isinstance(self.block, NamespaceScope)
         ns = UsingNamespace("::".join(namespace))
         self.block.using_ns.append(ns)
 
-    def on_using_alias(self, state: State, using: UsingAlias):
+    def on_using_alias(self, state: State, using: UsingAlias) -> None:
         self.block.using_alias.append(using)
 
     def on_using_declaration(self, state: State, using: UsingDecl) -> None:
@@ -283,12 +288,15 @@ class SimpleCxxVisitor:
         self.block = block
 
     def on_class_field(self, state: State, f: Field) -> None:
+        assert isinstance(self.block, ClassScope)
         self.block.fields.append(f)
 
     def on_class_method(self, state: ClassBlockState, method: Method) -> None:
+        assert isinstance(self.block, ClassScope)
         self.block.methods.append(method)
 
-    def on_class_friend(self, state: ClassBlockState, friend: FriendDecl):
+    def on_class_friend(self, state: ClassBlockState, friend: FriendDecl) -> None:
+        assert isinstance(self.block, ClassScope)
         self.block.friends.append(friend)
 
     def on_class_end(self, state: ClassBlockState) -> None:
@@ -298,7 +306,7 @@ class SimpleCxxVisitor:
 def parse_string(
     content: str,
     *,
-    filename="<str>",
+    filename: str = "<str>",
     options: typing.Optional[ParserOptions] = None,
     cleandoc: bool = False,
 ) -> ParsedData:
