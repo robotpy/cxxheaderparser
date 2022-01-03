@@ -220,6 +220,8 @@ class CxxParser:
         match_stack = deque((token_map[tok.type] for tok in consumed))
         get_token = self.lex.token
 
+        tok: typing.Optional[LexToken]
+
         while True:
             tok = get_token()
             consumed.append(tok)
@@ -710,9 +712,11 @@ class CxxParser:
                 break
 
             # multiple attributes can be specified
-            tok = self.lex.token_if(*self._attribute_specifier_seq_start_types)
-            if tok is None:
+            maybe_tok = self.lex.token_if(*self._attribute_specifier_seq_start_types)
+            if maybe_tok is None:
                 break
+
+            tok = maybe_tok
 
         # TODO return attrs
 
@@ -1202,10 +1206,13 @@ class CxxParser:
             props.update(dict.fromkeys(mods.vars.keys(), True))
 
             if is_class_block:
+                access = self._current_access
+                assert access is not None
+
                 f = Field(
                     name=name,
                     type=dtype,
-                    access=self._current_access,
+                    access=access,
                     value=default,
                     bits=bits,
                     doxygen=doxygen,
@@ -1713,6 +1720,9 @@ class CxxParser:
 
             method: Method
 
+            current_access = self._current_access
+            assert current_access is not None
+
             if op:
                 method = Operator(
                     return_type,
@@ -1722,8 +1732,8 @@ class CxxParser:
                     doxygen=doxygen,
                     operator=op,
                     template=template,
-                    access=self._current_access,
-                    **props,
+                    access=current_access,
+                    **props,  # type: ignore
                 )
             else:
                 method = Method(
@@ -1735,8 +1745,8 @@ class CxxParser:
                     constructor=constructor,
                     destructor=destructor,
                     template=template,
-                    access=self._current_access,
-                    **props,
+                    access=current_access,
+                    **props,  # type: ignore
                 )
 
             self._parse_method_end(method)
@@ -1772,6 +1782,10 @@ class CxxParser:
                     raise CxxParseError(
                         "typedef name may not be a nested-name-specifier"
                     )
+                name: typing.Optional[str] = getattr(pqname.segments[0], "name", None)
+                if not name:
+                    raise CxxParseError("typedef function must have a name")
+
                 if fn.constexpr:
                     raise CxxParseError("typedef function may not be constexpr")
                 if fn.extern:
@@ -1798,7 +1812,7 @@ class CxxParser:
                     msvc_convention=fn.msvc_convention,
                 )
 
-                typedef = Typedef(fntype, pqname.segments[0].name, self._current_access)
+                typedef = Typedef(fntype, name, self._current_access)
                 self.visitor.on_typedef(state, typedef)
                 return False
             else:
@@ -1861,9 +1875,10 @@ class CxxParser:
                     self._parse_trailing_return_type(dtype)
 
             else:
-                msvc_convention = self.lex.token_if_val(*self._msvc_conventions)
-                if msvc_convention:
-                    msvc_convention = msvc_convention.value
+                msvc_convention = None
+                msvc_convention_tok = self.lex.token_if_val(*self._msvc_conventions)
+                if msvc_convention_tok:
+                    msvc_convention = msvc_convention_tok.value
 
                 # Check to see if this is a grouping paren or something else
                 if not self.lex.token_peek_if("*", "&"):

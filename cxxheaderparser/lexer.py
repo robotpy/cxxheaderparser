@@ -274,7 +274,7 @@ class Lexer:
         self.filenames: typing.List[str] = []
         self._filenames_set: typing.Set[str] = set()
 
-        if self.filename:
+        if filename:
             self.filenames.append(filename)
             self._filenames_set.add(filename)
 
@@ -334,10 +334,10 @@ class Lexer:
 
                 del self.comments[:]
 
-        comments = "\n".join(comments)
+        comment_str = "\n".join(comments)
         del self.comments[:]
-        if comments:
-            return comments
+        if comment_str:
+            return comment_str
 
         return None
 
