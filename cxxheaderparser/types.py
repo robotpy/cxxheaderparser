@@ -193,7 +193,7 @@ class TemplateArgument:
 
     #: If this argument is a type, it is stored here as a DecoratedType,
     #: otherwise it's stored as an unparsed set of values
-    arg: typing.Union["DecoratedType", Value]
+    arg: typing.Union["DecoratedType", "FunctionType", Value]
 
     param_pack: bool = False
 
@@ -297,7 +297,7 @@ class Reference:
     A lvalue (``&``) reference
     """
 
-    ref_to: typing.Union[Array, Pointer, Type]
+    ref_to: typing.Union[Array, FunctionType, Pointer, Type]
 
 
 @dataclass
@@ -306,7 +306,7 @@ class MoveReference:
     An rvalue (``&&``) reference
     """
 
-    moveref_to: typing.Union[Array, Pointer, Type]
+    moveref_to: typing.Union[Array, FunctionType, Pointer, Type]
 
 
 #: A type or function type that is decorated with various things

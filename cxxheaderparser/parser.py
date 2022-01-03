@@ -602,7 +602,7 @@ class CxxParser:
                             raise self._parse_error(None)
 
                         mods.validate(var_ok=False, meth_ok=False, msg="")
-                        dtype = self._parse_cv_ptr(parsed_type, nonptr_fn=True)
+                        dtype = self._parse_cv_ptr_or_fn(parsed_type, nonptr_fn=True)
                         self._next_token_must_be(PhonyEnding.type)
                     except CxxParseError:
                         dtype = None
@@ -1220,6 +1220,7 @@ class CxxParser:
                 )
                 self.visitor.on_class_field(class_state, f)
             else:
+                assert pqname is not None
                 v = Variable(
                     pqname, dtype, default, doxygen=doxygen, template=template, **props
                 )
@@ -1757,7 +1758,7 @@ class CxxParser:
             else:
                 # method must not have multiple segments except for operator
                 if len(pqname.segments) > 1:
-                    if not pqname.segments[0].name == "operator":
+                    if getattr(pqname.segments[0], "name", None) != "operator":
                         raise self._parse_error(None)
 
                 self.visitor.on_class_method(state, method)
@@ -1827,6 +1828,9 @@ class CxxParser:
 
         assert tok.type == "["
 
+        if isinstance(dtype, (Reference, MoveReference)):
+            raise CxxParseError("arrays of references are illegal", tok)
+
         toks = self._consume_balanced_tokens(tok)
         otok = self.lex.token_if("[")
         if otok:
@@ -1843,9 +1847,20 @@ class CxxParser:
 
     def _parse_cv_ptr(
         self,
-        dtype: typing.Union[Array, FunctionType, Pointer, Type],
-        nonptr_fn: bool = False,
+        dtype: DecoratedType,
     ) -> DecoratedType:
+        dtype_or_fn = self._parse_cv_ptr_or_fn(dtype)
+        if isinstance(dtype_or_fn, FunctionType):
+            raise CxxParseError("unexpected function type")
+        return dtype_or_fn
+
+    def _parse_cv_ptr_or_fn(
+        self,
+        dtype: typing.Union[
+            Array, Pointer, MoveReference, Reference, Type, FunctionType
+        ],
+        nonptr_fn: bool = False,
+    ) -> typing.Union[Array, Pointer, MoveReference, Reference, Type, FunctionType]:
         # nonptr_fn is for parsing function types directly in template specialization
 
         while True:
@@ -1854,10 +1869,16 @@ class CxxParser:
                 break
 
             if tok.type == "*":
+                if isinstance(dtype, (Reference, MoveReference)):
+                    raise self._parse_error(tok)
                 dtype = Pointer(dtype)
             elif tok.type == "const":
+                if not isinstance(dtype, (Pointer, Type)):
+                    raise self._parse_error(tok)
                 dtype.const = True
             elif tok.type == "volatile":
+                if not isinstance(dtype, (Pointer, Type)):
+                    raise self._parse_error(tok)
                 dtype.volatile = True
             elif nonptr_fn:
                 # remove any inner grouping parens
@@ -1870,9 +1891,11 @@ class CxxParser:
                     self.lex.return_tokens(toks[1:-1])
 
                 fn_params, vararg = self._parse_parameters()
-                dtype = FunctionType(dtype, fn_params, vararg)
+
+                assert not isinstance(dtype, FunctionType)
+                dtype = dtype_fn = FunctionType(dtype, fn_params, vararg)
                 if self.lex.token_if("ARROW"):
-                    self._parse_trailing_return_type(dtype)
+                    self._parse_trailing_return_type(dtype_fn)
 
             else:
                 msvc_convention = None
@@ -1892,10 +1915,13 @@ class CxxParser:
                 aptok = self.lex.token_if("[", "(")
                 if aptok:
                     if aptok.type == "[":
+                        assert not isinstance(dtype, FunctionType)
                         dtype = self._parse_array_type(aptok, dtype)
                     elif aptok.type == "(":
                         fn_params, vararg = self._parse_parameters()
                         # the type we already have is the return type of the function pointer
+
+                        assert not isinstance(dtype, FunctionType)
 
                         dtype = FunctionType(
                             dtype, fn_params, vararg, msvc_convention=msvc_convention
@@ -1909,11 +1935,13 @@ class CxxParser:
                 # -> this could return some weird results for invalid code, but
                 #    we don't support that anyways so it's fine?
                 self.lex.return_tokens(toks[1:-1])
-                dtype = self._parse_cv_ptr(dtype)
+                dtype = self._parse_cv_ptr_or_fn(dtype, nonptr_fn)
                 break
 
         tok = self.lex.token_if("&", "DBL_AMP")
         if tok:
+            assert not isinstance(dtype, (Reference, MoveReference))
+
             if tok.type == "&":
                 dtype = Reference(dtype)
             else:
@@ -1922,7 +1950,7 @@ class CxxParser:
             # peek at the next token and see if it's a paren. If so, it might
             # be a nasty function pointer
             if self.lex.token_peek_if("("):
-                dtype = self._parse_cv_ptr(dtype, nonptr_fn)
+                dtype = self._parse_cv_ptr_or_fn(dtype, nonptr_fn)
 
         return dtype
 
@@ -2146,6 +2174,9 @@ class CxxParser:
             return True
         if op:
             raise self._parse_error(None)
+
+        if not dtype:
+            raise CxxParseError("appear to be parsing a field without a type")
 
         self._parse_field(mods, dtype, pqname, template, doxygen, location, is_typedef)
         return False
