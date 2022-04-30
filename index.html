@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html>
 
@@ -14,55 +15,102 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/split.js/1.6.0/split.min.js"></script>
 
     <script src="https://cdn.jsdelivr.net/pyodide/v0.20.0/full/pyodide.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.14/theme-twilight.min.js"></script>
 
     <style>
-        #editor {
-            border-right: 2px solid gray;
-        }
-
-        #output {
-            border-left: 2px solid gray;
-        }
 
         #cxxoutput {
             font-size: 12px;
         }
 
-        .flex {
+        .layout {
+            height: 100vh;
             display: flex;
+            flex-wrap: nowrap;
+            align-items: stretch;
+            gap: 20px;
+        }
+
+        .info {
+            width: 400px;
+            max-width: 30%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 5px 20px;
+        }
+
+        .playground {
+            display: flex;
+            flex: 1;
             flex-direction: row;
-            min-height: 800px;
+            align-items: stretch;
+        }
+
+        .editor {
+            flex: 1;
+        }
+
+        .output {
+            padding: 0 10px;
+        }
+
+        .gutter {
+            background-color: #eee;
+            background-repeat: no-repeat;
+            background-position: 50%;
+        }
+
+        .gutter.gutter-horizontal {
+            background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAeCAYAAADkftS9AAAAIklEQVQoU2M4c+bMfxAGAgYYmwGrIIiDjrELjpo5aiZeMwF+yNnOs5KSvgAAAABJRU5ErkJggg==');
+            cursor: col-resize;
+        }
+        
+        .output pre {
+            height: 100%;
         }
     </style>
 </head>
 
 <body>
-
-    <div>
-        <h1>cxxheaderparser interactive demo</h1>
-
-        <p>
-            cxxheaderparser is a pure python C++ header parser that parses C++ headers in a mildly naive
-            manner that allows it to handle many C++ constructs, including many modern
-            (C++11 and beyond) features.
-        </p>
-        <p>
-            C++ of course is a very challenging language to parse, and cxxheaderparser isn't always going to get it
-            right.
-            If you find that cxxheaderparser can't properly parse valid C++, <a
-                href="https://github.com/robotpy/cxxheaderparser/issues/new">submit a bug report on github</a>!
-        </p>
-        <p>
-            Type in your C++ in the editor on the left, and on the right will show the repr of the python objects
-            generated when you call `cxxheaderparser.simple.parse_string` (or an error message).
-        </p>
-        <p>
-            <input type="checkbox" id="verbose" /> <label for="verbose">Show stack trace on parser error</label>
-        </p>
-    </div>
-
-    <div class="flex">
-        <div id="editor">
+    <div class="layout">
+        <div class="info">
+            <div>
+                <h1>cxxheaderparser interactive demo</h1>
+        
+                <p>
+                    cxxheaderparser is a pure python C++ header parser that parses C++ headers in a mildly naive
+                    manner that allows it to handle many C++ constructs, including many modern
+                    (C++11 and beyond) features.
+                </p>
+                <p>
+                    C++ of course is a very challenging language to parse, and cxxheaderparser isn't always going to get it
+                    right.
+                    If you find that cxxheaderparser can't properly parse valid C++, <a
+                        href="https://github.com/robotpy/cxxheaderparser/issues/new">submit a bug report on github</a>!
+                </p>
+                <p>
+                    Type in your C++ in the editor on the left, and on the right will show the repr of the python objects
+                    generated when you call `cxxheaderparser.simple.parse_string` (or an error message).
+                </p>
+                <p>
+                    <input type="checkbox" id="verbose" /> <label for="verbose">Show stack trace on parser error</label>
+                </p>
+            </div>
+            <div>
+                <p>
+                    cxxheaderparser <span id="version"></span> interactive demo powered by
+                    <a href="https://github.com/pyodide/pyodide">Pyodide</a>,
+                    <a href="https://ace.c9.io/">ACE Editor</a>,
+                    <a href="https://github.com/nathancahill/split">Split.js</a>,
+                    and <a href="">Bootstrap</a>
+            
+                </p>
+            </div>
+        </div>
+    
+        <div class="playground">
+            <div id="editor" class="editor">
 class FX {
     public:
         FX(char);
@@ -75,26 +123,18 @@ class FX {
         friend FX::FX(char), FX::~FX();
         friend void FX::fn() const;
     };
-        </div>
-        <div id="output">
-            <pre id="cxxoutput"></pre>
+            </div>
+            <div id="output" class="output">
+                <pre id="cxxoutput"></pre>
+            </div>
         </div>
     </div>
-
-    <p>
-        cxxheaderparser <span id="version"></span> interactive demo powered by
-        <a href="https://github.com/pyodide/pyodide">Pyodide</a>,
-        <a href="https://ace.c9.io/">ACE Editor</a>,
-        <a href="https://github.com/nathancahill/split">Split.js</a>,
-        and <a href="">Bootstrap</a>
-
-    </p>
 
     <script type="text/javascript">
 
         Split(["#editor", "#output"], {
-            sizes: [25, 75],
-            minSize: 200,
+            sizes: [40, 60],
+            minSize: 100,
         });
 
         var out = document.getElementById('cxxoutput');
@@ -114,6 +154,7 @@ class FX {
         var editor = ace.edit("editor");
         editor.session.setMode("ace/mode/c_cpp");
         editor.session.setUseWrapMode(true);
+        editor.setTheme('ace/theme/twilight');
 
         var ns = "";
 
