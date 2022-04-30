@@ -38,6 +38,11 @@ There are two APIs available:
 * A visitor-style interface to build up your own custom data structures 
 * A simple visitor that stores everything in a giant data structure
 
+Live Demo
+---------
+
+A pyodide-powered interactive demo is at https://robotpy.github.io/cxxheaderparser/
+
 Documentation
 -------------
 
