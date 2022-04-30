@@ -27,5 +27,6 @@ jobs:
           folder: build
           clean: true
           clean-exclude: |
+            .nojekyll
             index.html
             _index.py
