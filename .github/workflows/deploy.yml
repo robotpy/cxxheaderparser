@@ -1,0 +1,31 @@
+# deploy to github pages
+name: Build and Deploy
+on:
+  push:
+    branches:
+      - main
+jobs:
+  deploy:
+    concurrency: ci-${{ github.ref }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v3
+
+      - name: Build
+        run: |
+          echo "__version__ = '$(git describe --tags)'" > cxxheaderparser/version.py
+
+          mkdir build
+          cp -r cxxheaderparser build
+          
+
+      - name: Deploy 🚀
+        uses: JamesIves/github-pages-deploy-action@v4.3.3
+        with:
+          branch: gh-pages
+          folder: build
+          clean: true
+          clean-exclude: |
+            index.html
+            _index.py
