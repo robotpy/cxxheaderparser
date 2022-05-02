@@ -112,17 +112,17 @@
         <div class="playground">
             <div id="editor" class="editor">
 class FX {
-    public:
-        FX(char);
-        ~FX();
-        void fn() const;
-    };
-    
-    class FF {
-        friend class FX;
-        friend FX::FX(char), FX::~FX();
-        friend void FX::fn() const;
-    };
+public:
+    FX(char);
+    ~FX();
+    void fn() const;
+};
+
+class FF {
+    friend class FX;
+    friend FX::FX(char), FX::~FX();
+    friend void FX::fn() const;
+};
             </div>
             <div id="output" class="output">
                 <pre id="cxxoutput"></pre>
