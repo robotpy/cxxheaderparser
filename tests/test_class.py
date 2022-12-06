@@ -2998,3 +2998,217 @@ def test_class_mutable() -> None:
             ]
         )
     )
+
+
+def test_nested_class_access() -> None:
+    content = """
+      class Outer {
+          struct Inner {
+              void fn();
+          };
+
+          void ofn();
+      };
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            classes=[
+                ClassScope(
+                    class_decl=ClassDecl(
+                        typename=PQName(
+                            segments=[NameSpecifier(name="Outer")], classkey="class"
+                        )
+                    ),
+                    classes=[
+                        ClassScope(
+                            class_decl=ClassDecl(
+                                typename=PQName(
+                                    segments=[NameSpecifier(name="Inner")],
+                                    classkey="struct",
+                                ),
+                                access="private",
+                            ),
+                            methods=[
+                                Method(
+                                    return_type=Type(
+                                        typename=PQName(
+                                            segments=[FundamentalSpecifier(name="void")]
+                                        )
+                                    ),
+                                    name=PQName(segments=[NameSpecifier(name="fn")]),
+                                    parameters=[],
+                                    access="public",
+                                )
+                            ],
+                        )
+                    ],
+                    methods=[
+                        Method(
+                            return_type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="void")]
+                                )
+                            ),
+                            name=PQName(segments=[NameSpecifier(name="ofn")]),
+                            parameters=[],
+                            access="private",
+                        )
+                    ],
+                )
+            ]
+        )
+    )
+
+
+def test_class_with_typedef() -> None:
+    content = """
+      template <class SomeType> class A {
+       public:
+        typedef B <SomeType> C;
+
+        A();
+
+       protected:
+        C aCInstance;
+      };
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            classes=[
+                ClassScope(
+                    class_decl=ClassDecl(
+                        typename=PQName(
+                            segments=[NameSpecifier(name="A")], classkey="class"
+                        ),
+                        template=TemplateDecl(
+                            params=[TemplateTypeParam(typekey="class", name="SomeType")]
+                        ),
+                    ),
+                    fields=[
+                        Field(
+                            access="protected",
+                            type=Type(
+                                typename=PQName(segments=[NameSpecifier(name="C")])
+                            ),
+                            name="aCInstance",
+                        )
+                    ],
+                    methods=[
+                        Method(
+                            return_type=None,
+                            name=PQName(segments=[NameSpecifier(name="A")]),
+                            parameters=[],
+                            access="public",
+                            constructor=True,
+                        )
+                    ],
+                    typedefs=[
+                        Typedef(
+                            type=Type(
+                                typename=PQName(
+                                    segments=[
+                                        NameSpecifier(
+                                            name="B",
+                                            specialization=TemplateSpecialization(
+                                                args=[
+                                                    TemplateArgument(
+                                                        arg=Type(
+                                                            typename=PQName(
+                                                                segments=[
+                                                                    NameSpecifier(
+                                                                        name="SomeType"
+                                                                    )
+                                                                ]
+                                                            )
+                                                        )
+                                                    )
+                                                ]
+                                            ),
+                                        )
+                                    ]
+                                )
+                            ),
+                            name="C",
+                            access="public",
+                        )
+                    ],
+                )
+            ]
+        )
+    )
+
+
+def test_class_ref_qualifiers() -> None:
+    content = """
+      struct X {
+        void fn0();
+        void fn1() &;
+        void fn2() &&;
+        void fn3() && = 0;
+      };
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            classes=[
+                ClassScope(
+                    class_decl=ClassDecl(
+                        typename=PQName(
+                            segments=[NameSpecifier(name="X")], classkey="struct"
+                        )
+                    ),
+                    methods=[
+                        Method(
+                            return_type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="void")]
+                                )
+                            ),
+                            name=PQName(segments=[NameSpecifier(name="fn0")]),
+                            parameters=[],
+                            access="public",
+                        ),
+                        Method(
+                            return_type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="void")]
+                                )
+                            ),
+                            name=PQName(segments=[NameSpecifier(name="fn1")]),
+                            parameters=[],
+                            access="public",
+                            ref_qualifier="&",
+                        ),
+                        Method(
+                            return_type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="void")]
+                                )
+                            ),
+                            name=PQName(segments=[NameSpecifier(name="fn2")]),
+                            parameters=[],
+                            access="public",
+                            ref_qualifier="&&",
+                        ),
+                        Method(
+                            return_type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="void")]
+                                )
+                            ),
+                            name=PQName(segments=[NameSpecifier(name="fn3")]),
+                            parameters=[],
+                            access="public",
+                            ref_qualifier="&&",
+                            pure_virtual=True,
+                        ),
+                    ],
+                )
+            ]
+        )
+    )
