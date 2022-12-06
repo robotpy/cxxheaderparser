@@ -391,6 +391,23 @@ class TemplateDecl:
 
 
 @dataclass
+class TemplateInst:
+    """
+    Explicit template instantiation
+
+    .. code-block:: c++
+
+        template class MyClass<1,2>;
+
+        extern template class MyClass<2,3>;
+    """
+
+    typename: PQName
+    extern: bool
+    doxygen: typing.Optional[str] = None
+
+
+@dataclass
 class ForwardDecl:
     """
     Represents a forward declaration of a user defined type
