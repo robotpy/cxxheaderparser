@@ -1909,8 +1909,8 @@ def test_class_fn_inline_impl() -> None:
                     ],
                 )
             ],
-            functions=[
-                Function(
+            method_impls=[
+                Method(
                     return_type=Type(
                         typename=PQName(segments=[FundamentalSpecifier(name="void")])
                     ),
@@ -2109,8 +2109,8 @@ def test_class_fn_return_class() -> None:
                     ],
                 ),
             ],
-            functions=[
-                Function(
+            method_impls=[
+                Method(
                     return_type=Pointer(
                         ptr_to=Type(
                             typename=PQName(
@@ -2198,8 +2198,8 @@ def test_class_fn_template_impl() -> None:
                     ],
                 )
             ],
-            functions=[
-                Function(
+            method_impls=[
+                Method(
                     return_type=Pointer(
                         ptr_to=Type(
                             typename=PQName(segments=[FundamentalSpecifier(name="int")])
@@ -2265,8 +2265,8 @@ def test_class_fn_inline_template_impl() -> None:
                     ],
                 )
             ],
-            functions=[
-                Function(
+            method_impls=[
+                Method(
                     return_type=Type(
                         typename=PQName(segments=[NameSpecifier(name="T")])
                     ),
@@ -3208,6 +3208,54 @@ def test_class_ref_qualifiers() -> None:
                             pure_virtual=True,
                         ),
                     ],
+                )
+            ]
+        )
+    )
+
+
+def test_method_outside_class() -> None:
+    content = """
+      int foo::bar() { return 1; }
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            method_impls=[
+                Method(
+                    return_type=Type(
+                        typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                    ),
+                    name=PQName(
+                        segments=[NameSpecifier(name="foo"), NameSpecifier(name="bar")]
+                    ),
+                    parameters=[],
+                    has_body=True,
+                )
+            ]
+        )
+    )
+
+
+def test_constructor_outside_class() -> None:
+    content = """
+      inline foo::foo() {}
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            method_impls=[
+                Method(
+                    return_type=None,
+                    name=PQName(
+                        segments=[NameSpecifier(name="foo"), NameSpecifier(name="foo")]
+                    ),
+                    parameters=[],
+                    inline=True,
+                    has_body=True,
+                    constructor=True,
                 )
             ]
         )
