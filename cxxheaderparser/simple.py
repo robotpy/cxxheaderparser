@@ -94,7 +94,13 @@ class NamespaceScope:
 
     classes: typing.List["ClassScope"] = field(default_factory=list)
     enums: typing.List[EnumDecl] = field(default_factory=list)
+
+    #: Function declarations (with or without body)
     functions: typing.List[Function] = field(default_factory=list)
+
+    #: Method implementations outside of a class (must have a body)
+    method_impls: typing.List[Method] = field(default_factory=list)
+
     typedefs: typing.List[Typedef] = field(default_factory=list)
     variables: typing.List[Variable] = field(default_factory=list)
 
@@ -263,6 +269,10 @@ class SimpleCxxVisitor:
     def on_function(self, state: State, fn: Function) -> None:
         assert isinstance(self.block, NamespaceScope)
         self.block.functions.append(fn)
+
+    def on_method_impl(self, state: State, method: Method) -> None:
+        assert isinstance(self.block, NamespaceScope)
+        self.block.method_impls.append(method)
 
     def on_typedef(self, state: State, typedef: Typedef) -> None:
         self.block.typedefs.append(typedef)
