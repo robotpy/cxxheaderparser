@@ -2131,12 +2131,22 @@ class CxxParser:
         tok = self.lex.token_if("(")
         if tok:
 
-            # Check to see if this is a constructor/destructor
-            if isinstance(state, ClassBlockState) and isinstance(dtype, Type):
-
+            dsegments: typing.List[PQNameSegment] = []
+            if isinstance(dtype, Type):
                 dsegments = dtype.typename.segments
 
-                if not is_friend:
+            # Check to see if this is a constructor/destructor by matching
+            # the method name to the class name
+            is_class_block = isinstance(state, ClassBlockState)
+            if (is_class_block or len(dsegments) > 1) and isinstance(dtype, Type):
+
+                if not is_class_block:
+                    # must be an instance of a class
+                    cls_name = getattr(dsegments[-2], "name", None)
+
+                elif not is_friend:
+                    assert isinstance(state, ClassBlockState)
+
                     # class name to match against is this class
                     cls_name = getattr(
                         state.class_decl.typename.segments[-1], "name", None

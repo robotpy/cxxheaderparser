@@ -3236,3 +3236,27 @@ def test_method_outside_class() -> None:
             ]
         )
     )
+
+
+def test_constructor_outside_class() -> None:
+    content = """
+      inline foo::foo() {}
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            method_impls=[
+                Method(
+                    return_type=None,
+                    name=PQName(
+                        segments=[NameSpecifier(name="foo"), NameSpecifier(name="foo")]
+                    ),
+                    parameters=[],
+                    inline=True,
+                    has_body=True,
+                    constructor=True,
+                )
+            ]
+        )
+    )
