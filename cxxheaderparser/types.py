@@ -529,7 +529,8 @@ class Method(Function):
     A method declaration, potentially with the method body
     """
 
-    access: str = ""
+    #: If parsed within a class, the access level for this method
+    access: typing.Optional[str] = None
 
     const: bool = False
     volatile: bool = False

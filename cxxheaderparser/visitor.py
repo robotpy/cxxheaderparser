@@ -106,6 +106,22 @@ class CxxVisitor(Protocol):
     def on_function(self, state: State, fn: Function) -> None:
         ...
 
+    def on_method_impl(self, state: State, method: Method) -> None:
+        """
+        Called when a method implementation is encountered outside of a class
+        declaration. For example:
+
+        .. code-block:: c++
+
+            void MyClass::fn() {
+                // does something
+            }
+
+        .. note:: The above implementation is ambiguous, as it technically could
+                  be a function in a namespace. We emit this instead as it's
+                  more likely to be the case in common code.
+        """
+
     def on_typedef(self, state: State, typedef: Typedef) -> None:
         """
         Called for each typedef instance encountered. For example:
@@ -184,7 +200,7 @@ class CxxVisitor(Protocol):
 
     def on_class_method(self, state: ClassBlockState, method: Method) -> None:
         """
-        Called when a method of a class is encountered
+        Called when a method of a class is encountered inside of a class
         """
 
     def on_class_end(self, state: ClassBlockState) -> None:

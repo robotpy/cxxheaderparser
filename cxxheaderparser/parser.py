@@ -1758,15 +1758,14 @@ class CxxParser:
 
         params, vararg = self._parse_parameters()
 
-        if is_class_block and not is_typedef:
-            assert isinstance(state, ClassBlockState)
+        # A method outside of a class has multiple name segments
+        multiple_name_segments = len(pqname.segments) > 1
+
+        if (is_class_block or multiple_name_segments) and not is_typedef:
 
             props.update(dict.fromkeys(mods.meths.keys(), True))
 
             method: Method
-
-            current_access = self._current_access
-            assert current_access is not None
 
             if op:
                 method = Operator(
@@ -1777,7 +1776,7 @@ class CxxParser:
                     doxygen=doxygen,
                     operator=op,
                     template=template,
-                    access=current_access,
+                    access=self._current_access,
                     **props,  # type: ignore
                 )
             else:
@@ -1790,22 +1789,28 @@ class CxxParser:
                     constructor=constructor,
                     destructor=destructor,
                     template=template,
-                    access=current_access,
+                    access=self._current_access,
                     **props,  # type: ignore
                 )
 
             self._parse_method_end(method)
 
-            if is_friend:
-                friend = FriendDecl(fn=method)
-                self.visitor.on_class_friend(state, friend)
-            else:
-                # method must not have multiple segments except for operator
-                if len(pqname.segments) > 1:
-                    if getattr(pqname.segments[0], "name", None) != "operator":
-                        raise self._parse_error(None)
+            if is_class_block:
+                assert isinstance(state, ClassBlockState)
+                if is_friend:
+                    friend = FriendDecl(fn=method)
+                    self.visitor.on_class_friend(state, friend)
+                else:
+                    # method must not have multiple segments except for operator
+                    if len(pqname.segments) > 1:
+                        if getattr(pqname.segments[0], "name", None) != "operator":
+                            raise self._parse_error(None)
 
-                self.visitor.on_class_method(state, method)
+                    self.visitor.on_class_method(state, method)
+            else:
+                if not method.has_body:
+                    raise self._parse_error(None, expected="Method body")
+                self.visitor.on_method_impl(state, method)
 
             return method.has_body or method.has_trailing_return
 
