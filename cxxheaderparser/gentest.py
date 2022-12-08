@@ -60,14 +60,14 @@ def gentest(infile: str, name: str, outfile: str, verbose: bool) -> None:
 
     stmt = nondefault_repr(data)
 
-    content = content.replace("\n", "\n              ")
+    content = ("\n" + content.strip()).replace("\n", "\n              ")
+    content = "\n".join(l.rstrip() for l in content.splitlines())
 
     stmt = inspect.cleandoc(
         f'''
     
         def test_{name}() -> None:
-            content = """
-              {content}
+            content = """{content}
             """
             data = parse_string(content, cleandoc=True)
 

@@ -14,6 +14,7 @@ from .types import (
     FriendDecl,
     Function,
     Method,
+    TemplateInst,
     Typedef,
     UsingAlias,
     UsingDecl,
@@ -92,6 +93,11 @@ class CxxVisitor(Protocol):
     def on_forward_decl(self, state: State, fdecl: ForwardDecl) -> None:
         """
         Called when a forward declaration is encountered
+        """
+
+    def on_template_inst(self, state: State, inst: TemplateInst) -> None:
+        """
+        Called when an explicit template instantiation is encountered
         """
 
     def on_variable(self, state: State, v: Variable) -> None:
