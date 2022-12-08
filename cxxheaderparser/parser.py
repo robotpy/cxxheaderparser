@@ -43,6 +43,7 @@ from .types import (
     Reference,
     TemplateArgument,
     TemplateDecl,
+    TemplateInst,
     TemplateNonTypeParam,
     TemplateParam,
     TemplateSpecialization,
@@ -406,16 +407,21 @@ class CxxParser:
 
     def _parse_extern(self, tok: LexToken, doxygen: typing.Optional[str]) -> None:
 
-        etok = self.lex.token_if("STRING_LITERAL")
+        etok = self.lex.token_if("STRING_LITERAL", "template")
         if etok:
-            if self.lex.token_if("{"):
-                state = self._push_state(ExternBlockState, etok.value)
-                state.location = tok.location
-                self.visitor.on_extern_block_start(state)
-                return
+            if etok.type == "STRING_LITERAL":
+                if self.lex.token_if("{"):
+                    state = self._push_state(ExternBlockState, etok.value)
+                    state.location = tok.location
+                    self.visitor.on_extern_block_start(state)
+                    return
 
-            # an extern variable/function with specific linkage
-            self.lex.return_token(etok)
+                # an extern variable/function with specific linkage
+                self.lex.return_token(etok)
+            else:
+                # must be an extern template instantitation
+                self._parse_template_instantiation(doxygen, True)
+                return
 
         self._parse_declarations(tok, doxygen)
 
@@ -547,6 +553,9 @@ class CxxParser:
         return TemplateDecl(params)
 
     def _parse_template(self, tok: LexToken, doxygen: typing.Optional[str]) -> None:
+        if not self.lex.token_peek_if("<"):
+            self._parse_template_instantiation(doxygen, False)
+            return
 
         template = self._parse_template_decl()
 
@@ -623,6 +632,41 @@ class CxxParser:
                 break
 
         return TemplateSpecialization(args)
+
+    def _parse_template_instantiation(
+        self, doxygen: typing.Optional[str], extern: bool
+    ):
+        """
+        explicit-instantiation: [extern] template declaration
+        """
+
+        # entry is right after template
+
+        tok = self.lex.token_if("class", "struct")
+        if not tok:
+            raise self._parse_error(tok)
+
+        atok = self.lex.token_if_in_set(self._attribute_start_tokens)
+        if atok:
+            self._consume_attribute(atok)
+
+        typename, _ = self._parse_pqname(None)
+
+        # the last segment must have a specialization
+        last_segment = typename.segments[-1]
+        if (
+            not isinstance(last_segment, NameSpecifier)
+            or not last_segment.specialization
+        ):
+            raise self._parse_error(
+                None, "expected extern template to have specialization"
+            )
+
+        self._next_token_must_be(";")
+
+        self.visitor.on_template_inst(
+            self.state, TemplateInst(typename, extern, doxygen)
+        )
 
     #
     # Attributes

@@ -18,6 +18,7 @@ from cxxheaderparser.types import (
     Reference,
     TemplateArgument,
     TemplateDecl,
+    TemplateInst,
     TemplateNonTypeParam,
     TemplateSpecialization,
     TemplateTypeParam,
@@ -1812,5 +1813,177 @@ def test_template_specialized_fn_typename_template() -> None:
                     ],
                 ),
             ]
+        )
+    )
+
+
+def test_template_instantiation() -> None:
+    content = """
+      template class MyClass<1,2>;
+      template class __attribute__(("something")) MyClass<3,4>;
+
+      namespace foo {
+      template class MyClass<5,6>;
+      };
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            template_insts=[
+                TemplateInst(
+                    typename=PQName(
+                        segments=[
+                            NameSpecifier(
+                                name="MyClass",
+                                specialization=TemplateSpecialization(
+                                    args=[
+                                        TemplateArgument(
+                                            arg=Value(tokens=[Token(value="1")])
+                                        ),
+                                        TemplateArgument(
+                                            arg=Value(tokens=[Token(value="2")])
+                                        ),
+                                    ]
+                                ),
+                            )
+                        ]
+                    ),
+                    extern=False,
+                ),
+                TemplateInst(
+                    typename=PQName(
+                        segments=[
+                            NameSpecifier(
+                                name="MyClass",
+                                specialization=TemplateSpecialization(
+                                    args=[
+                                        TemplateArgument(
+                                            arg=Value(tokens=[Token(value="3")])
+                                        ),
+                                        TemplateArgument(
+                                            arg=Value(tokens=[Token(value="4")])
+                                        ),
+                                    ]
+                                ),
+                            )
+                        ]
+                    ),
+                    extern=False,
+                ),
+            ],
+            namespaces={
+                "foo": NamespaceScope(
+                    name="foo",
+                    template_insts=[
+                        TemplateInst(
+                            typename=PQName(
+                                segments=[
+                                    NameSpecifier(
+                                        name="MyClass",
+                                        specialization=TemplateSpecialization(
+                                            args=[
+                                                TemplateArgument(
+                                                    arg=Value(tokens=[Token(value="5")])
+                                                ),
+                                                TemplateArgument(
+                                                    arg=Value(tokens=[Token(value="6")])
+                                                ),
+                                            ]
+                                        ),
+                                    )
+                                ]
+                            ),
+                            extern=False,
+                        )
+                    ],
+                )
+            },
+        )
+    )
+
+
+def test_extern_template() -> None:
+    content = """
+      extern template class MyClass<1,2>;
+      extern template class __attribute__(("something")) MyClass<3,4>;
+
+      namespace foo {
+      extern template class MyClass<5,6>;
+      };
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            template_insts=[
+                TemplateInst(
+                    typename=PQName(
+                        segments=[
+                            NameSpecifier(
+                                name="MyClass",
+                                specialization=TemplateSpecialization(
+                                    args=[
+                                        TemplateArgument(
+                                            arg=Value(tokens=[Token(value="1")])
+                                        ),
+                                        TemplateArgument(
+                                            arg=Value(tokens=[Token(value="2")])
+                                        ),
+                                    ]
+                                ),
+                            )
+                        ]
+                    ),
+                    extern=True,
+                ),
+                TemplateInst(
+                    typename=PQName(
+                        segments=[
+                            NameSpecifier(
+                                name="MyClass",
+                                specialization=TemplateSpecialization(
+                                    args=[
+                                        TemplateArgument(
+                                            arg=Value(tokens=[Token(value="3")])
+                                        ),
+                                        TemplateArgument(
+                                            arg=Value(tokens=[Token(value="4")])
+                                        ),
+                                    ]
+                                ),
+                            )
+                        ]
+                    ),
+                    extern=True,
+                ),
+            ],
+            namespaces={
+                "foo": NamespaceScope(
+                    name="foo",
+                    template_insts=[
+                        TemplateInst(
+                            typename=PQName(
+                                segments=[
+                                    NameSpecifier(
+                                        name="MyClass",
+                                        specialization=TemplateSpecialization(
+                                            args=[
+                                                TemplateArgument(
+                                                    arg=Value(tokens=[Token(value="5")])
+                                                ),
+                                                TemplateArgument(
+                                                    arg=Value(tokens=[Token(value="6")])
+                                                ),
+                                            ]
+                                        ),
+                                    )
+                                ]
+                            ),
+                            extern=True,
+                        )
+                    ],
+                )
+            },
         )
     )

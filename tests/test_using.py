@@ -548,3 +548,171 @@ def test_using_many_things() -> None:
             },
         )
     )
+
+
+def test_using_template_in_class() -> None:
+    content = """
+      class X {
+        template <typename T>
+        using TT = U<T>;
+      };
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            classes=[
+                ClassScope(
+                    class_decl=ClassDecl(
+                        typename=PQName(
+                            segments=[NameSpecifier(name="X")], classkey="class"
+                        )
+                    ),
+                    using_alias=[
+                        UsingAlias(
+                            alias="TT",
+                            type=Type(
+                                typename=PQName(
+                                    segments=[
+                                        NameSpecifier(
+                                            name="U",
+                                            specialization=TemplateSpecialization(
+                                                args=[
+                                                    TemplateArgument(
+                                                        arg=Type(
+                                                            typename=PQName(
+                                                                segments=[
+                                                                    NameSpecifier(
+                                                                        name="T"
+                                                                    )
+                                                                ]
+                                                            )
+                                                        )
+                                                    )
+                                                ]
+                                            ),
+                                        )
+                                    ]
+                                )
+                            ),
+                            template=TemplateDecl(
+                                params=[TemplateTypeParam(typekey="typename", name="T")]
+                            ),
+                            access="private",
+                        )
+                    ],
+                )
+            ]
+        )
+    )
+
+
+def test_using_typename_in_class() -> None:
+    content = """
+      template <class D> class P {
+      using A = typename f::TP<D>::A;
+      public:
+        using State = typename f::TP<D>::S;
+        P(State st);
+      };
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            classes=[
+                ClassScope(
+                    class_decl=ClassDecl(
+                        typename=PQName(
+                            segments=[NameSpecifier(name="P")], classkey="class"
+                        ),
+                        template=TemplateDecl(
+                            params=[TemplateTypeParam(typekey="class", name="D")]
+                        ),
+                    ),
+                    methods=[
+                        Method(
+                            return_type=None,
+                            name=PQName(segments=[NameSpecifier(name="P")]),
+                            parameters=[
+                                Parameter(
+                                    type=Type(
+                                        typename=PQName(
+                                            segments=[NameSpecifier(name="State")]
+                                        )
+                                    ),
+                                    name="st",
+                                )
+                            ],
+                            access="public",
+                            constructor=True,
+                        )
+                    ],
+                    using_alias=[
+                        UsingAlias(
+                            alias="A",
+                            type=Type(
+                                typename=PQName(
+                                    segments=[
+                                        NameSpecifier(name="f"),
+                                        NameSpecifier(
+                                            name="TP",
+                                            specialization=TemplateSpecialization(
+                                                args=[
+                                                    TemplateArgument(
+                                                        arg=Type(
+                                                            typename=PQName(
+                                                                segments=[
+                                                                    NameSpecifier(
+                                                                        name="D"
+                                                                    )
+                                                                ]
+                                                            )
+                                                        )
+                                                    )
+                                                ]
+                                            ),
+                                        ),
+                                        NameSpecifier(name="A"),
+                                    ],
+                                    has_typename=True,
+                                )
+                            ),
+                            access="private",
+                        ),
+                        UsingAlias(
+                            alias="State",
+                            type=Type(
+                                typename=PQName(
+                                    segments=[
+                                        NameSpecifier(name="f"),
+                                        NameSpecifier(
+                                            name="TP",
+                                            specialization=TemplateSpecialization(
+                                                args=[
+                                                    TemplateArgument(
+                                                        arg=Type(
+                                                            typename=PQName(
+                                                                segments=[
+                                                                    NameSpecifier(
+                                                                        name="D"
+                                                                    )
+                                                                ]
+                                                            )
+                                                        )
+                                                    )
+                                                ]
+                                            ),
+                                        ),
+                                        NameSpecifier(name="S"),
+                                    ],
+                                    has_typename=True,
+                                )
+                            ),
+                            access="public",
+                        ),
+                    ],
+                )
+            ]
+        )
+    )
