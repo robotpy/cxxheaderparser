@@ -92,6 +92,7 @@ class NamespaceScope:
 
     name: str = ""
     inline: bool = False
+    doxygen: typing.Optional[str] = None
 
     classes: typing.List["ClassScope"] = field(default_factory=list)
     enums: typing.List[EnumDecl] = field(default_factory=list)
@@ -249,8 +250,9 @@ class SimpleCxxVisitor:
 
         assert ns is not None
 
-        # only set inline on inner namespace
+        # only set inline/doxygen on inner namespace
         ns.inline = state.namespace.inline
+        ns.doxygen = state.namespace.doxygen
 
         self.block = ns
         self.namespace = ns

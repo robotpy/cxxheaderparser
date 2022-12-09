@@ -56,6 +56,9 @@ class NamespaceDecl:
     names: typing.List[str]
     inline: bool = False
 
+    #: Documentation if present
+    doxygen: typing.Optional[str] = None
+
 
 @dataclass
 class DecltypeSpecifier:

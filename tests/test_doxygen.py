@@ -290,3 +290,42 @@ def test_doxygen_var_after() -> None:
             ]
         )
     )
+
+
+def test_doxygen_namespace() -> None:
+    content = """
+      /**
+       * x is a mysterious namespace
+       */
+      namespace x {}
+
+      /**
+       * c is also a mysterious namespace
+       */
+      namespace a::b::c {}
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            namespaces={
+                "x": NamespaceScope(
+                    name="x", doxygen="/**\n* x is a mysterious namespace\n*/"
+                ),
+                "a": NamespaceScope(
+                    name="a",
+                    namespaces={
+                        "b": NamespaceScope(
+                            name="b",
+                            namespaces={
+                                "c": NamespaceScope(
+                                    name="c",
+                                    doxygen="/**\n* c is also a mysterious namespace\n*/",
+                                )
+                            },
+                        )
+                    },
+                ),
+            }
+        )
+    )

@@ -404,7 +404,7 @@ class CxxParser:
 
         # TODO: namespace_alias_definition
 
-        ns = NamespaceDecl(names, inline)
+        ns = NamespaceDecl(names, inline, doxygen)
         state = self._push_state(NamespaceBlockState, ns)
         state.location = location
         self.visitor.on_namespace_start(state)
