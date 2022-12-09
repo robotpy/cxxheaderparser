@@ -284,6 +284,7 @@ class CxxParser:
             "alignas": self._consume_attribute_specifier_seq,
             "extern": self._parse_extern,
             "friend": self._parse_friend_decl,
+            "inline": self._parse_inline,
             "namespace": self._parse_namespace,
             "private": self._process_access_specifier,
             "protected": self._process_access_specifier,
@@ -397,6 +398,9 @@ class CxxParser:
                     break
 
                 tok = self._next_token_must_be("NAME")
+
+        if inline and len(names) > 1:
+            raise CxxParseError("a nested namespace definition cannot be inline")
 
         # TODO: namespace_alias_definition
 

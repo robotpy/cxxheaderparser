@@ -91,6 +91,7 @@ class NamespaceScope:
     """
 
     name: str = ""
+    inline: bool = False
 
     classes: typing.List["ClassScope"] = field(default_factory=list)
     enums: typing.List[EnumDecl] = field(default_factory=list)
@@ -247,6 +248,9 @@ class SimpleCxxVisitor:
             parent_ns = ns
 
         assert ns is not None
+
+        # only set inline on inner namespace
+        ns.inline = state.namespace.inline
 
         self.block = ns
         self.namespace = ns

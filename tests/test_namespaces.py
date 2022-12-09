@@ -1,6 +1,8 @@
 # Note: testcases generated via `python -m cxxheaderparser.gentest`
 
+from cxxheaderparser.errors import CxxParseError
 from cxxheaderparser.types import (
+    ForwardDecl,
     FundamentalSpecifier,
     NameSpecifier,
     PQName,
@@ -14,6 +16,9 @@ from cxxheaderparser.simple import (
     parse_string,
     ParsedData,
 )
+
+import pytest
+import re
 
 
 def test_dups_in_different_ns() -> None:
@@ -119,3 +124,47 @@ def test_correct_ns() -> None:
             }
         )
     )
+
+
+def test_inline_namespace() -> None:
+    content = """
+      namespace Lib {
+        inline namespace Lib_1 {
+          class A;
+        }
+      }
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            namespaces={
+                "Lib": NamespaceScope(
+                    name="Lib",
+                    namespaces={
+                        "Lib_1": NamespaceScope(
+                            name="Lib_1",
+                            inline=True,
+                            forward_decls=[
+                                ForwardDecl(
+                                    typename=PQName(
+                                        segments=[NameSpecifier(name="A")],
+                                        classkey="class",
+                                    )
+                                )
+                            ],
+                        )
+                    },
+                )
+            }
+        )
+    )
+
+
+def test_invalid_inline_namespace() -> None:
+    content = """
+      inline namespace a::b {}
+    """
+    err = "<str>:1: parse error evaluating 'inline': a nested namespace definition cannot be inline"
+    with pytest.raises(CxxParseError, match=re.escape(err)):
+        parse_string(content, cleandoc=True)
