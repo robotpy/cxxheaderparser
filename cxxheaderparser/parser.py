@@ -156,21 +156,21 @@ class CxxParser:
             raise self._parse_error(tok, "' or '".join(tokenTypes))
         return tok
 
-    def _next_token_in_set(self, tokenTypes: typing.Set[str]) -> LexToken:
-        tok = self.lex.token()
-        if tok.type not in tokenTypes:
-            raise self._parse_error(tok, "' or '".join(sorted(tokenTypes)))
-        return tok
+    # def _next_token_in_set(self, tokenTypes: typing.Set[str]) -> LexToken:
+    #     tok = self.lex.token()
+    #     if tok.type not in tokenTypes:
+    #         raise self._parse_error(tok, "' or '".join(sorted(tokenTypes)))
+    #     return tok
 
-    def _consume_up_to(self, rtoks: LexTokenList, *token_types: str) -> LexTokenList:
-        # includes the last token
-        get_token = self.lex.token
-        while True:
-            tok = get_token()
-            rtoks.append(tok)
-            if tok.type in token_types:
-                break
-        return rtoks
+    # def _consume_up_to(self, rtoks: LexTokenList, *token_types: str) -> LexTokenList:
+    #     # includes the last token
+    #     get_token = self.lex.token
+    #     while True:
+    #         tok = get_token()
+    #         rtoks.append(tok)
+    #         if tok.type in token_types:
+    #             break
+    #     return rtoks
 
     def _consume_until(self, rtoks: LexTokenList, *token_types: str) -> LexTokenList:
         # does not include the found token
@@ -447,12 +447,6 @@ class CxxParser:
             self._parse_namespace(itok, doxygen, inline=True)
         else:
             self._parse_declarations(tok, doxygen)
-
-    def _parse_mutable(self, tok: LexToken, doxygen: typing.Optional[str]) -> None:
-        if not isinstance(self.state, ClassBlockState):
-            raise self._parse_error(tok)
-
-        self._parse_declarations(tok, doxygen)
 
     def _parse_typedef(self, tok: LexToken, doxygen: typing.Optional[str]) -> None:
         tok = self.lex.token()

@@ -47,7 +47,7 @@ def tokfmt(toks: typing.List[Token]) -> str:
     return "".join(vals)
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     import argparse
 
     parser = argparse.ArgumentParser()
