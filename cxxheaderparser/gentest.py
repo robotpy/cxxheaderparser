@@ -1,9 +1,11 @@
 import argparse
 import dataclasses
 import inspect
+import re
 import subprocess
 import typing
 
+from .errors import CxxParseError
 from .options import ParserOptions
 from .simple import parse_string, ParsedData
 
@@ -47,7 +49,7 @@ def nondefault_repr(data: ParsedData) -> str:
     return _inner_repr(data)
 
 
-def gentest(infile: str, name: str, outfile: str, verbose: bool) -> None:
+def gentest(infile: str, name: str, outfile: str, verbose: bool, fail: bool) -> None:
     # Goal is to allow making a unit test as easy as running this dumper
     # on a file and copy/pasting this into a test
 
@@ -56,23 +58,42 @@ def gentest(infile: str, name: str, outfile: str, verbose: bool) -> None:
 
     options = ParserOptions(verbose=verbose)
 
-    data = parse_string(content, options=options)
+    try:
+        data = parse_string(content, options=options)
+        if fail:
+            raise ValueError("did not fail")
+    except CxxParseError as e:
+        if not fail:
+            raise
+        # do it again, but strip the content so the error message matches
+        try:
+            parse_string(content.strip(), options=options)
+        except CxxParseError as e2:
+            err = str(e2)
 
-    stmt = nondefault_repr(data)
+    if not fail:
+        stmt = nondefault_repr(data)
+        stmt = f"""
+            data = parse_string(content, cleandoc=True)
+
+            assert data == {stmt}
+        """
+    else:
+        stmt = f"""
+            err = {repr(err)}
+            with pytest.raises(CxxParseError, match=re.escape(err)):
+                parse_string(content, cleandoc=True)
+        """
 
     content = ("\n" + content.strip()).replace("\n", "\n              ")
     content = "\n".join(l.rstrip() for l in content.splitlines())
 
     stmt = inspect.cleandoc(
         f'''
-    
         def test_{name}() -> None:
             content = """{content}
             """
-            data = parse_string(content, cleandoc=True)
-
-            assert data == {stmt}
-    
+            {stmt.strip()}
     '''
     )
 
@@ -94,6 +115,9 @@ if __name__ == "__main__":
     parser.add_argument("name", nargs="?", default="TODO")
     parser.add_argument("-v", "--verbose", default=False, action="store_true")
     parser.add_argument("-o", "--output", default="-")
+    parser.add_argument(
+        "-x", "--fail", default=False, action="store_true", help="Expect failure"
+    )
     args = parser.parse_args()
 
-    gentest(args.header, args.name, args.output, args.verbose)
+    gentest(args.header, args.name, args.output, args.verbose, args.fail)

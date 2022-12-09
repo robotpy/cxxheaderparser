@@ -4,7 +4,7 @@ import typing
 if sys.version_info >= (3, 8):
     from typing import Protocol
 else:
-    Protocol = object
+    Protocol = object  # pragma: no cover
 
 
 from .types import (
@@ -65,7 +65,9 @@ class CxxVisitor(Protocol):
         """
 
     def on_empty_block_end(self, state: EmptyBlockState) -> None:
-        ...
+        """
+        Called when an empty block ends
+        """
 
     def on_extern_block_start(self, state: ExternBlockState) -> None:
         """
@@ -78,7 +80,9 @@ class CxxVisitor(Protocol):
         """
 
     def on_extern_block_end(self, state: ExternBlockState) -> None:
-        ...
+        """
+        Called when an extern block ends
+        """
 
     def on_namespace_start(self, state: NamespaceBlockState) -> None:
         """
@@ -101,10 +105,14 @@ class CxxVisitor(Protocol):
         """
 
     def on_variable(self, state: State, v: Variable) -> None:
-        ...
+        """
+        Called when a global variable is encountered
+        """
 
     def on_function(self, state: State, fn: Function) -> None:
-        ...
+        """
+        Called when a function is encountered that isn't part of a class
+        """
 
     def on_method_impl(self, state: State, method: Method) -> None:
         """

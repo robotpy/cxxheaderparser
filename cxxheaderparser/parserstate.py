@@ -1,7 +1,7 @@
 import typing
 
 if typing.TYPE_CHECKING:
-    from .visitor import CxxVisitor
+    from .visitor import CxxVisitor  # pragma: nocover
 
 from .errors import CxxParseError
 from .lexer import LexToken, Location

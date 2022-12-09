@@ -474,7 +474,7 @@ class Lexer:
         self.lookahead.extendleft(reversed(toks))
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     try:
         lex.runmain(lexer=Lexer(None))
     except EOFError:
