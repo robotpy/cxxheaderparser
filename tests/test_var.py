@@ -1,6 +1,6 @@
 # Note: testcases generated via `python -m cxxheaderparser.gentest`
 
-
+from cxxheaderparser.errors import CxxParseError
 from cxxheaderparser.types import (
     Array,
     ClassDecl,
@@ -20,6 +20,9 @@ from cxxheaderparser.types import (
     Variable,
 )
 from cxxheaderparser.simple import ClassScope, NamespaceScope, ParsedData, parse_string
+
+import pytest
+import re
 
 
 def test_var_unixwiz_ridiculous() -> None:
@@ -766,3 +769,73 @@ def test_var_extern() -> None:
             ]
         )
     )
+
+
+def test_balanced_with_gt() -> None:
+    """Tests _consume_balanced_tokens handling of mismatched gt tokens"""
+    content = """
+      int x = (1 >> 2);
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            variables=[
+                Variable(
+                    name=PQName(segments=[NameSpecifier(name="x")]),
+                    type=Type(
+                        typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                    ),
+                    value=Value(
+                        tokens=[
+                            Token(value="("),
+                            Token(value="1"),
+                            Token(value=">"),
+                            Token(value=">"),
+                            Token(value="2"),
+                            Token(value=")"),
+                        ]
+                    ),
+                )
+            ]
+        )
+    )
+
+
+def test_balanced_with_lt() -> None:
+    """Tests _consume_balanced_tokens handling of mismatched lt tokens"""
+    content = """
+      bool z = (i < 4);
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            variables=[
+                Variable(
+                    name=PQName(segments=[NameSpecifier(name="z")]),
+                    type=Type(
+                        typename=PQName(segments=[FundamentalSpecifier(name="bool")])
+                    ),
+                    value=Value(
+                        tokens=[
+                            Token(value="("),
+                            Token(value="i"),
+                            Token(value="<"),
+                            Token(value="4"),
+                            Token(value=")"),
+                        ]
+                    ),
+                )
+            ]
+        )
+    )
+
+
+def test_balanced_bad_mismatch() -> None:
+    content = """
+      bool z = (12 ]);
+    """
+    err = "<str>:1: parse error evaluating ']': unexpected ']', expected ')'"
+    with pytest.raises(CxxParseError, match=re.escape(err)):
+        parse_string(content, cleandoc=True)

@@ -230,16 +230,24 @@ class CxxParser:
             if tok.type in self._end_balanced_tokens:
                 expected = match_stack.pop()
                 if tok.type != expected:
-                    # hack: ambiguous right-shift issues here, really
-                    # should be looking at the context
-                    if tok.type == ">":
-                        tok = self.lex.token_if(">")
-                        if tok:
-                            consumed.append(tok)
-                            match_stack.append(expected)
-                            continue
+                    # hack: we only claim to parse correct code, so if this
+                    # is less than or greater than, assume that the code is
+                    # doing math and so this unexpected item is correct.
+                    #
+                    # If one of the other items on the stack match, pop back
+                    # to that. Otherwise, ignore it and hope for the best
+                    if tok.type != ">" and expected != ">":
+                        raise self._parse_error(tok, expected)
 
-                    raise self._parse_error(tok, expected)
+                    for i, maybe in enumerate(reversed(match_stack)):
+                        if tok.type == maybe:
+                            for _ in range(i + 1):
+                                match_stack.pop()
+                            break
+                    else:
+                        match_stack.append(expected)
+                        continue
+
                 if len(match_stack) == 0:
                     return consumed
 
