@@ -514,7 +514,12 @@ class Function:
 
     template: typing.Optional[TemplateDecl] = None
 
+    #: Value of any throw specification for this function. The value omits the
+    #: outer parentheses.
     throw: typing.Optional[Value] = None
+
+    #: Value of any noexcept specification for this function. The value omits
+    #: the outer parentheses.
     noexcept: typing.Optional[Value] = None
 
     #: Only set if an MSVC calling convention (__stdcall, etc) is explictly

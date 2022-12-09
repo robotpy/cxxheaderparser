@@ -1653,7 +1653,7 @@ class CxxParser:
 
         if self.lex.token_if("throw"):
             tok = self._next_token_must_be("(")
-            fn.throw = self._create_value(self._consume_balanced_tokens(tok))
+            fn.throw = self._create_value(self._consume_balanced_tokens(tok)[1:-1])
 
         elif self.lex.token_if("noexcept"):
             toks = []

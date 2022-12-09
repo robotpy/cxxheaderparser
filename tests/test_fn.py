@@ -1045,3 +1045,99 @@ def test_msvc_conventions() -> None:
             ],
         )
     )
+
+
+def test_throw_empty() -> None:
+    content = """
+      void foo() throw() { throw std::runtime_error("foo"); }
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            functions=[
+                Function(
+                    return_type=Type(
+                        typename=PQName(segments=[FundamentalSpecifier(name="void")])
+                    ),
+                    name=PQName(segments=[NameSpecifier(name="foo")]),
+                    parameters=[],
+                    has_body=True,
+                    throw=Value(tokens=[]),
+                )
+            ]
+        )
+    )
+
+
+def test_throw_dynamic() -> None:
+    content = """
+      void foo() throw(std::exception) { throw std::runtime_error("foo"); }
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            functions=[
+                Function(
+                    return_type=Type(
+                        typename=PQName(segments=[FundamentalSpecifier(name="void")])
+                    ),
+                    name=PQName(segments=[NameSpecifier(name="foo")]),
+                    parameters=[],
+                    has_body=True,
+                    throw=Value(
+                        tokens=[
+                            Token(value="std"),
+                            Token(value="::"),
+                            Token(value="exception"),
+                        ]
+                    ),
+                )
+            ]
+        )
+    )
+
+
+def test_noexcept_empty() -> None:
+    content = """
+      void foo() noexcept;
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            functions=[
+                Function(
+                    return_type=Type(
+                        typename=PQName(segments=[FundamentalSpecifier(name="void")])
+                    ),
+                    name=PQName(segments=[NameSpecifier(name="foo")]),
+                    parameters=[],
+                    noexcept=Value(tokens=[]),
+                )
+            ]
+        )
+    )
+
+
+def test_noexcept_contents() -> None:
+    content = """
+      void foo() noexcept(false);
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            functions=[
+                Function(
+                    return_type=Type(
+                        typename=PQName(segments=[FundamentalSpecifier(name="void")])
+                    ),
+                    name=PQName(segments=[NameSpecifier(name="foo")]),
+                    parameters=[],
+                    noexcept=Value(tokens=[Token(value="false")]),
+                )
+            ]
+        )
+    )
