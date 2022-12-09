@@ -156,21 +156,21 @@ class CxxParser:
             raise self._parse_error(tok, "' or '".join(tokenTypes))
         return tok
 
-    def _next_token_in_set(self, tokenTypes: typing.Set[str]) -> LexToken:
-        tok = self.lex.token()
-        if tok.type not in tokenTypes:
-            raise self._parse_error(tok, "' or '".join(sorted(tokenTypes)))
-        return tok
+    # def _next_token_in_set(self, tokenTypes: typing.Set[str]) -> LexToken:
+    #     tok = self.lex.token()
+    #     if tok.type not in tokenTypes:
+    #         raise self._parse_error(tok, "' or '".join(sorted(tokenTypes)))
+    #     return tok
 
-    def _consume_up_to(self, rtoks: LexTokenList, *token_types: str) -> LexTokenList:
-        # includes the last token
-        get_token = self.lex.token
-        while True:
-            tok = get_token()
-            rtoks.append(tok)
-            if tok.type in token_types:
-                break
-        return rtoks
+    # def _consume_up_to(self, rtoks: LexTokenList, *token_types: str) -> LexTokenList:
+    #     # includes the last token
+    #     get_token = self.lex.token
+    #     while True:
+    #         tok = get_token()
+    #         rtoks.append(tok)
+    #         if tok.type in token_types:
+    #             break
+    #     return rtoks
 
     def _consume_until(self, rtoks: LexTokenList, *token_types: str) -> LexTokenList:
         # does not include the found token
@@ -230,16 +230,24 @@ class CxxParser:
             if tok.type in self._end_balanced_tokens:
                 expected = match_stack.pop()
                 if tok.type != expected:
-                    # hack: ambiguous right-shift issues here, really
-                    # should be looking at the context
-                    if tok.type == ">":
-                        tok = self.lex.token_if(">")
-                        if tok:
-                            consumed.append(tok)
-                            match_stack.append(expected)
-                            continue
+                    # hack: we only claim to parse correct code, so if this
+                    # is less than or greater than, assume that the code is
+                    # doing math and so this unexpected item is correct.
+                    #
+                    # If one of the other items on the stack match, pop back
+                    # to that. Otherwise, ignore it and hope for the best
+                    if tok.type != ">" and expected != ">":
+                        raise self._parse_error(tok, expected)
 
-                    raise self._parse_error(tok, expected)
+                    for i, maybe in enumerate(reversed(match_stack)):
+                        if tok.type == maybe:
+                            for _ in range(i + 1):
+                                match_stack.pop()
+                            break
+                    else:
+                        match_stack.append(expected)
+                        continue
+
                 if len(match_stack) == 0:
                     return consumed
 
@@ -284,6 +292,7 @@ class CxxParser:
             "alignas": self._consume_attribute_specifier_seq,
             "extern": self._parse_extern,
             "friend": self._parse_friend_decl,
+            "inline": self._parse_inline,
             "namespace": self._parse_namespace,
             "private": self._process_access_specifier,
             "protected": self._process_access_specifier,
@@ -398,9 +407,12 @@ class CxxParser:
 
                 tok = self._next_token_must_be("NAME")
 
+        if inline and len(names) > 1:
+            raise CxxParseError("a nested namespace definition cannot be inline")
+
         # TODO: namespace_alias_definition
 
-        ns = NamespaceDecl(names, inline)
+        ns = NamespaceDecl(names, inline, doxygen)
         state = self._push_state(NamespaceBlockState, ns)
         state.location = location
         self.visitor.on_namespace_start(state)
@@ -443,12 +455,6 @@ class CxxParser:
             self._parse_namespace(itok, doxygen, inline=True)
         else:
             self._parse_declarations(tok, doxygen)
-
-    def _parse_mutable(self, tok: LexToken, doxygen: typing.Optional[str]) -> None:
-        if not isinstance(self.state, ClassBlockState):
-            raise self._parse_error(tok)
-
-        self._parse_declarations(tok, doxygen)
 
     def _parse_typedef(self, tok: LexToken, doxygen: typing.Optional[str]) -> None:
         tok = self.lex.token()
@@ -1647,7 +1653,7 @@ class CxxParser:
 
         if self.lex.token_if("throw"):
             tok = self._next_token_must_be("(")
-            fn.throw = self._create_value(self._consume_balanced_tokens(tok))
+            fn.throw = self._create_value(self._consume_balanced_tokens(tok)[1:-1])
 
         elif self.lex.token_if("noexcept"):
             toks = []
