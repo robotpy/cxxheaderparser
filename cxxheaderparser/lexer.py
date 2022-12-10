@@ -61,6 +61,10 @@ PhonyEnding.lexpos = 0
 
 
 class Lexer:
+    """
+    This lexer is a combination of pieces from the PLY lexers that CppHeaderParser
+    and pycparser have.
+    """
 
     keywords = {
         "__attribute__",
@@ -144,15 +148,33 @@ class Lexer:
     }
 
     tokens = [
-        "NUMBER",
-        "FLOAT_NUMBER",
+        # constants
+        "FLOAT_CONST",
+        "HEX_FLOAT_CONST",
+        "INT_CONST_HEX",
+        "INT_CONST_BIN",
+        "INT_CONST_OCT",
+        "INT_CONST_DEC",
+        "INT_CONST_CHAR",
+        "CHAR_CONST",
+        "WCHAR_CONST",
+        "U8CHAR_CONST",
+        "U16CHAR_CONST",
+        "U32CHAR_CONST",
+        # String literals
+        "STRING_LITERAL",
+        "WSTRING_LITERAL",
+        "U8STRING_LITERAL",
+        "U16STRING_LITERAL",
+        "U32STRING_LITERAL",
+        #
         "NAME",
+        # Comments
         "COMMENT_SINGLELINE",
         "COMMENT_MULTILINE",
         "PRECOMP_MACRO",
+        # misc
         "DIVIDE",
-        "CHAR_LITERAL",
-        "STRING_LITERAL",
         "NEWLINE",
         "ELLIPSIS",
         "DBL_LBRACKET",
@@ -189,9 +211,216 @@ class Lexer:
         ".",
     ]
 
+    #
+    # Regexes for use in tokens (taken from pycparser)
+    #
+
+    hex_prefix = "0[xX]"
+    hex_digits = "[0-9a-fA-F]+"
+    bin_prefix = "0[bB]"
+    bin_digits = "[01]+"
+
+    # integer constants (K&R2: A.2.5.1)
+    integer_suffix_opt = (
+        r"(([uU]ll)|([uU]LL)|(ll[uU]?)|(LL[uU]?)|([uU][lL])|([lL][uU]?)|[uU])?"
+    )
+    decimal_constant = (
+        "(0" + integer_suffix_opt + ")|([1-9][0-9]*" + integer_suffix_opt + ")"
+    )
+    octal_constant = "0[0-7]*" + integer_suffix_opt
+    hex_constant = hex_prefix + hex_digits + integer_suffix_opt
+    bin_constant = bin_prefix + bin_digits + integer_suffix_opt
+
+    bad_octal_constant = "0[0-7]*[89]"
+
+    # character constants (K&R2: A.2.5.2)
+    # Note: a-zA-Z and '.-~^_!=&;,' are allowed as escape chars to support #line
+    # directives with Windows paths as filenames (..\..\dir\file)
+    # For the same reason, decimal_escape allows all digit sequences. We want to
+    # parse all correct code, even if it means to sometimes parse incorrect
+    # code.
+    #
+    # The original regexes were taken verbatim from the C syntax definition,
+    # and were later modified to avoid worst-case exponential running time.
+    #
+    #   simple_escape = r"""([a-zA-Z._~!=&\^\-\\?'"])"""
+    #   decimal_escape = r"""(\d+)"""
+    #   hex_escape = r"""(x[0-9a-fA-F]+)"""
+    #   bad_escape = r"""([\\][^a-zA-Z._~^!=&\^\-\\?'"x0-7])"""
+    #
+    # The following modifications were made to avoid the ambiguity that allowed backtracking:
+    # (https://github.com/eliben/pycparser/issues/61)
+    #
+    # - \x was removed from simple_escape, unless it was not followed by a hex digit, to avoid ambiguity with hex_escape.
+    # - hex_escape allows one or more hex characters, but requires that the next character(if any) is not hex
+    # - decimal_escape allows one or more decimal characters, but requires that the next character(if any) is not a decimal
+    # - bad_escape does not allow any decimals (8-9), to avoid conflicting with the permissive decimal_escape.
+    #
+    # Without this change, python's `re` module would recursively try parsing each ambiguous escape sequence in multiple ways.
+    # e.g. `\123` could be parsed as `\1`+`23`, `\12`+`3`, and `\123`.
+
+    simple_escape = r"""([a-wyzA-Z._~!=&\^\-\\?'"]|x(?![0-9a-fA-F]))"""
+    decimal_escape = r"""(\d+)(?!\d)"""
+    hex_escape = r"""(x[0-9a-fA-F]+)(?![0-9a-fA-F])"""
+    bad_escape = r"""([\\][^a-zA-Z._~^!=&\^\-\\?'"x0-9])"""
+
+    escape_sequence = (
+        r"""(\\(""" + simple_escape + "|" + decimal_escape + "|" + hex_escape + "))"
+    )
+
+    # This complicated regex with lookahead might be slow for strings, so because all of the valid escapes (including \x) allowed
+    # 0 or more non-escaped characters after the first character, simple_escape+decimal_escape+hex_escape got simplified to
+
+    escape_sequence_start_in_string = r"""(\\[0-9a-zA-Z._~!=&\^\-\\?'"])"""
+
+    cconst_char = r"""([^'\\\n]|""" + escape_sequence + ")"
+    char_const = "'" + cconst_char + "'"
+    wchar_const = "L" + char_const
+    u8char_const = "u8" + char_const
+    u16char_const = "u" + char_const
+    u32char_const = "U" + char_const
+    multicharacter_constant = "'" + cconst_char + "{2,4}'"
+    unmatched_quote = "('" + cconst_char + "*\\n)|('" + cconst_char + "*$)"
+    bad_char_const = (
+        r"""('"""
+        + cconst_char
+        + """[^'\n]+')|('')|('"""
+        + bad_escape
+        + r"""[^'\n]*')"""
+    )
+
+    # string literals (K&R2: A.2.6)
+    string_char = r"""([^"\\\n]|""" + escape_sequence_start_in_string + ")"
+    string_literal = '"' + string_char + '*"'
+    wstring_literal = "L" + string_literal
+    u8string_literal = "u8" + string_literal
+    u16string_literal = "u" + string_literal
+    u32string_literal = "U" + string_literal
+    bad_string_literal = '"' + string_char + "*" + bad_escape + string_char + '*"'
+
+    # floating constants (K&R2: A.2.5.3)
+    exponent_part = r"""([eE][-+]?[0-9]+)"""
+    fractional_constant = r"""([0-9]*\.[0-9]+)|([0-9]+\.)"""
+    floating_constant = (
+        "(((("
+        + fractional_constant
+        + ")"
+        + exponent_part
+        + "?)|([0-9]+"
+        + exponent_part
+        + "))[FfLl]?)"
+    )
+    binary_exponent_part = r"""([pP][+-]?[0-9]+)"""
+    hex_fractional_constant = (
+        "(((" + hex_digits + r""")?\.""" + hex_digits + ")|(" + hex_digits + r"""\.))"""
+    )
+    hex_floating_constant = (
+        "("
+        + hex_prefix
+        + "("
+        + hex_digits
+        + "|"
+        + hex_fractional_constant
+        + ")"
+        + binary_exponent_part
+        + "[FfLl]?)"
+    )
+
     t_ignore = " \t\r?@\f"
-    t_NUMBER = r"[0-9][0-9XxA-Fa-f]*"
-    t_FLOAT_NUMBER = r"[-+]?[0-9]*\.[0-9]+([eE][-+]?[0-9]+)?"
+
+    # The following floating and integer constants are defined as
+    # functions to impose a strict order (otherwise, decimal
+    # is placed before the others because its regex is longer,
+    # and this is bad)
+    #
+    @TOKEN(floating_constant)
+    def t_FLOAT_CONST(self, t: LexToken) -> LexToken:
+        return t
+
+    @TOKEN(hex_floating_constant)
+    def t_HEX_FLOAT_CONST(self, t: LexToken) -> LexToken:
+        return t
+
+    @TOKEN(hex_constant)
+    def t_INT_CONST_HEX(self, t: LexToken) -> LexToken:
+        return t
+
+    @TOKEN(bin_constant)
+    def t_INT_CONST_BIN(self, t: LexToken) -> LexToken:
+        return t
+
+    @TOKEN(bad_octal_constant)
+    def t_BAD_CONST_OCT(self, t: LexToken) -> None:
+        msg = "Invalid octal constant"
+        self._error(msg, t)
+
+    @TOKEN(octal_constant)
+    def t_INT_CONST_OCT(self, t: LexToken) -> LexToken:
+        return t
+
+    @TOKEN(decimal_constant)
+    def t_INT_CONST_DEC(self, t: LexToken) -> LexToken:
+        return t
+
+    # Must come before bad_char_const, to prevent it from
+    # catching valid char constants as invalid
+    #
+    @TOKEN(multicharacter_constant)
+    def t_INT_CONST_CHAR(self, t: LexToken) -> LexToken:
+        return t
+
+    @TOKEN(char_const)
+    def t_CHAR_CONST(self, t: LexToken) -> LexToken:
+        return t
+
+    @TOKEN(wchar_const)
+    def t_WCHAR_CONST(self, t: LexToken) -> LexToken:
+        return t
+
+    @TOKEN(u8char_const)
+    def t_U8CHAR_CONST(self, t: LexToken) -> LexToken:
+        return t
+
+    @TOKEN(u16char_const)
+    def t_U16CHAR_CONST(self, t: LexToken) -> LexToken:
+        return t
+
+    @TOKEN(u32char_const)
+    def t_U32CHAR_CONST(self, t: LexToken) -> LexToken:
+        return t
+
+    @TOKEN(unmatched_quote)
+    def t_UNMATCHED_QUOTE(self, t: LexToken) -> None:
+        msg = "Unmatched '"
+        self._error(msg, t)
+
+    @TOKEN(bad_char_const)
+    def t_BAD_CHAR_CONST(self, t: LexToken) -> None:
+        msg = "Invalid char constant %s" % t.value
+        self._error(msg, t)
+
+    @TOKEN(wstring_literal)
+    def t_WSTRING_LITERAL(self, t: LexToken) -> LexToken:
+        return t
+
+    @TOKEN(u8string_literal)
+    def t_U8STRING_LITERAL(self, t: LexToken) -> LexToken:
+        return t
+
+    @TOKEN(u16string_literal)
+    def t_U16STRING_LITERAL(self, t: LexToken) -> LexToken:
+        return t
+
+    @TOKEN(u32string_literal)
+    def t_U32STRING_LITERAL(self, t: LexToken) -> LexToken:
+        return t
+
+    # unmatched string literals are caught by the preprocessor
+
+    @TOKEN(bad_string_literal)
+    def t_BAD_STRING_LITERAL(self, t):
+        msg = "String contains invalid escape code"
+        self._error(msg, t)
 
     @TOKEN(r"[A-Za-z_~][A-Za-z0-9_]*")
     def t_NAME(self, t: LexToken) -> LexToken:
@@ -222,7 +451,6 @@ class Lexer:
         return t
 
     t_DIVIDE = r"/(?!/)"
-    t_CHAR_LITERAL = "'.'"
     t_ELLIPSIS = r"\.\.\."
     t_DBL_LBRACKET = r"\[\["
     t_DBL_RBRACKET = r"\]\]"
@@ -232,9 +460,7 @@ class Lexer:
     t_SHIFT_LEFT = r"<<"
     # SHIFT_RIGHT introduces ambiguity
 
-    # found at http://wordaligned.org/articles/string-literals-and-regular-expressions
-    # TODO: This does not work with the string "bla \" bla"
-    t_STRING_LITERAL = r'"([^"\\]|\\.)*"'
+    t_STRING_LITERAL = string_literal
 
     # Found at http://ostermiller.org/findcomment.html
     @TOKEN(r"/\*([^*]|[\r\n]|(\*+([^*/]|[\r\n])))*\*+/\n?")
