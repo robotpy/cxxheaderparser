@@ -5,6 +5,7 @@ import typing
 import sys
 
 from ._ply import lex
+from ._ply.lex import TOKEN
 
 
 if sys.version_info >= (3, 8):
@@ -186,14 +187,14 @@ class Lexer:
     t_NUMBER = r"[0-9][0-9XxA-Fa-f]*"
     t_FLOAT_NUMBER = r"[-+]?[0-9]*\.[0-9]+([eE][-+]?[0-9]+)?"
 
+    @TOKEN(r"[A-Za-z_~][A-Za-z0-9_]*")
     def t_NAME(self, t: LexToken) -> LexToken:
-        r"[A-Za-z_~][A-Za-z0-9_]*"
         if t.value in self.keywords:
             t.type = t.value
         return t
 
+    @TOKEN(r"\#.*")
     def t_PRECOMP_MACRO(self, t: LexToken) -> typing.Optional[LexToken]:
-        r"\#.*"
         m = _line_re.match(t.value)
         if m:
             filename = m.group(2)
@@ -207,8 +208,8 @@ class Lexer:
         else:
             return t
 
+    @TOKEN(r"\/\/.*\n?")
     def t_COMMENT_SINGLELINE(self, t: LexToken) -> LexToken:
-        r"\/\/.*\n?"
         if t.value.startswith("///") or t.value.startswith("//!"):
             self.comments.append(t.value.lstrip("\t ").rstrip("\n"))
         t.lexer.lineno += t.value.count("\n")
@@ -230,8 +231,8 @@ class Lexer:
     t_STRING_LITERAL = r'"([^"\\]|\\.)*"'
 
     # Found at http://ostermiller.org/findcomment.html
+    @TOKEN(r"/\*([^*]|[\r\n]|(\*+([^*/]|[\r\n])))*\*+/\n?")
     def t_COMMENT_MULTILINE(self, t: LexToken) -> LexToken:
-        r"/\*([^*]|[\r\n]|(\*+([^*/]|[\r\n])))*\*+/\n?"
         if t.value.startswith("/**") or t.value.startswith("/*!"):
             # not sure why, but get double new lines
             v = t.value.replace("\n\n", "\n")
@@ -241,8 +242,8 @@ class Lexer:
         t.lexer.lineno += t.value.count("\n")
         return t
 
+    @TOKEN(r"\n+")
     def t_NEWLINE(self, t: LexToken) -> LexToken:
-        r"\n+"
         t.lexer.lineno += len(t.value)
         del self.comments[:]
         return t
