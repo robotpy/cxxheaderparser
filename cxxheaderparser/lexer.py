@@ -7,6 +7,12 @@ import sys
 from ._ply import lex
 from ._ply.lex import TOKEN
 
+from .errors import CxxParseError
+
+
+class LexError(CxxParseError):
+    pass
+
 
 if sys.version_info >= (3, 8):
     from typing import Protocol
@@ -249,7 +255,11 @@ class Lexer:
         return t
 
     def t_error(self, t: LexToken) -> None:
-        print("Lex error: ", t)
+        self._error(f"Illegal character {t.value!r}", t)
+
+    def _error(self, msg: str, tok: LexToken):
+        tok.location = self.current_location()
+        raise LexError(msg, tok)
 
     _lexer = None
     lex: lex.Lexer
