@@ -432,11 +432,7 @@ class Lexer:
     def t_PRECOMP_MACRO(self, t: LexToken) -> typing.Optional[LexToken]:
         m = _line_re.match(t.value)
         if m:
-            filename = m.group(2)
-            if filename not in self._filenames_set:
-                self.filenames.append(filename)
-                self._filenames_set.add(filename)
-            self.filename = filename
+            self.filename = m.group(2)
 
             self.line_offset = 1 + self.lex.lineno - int(m.group(1))
             return None
@@ -507,13 +503,6 @@ class Lexer:
         # For tracking current file/line position
         self.filename = filename
         self.line_offset = 0
-
-        self.filenames: typing.List[str] = []
-        self._filenames_set: typing.Set[str] = set()
-
-        if filename:
-            self.filenames.append(filename)
-            self._filenames_set.add(filename)
 
         # Doxygen comments
         self.comments = []
