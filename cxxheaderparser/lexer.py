@@ -50,7 +50,7 @@ class LexToken(Protocol):
     location: Location
 
     #: private
-    lexer: "Lexer"
+    lexer: lex.Lexer
 
 
 PhonyEnding: LexToken = lex.LexToken()  # type: ignore
@@ -60,10 +60,13 @@ PhonyEnding.lineno = 0
 PhonyEnding.lexpos = 0
 
 
-class Lexer:
+class PlyLexer:
     """
     This lexer is a combination of pieces from the PLY lexers that CppHeaderParser
     and pycparser have.
+
+    This tokenizes the input into tokens. The other lexer classes do more complex
+    things with the tokens.
     """
 
     keywords = {
@@ -439,13 +442,6 @@ class Lexer:
         else:
             return t
 
-    @TOKEN(r"\/\/.*\n?")
-    def t_COMMENT_SINGLELINE(self, t: LexToken) -> LexToken:
-        if t.value.startswith("///") or t.value.startswith("//!"):
-            self.comments.append(t.value.lstrip("\t ").rstrip("\n"))
-        t.lexer.lineno += t.value.count("\n")
-        return t
-
     t_DIVIDE = r"/(?!/)"
     t_ELLIPSIS = r"\.\.\."
     t_DBL_LBRACKET = r"\[\["
@@ -458,22 +454,20 @@ class Lexer:
 
     t_STRING_LITERAL = string_literal
 
+    @TOKEN(r"\/\/.*\n?")
+    def t_COMMENT_SINGLELINE(self, t: LexToken) -> LexToken:
+        t.lexer.lineno += t.value.count("\n")
+        return t
+
     # Found at http://ostermiller.org/findcomment.html
     @TOKEN(r"/\*([^*]|[\r\n]|(\*+([^*/]|[\r\n])))*\*+/\n?")
     def t_COMMENT_MULTILINE(self, t: LexToken) -> LexToken:
-        if t.value.startswith("/**") or t.value.startswith("/*!"):
-            # not sure why, but get double new lines
-            v = t.value.replace("\n\n", "\n")
-            # strip prefixing whitespace
-            v = _multicomment_re.sub("\n*", v)
-            self.comments = v.splitlines()
         t.lexer.lineno += t.value.count("\n")
         return t
 
     @TOKEN(r"\n+")
     def t_NEWLINE(self, t: LexToken) -> LexToken:
         t.lexer.lineno += len(t.value)
-        del self.comments[:]
         return t
 
     def t_error(self, t: LexToken) -> None:
@@ -485,9 +479,8 @@ class Lexer:
 
     _lexer = None
     lex: lex.Lexer
-    lineno: int
 
-    def __new__(cls, *args, **kwargs) -> "Lexer":
+    def __new__(cls, *args, **kwargs) -> "PlyLexer":
         # only build the lexer once
         inst = super().__new__(cls)
         if cls._lexer is None:
@@ -499,157 +492,75 @@ class Lexer:
 
     def __init__(self, filename: typing.Optional[str] = None):
         self.input: typing.Callable[[str], None] = self.lex.input
+        self.token: typing.Callable[[], LexToken] = self.lex.token
 
         # For tracking current file/line position
         self.filename = filename
         self.line_offset = 0
 
-        # Doxygen comments
-        self.comments = []
+    def current_location(self) -> Location:
+        return Location(self.filename, self.lex.lineno - self.line_offset)
 
-        self.lookahead = typing.Deque[LexToken]()
 
-        # For 'set_group_of_tokens' support
-        self._get_token: typing.Callable[[], LexToken] = self.lex.token
-        self.lookahead_stack = typing.Deque[typing.Deque[LexToken]]()
+class TokenStream:
+    """
+    Provides access to a stream of tokens
+    """
+
+    tokbuf: typing.Deque[LexToken]
+
+    def _fill_tokbuf(self, tokbuf: typing.Deque[LexToken]) -> bool:
+        """
+        Fills tokbuf with tokens from the next line. Return True if at least
+        one token was added to the buffer
+        """
+        raise NotImplementedError
 
     def current_location(self) -> Location:
-        if self.lookahead:
-            return self.lookahead[0].location
-        return Location(self.filename, self.lex.lineno - self.line_offset)
+        raise NotImplementedError
 
     def get_doxygen(self) -> typing.Optional[str]:
         """
-        This should be called after the first element of something has
-        been consumed.
-
-        It will lookahead for comments that come after the item, if prior
-        comments don't exist.
+        This is called at the point that you want doxygen information
         """
+        raise NotImplementedError
 
-        # Assumption: This function is either called at the beginning of a
-        # statement or at the end of a statement
-
-        if self.comments:
-            comments = self.comments
-        else:
-            comments = []
-            # only look for comments until a newline (including lookahead)
-            for tok in self.lookahead:
-                if tok.type == "NEWLINE":
-                    return None
-
-            while True:
-                tok = self._get_token()
-                comments.extend(self.comments)
-
-                if tok is None:
-                    break
-
-                tok.location = Location(self.filename, tok.lineno - self.line_offset)
-                ttype = tok.type
-                if ttype == "NEWLINE":
-                    self.lookahead.append(tok)
-                    break
-
-                if ttype not in self._discard_types:
-                    self.lookahead.append(tok)
-
-                if ttype == "NAME":
-                    break
-
-                del self.comments[:]
-
-        comment_str = "\n".join(comments)
-        del self.comments[:]
-        if comment_str:
-            return comment_str
-
-        return None
+    def get_doxygen_after(self) -> typing.Optional[str]:
+        """
+        This is called to retrieve doxygen information after a statement
+        """
+        raise NotImplementedError
 
     _discard_types = {"NEWLINE", "COMMENT_SINGLELINE", "COMMENT_MULTILINE"}
 
-    def _token_limit_exceeded(self) -> typing.NoReturn:
-        from .errors import CxxParseError
-
-        raise CxxParseError("no more tokens left in this group")
-
-    @contextlib.contextmanager
-    def set_group_of_tokens(
-        self, toks: typing.List[LexToken]
-    ) -> typing.Generator[typing.Deque[LexToken], None, None]:
-        # intended for use when you have a set of tokens that you know
-        # must be consumed, such as a paren grouping or some type of
-        # lookahead case
-
-        stack = self.lookahead_stack
-        restore_fn = False
-
-        if not stack:
-            restore_fn = True
-            self._get_token = self._token_limit_exceeded
-
-        this_buf = typing.Deque[LexToken](toks)
-        prev_buf = self.lookahead
-        stack.append(prev_buf)
-        self.lookahead = this_buf
-
-        try:
-            yield this_buf
-        finally:
-            buf = stack.pop()
-            if prev_buf is not buf:
-                raise ValueError("internal error")
-
-            self.lookahead = prev_buf
-
-            if restore_fn:
-                self._get_token = self.lex.token
-
     def token(self) -> LexToken:
-        tok = None
-        while self.lookahead:
-            tok = self.lookahead.popleft()
-            if tok.type not in self._discard_types:
-                return tok
-
+        tokbuf = self.tokbuf
         while True:
-            tok = self._get_token()
-            if tok is None:
+            while tokbuf:
+                tok = tokbuf.popleft()
+                if tok.type not in self._discard_types:
+                    return tok
+
+            if not self._fill_tokbuf(tokbuf):
                 raise EOFError("unexpected end of file")
 
-            if tok.type not in self._discard_types:
-                tok.location = Location(self.filename, tok.lineno - self.line_offset)
-                break
-
-        return tok
-
     def token_eof_ok(self) -> typing.Optional[LexToken]:
-        tok = None
-        while self.lookahead:
-            tok = self.lookahead.popleft()
-            if tok.type not in self._discard_types:
-                return tok
-
+        tokbuf = self.tokbuf
         while True:
-            tok = self._get_token()
-            if tok is None:
-                break
+            while tokbuf:
+                tok = tokbuf.popleft()
+                if tok.type not in self._discard_types:
+                    return tok
 
-            if tok.type not in self._discard_types:
-                tok.location = Location(self.filename, tok.lineno - self.line_offset)
-                break
-
-        return tok
+            if not self._fill_tokbuf(tokbuf):
+                return None
 
     def token_if(self, *types: str) -> typing.Optional[LexToken]:
         tok = self.token_eof_ok()
         if tok is None:
             return None
         if tok.type not in types:
-            # put it back on the left in case it was retrieved
-            # from the lookahead buffer
-            self.lookahead.appendleft(tok)
+            self.tokbuf.appendleft(tok)
             return None
         return tok
 
@@ -658,9 +569,7 @@ class Lexer:
         if tok is None:
             return None
         if tok.type not in types:
-            # put it back on the left in case it was retrieved
-            # from the lookahead buffer
-            self.lookahead.appendleft(tok)
+            self.tokbuf.appendleft(tok)
             return None
         return tok
 
@@ -669,9 +578,7 @@ class Lexer:
         if tok is None:
             return None
         if tok.value not in vals:
-            # put it back on the left in case it was retrieved
-            # from the lookahead buffer
-            self.lookahead.appendleft(tok)
+            self.tokbuf.appendleft(tok)
             return None
         return tok
 
@@ -680,9 +587,7 @@ class Lexer:
         if tok is None:
             return None
         if tok.type in types:
-            # put it back on the left in case it was retrieved
-            # from the lookahead buffer
-            self.lookahead.appendleft(tok)
+            self.tokbuf.appendleft(tok)
             return None
         return tok
 
@@ -690,18 +595,177 @@ class Lexer:
         tok = self.token_eof_ok()
         if not tok:
             return False
-        self.lookahead.appendleft(tok)
+        self.tokbuf.appendleft(tok)
         return tok.type in types
 
     def return_token(self, tok: LexToken) -> None:
-        self.lookahead.appendleft(tok)
+        self.tokbuf.appendleft(tok)
 
     def return_tokens(self, toks: typing.Sequence[LexToken]) -> None:
-        self.lookahead.extendleft(reversed(toks))
+        self.tokbuf.extendleft(reversed(toks))
+
+
+class LexerTokenStream(TokenStream):
+    """
+    Provides tokens from using PlyLexer on the given input text
+    """
+
+    def __init__(self, filename: typing.Optional[str], content: str) -> None:
+        self._lex = PlyLexer(filename)
+        self._lex.input(content)
+        self.tokbuf = typing.Deque[LexToken]()
+
+    def _fill_tokbuf(self, tokbuf: typing.Deque[LexToken]) -> bool:
+        get_token = self._lex.token
+        tokbuf = self.tokbuf
+
+        tok = get_token()
+        if tok is None:
+            return False
+
+        while True:
+            tok.location = self._lex.current_location()
+            tokbuf.append(tok)
+
+            if tok.type == "NEWLINE":
+                break
+
+            tok = get_token()
+            if tok is None:
+                break
+
+        return True
+
+    def current_location(self) -> Location:
+        if self.tokbuf:
+            return self.tokbuf[0].location
+        return self._lex.current_location()
+
+    def get_doxygen(self) -> typing.Optional[str]:
+
+        tokbuf = self.tokbuf
+
+        # fill the token buffer if it's empty (which indicates a newline)
+        if not tokbuf and not self._fill_tokbuf(tokbuf):
+            return None
+
+        comments: typing.List[LexToken] = []
+
+        # retrieve any comments in the stream right before
+        # the first non-discard element
+        keep_going = True
+        while True:
+            while tokbuf:
+                tok = tokbuf.popleft()
+                if tok.type == "NEWLINE":
+                    comments.clear()
+                elif tok.type in ("COMMENT_SINGLELINE", "COMMENT_MULTILINE"):
+                    comments.append(tok)
+                else:
+                    tokbuf.appendleft(tok)
+                    keep_going = False
+                    break
+
+            if not keep_going:
+                break
+
+            if not self._fill_tokbuf(tokbuf):
+                break
+
+        if comments:
+            return self._extract_comments(comments)
+
+        return None
+
+    def get_doxygen_after(self) -> typing.Optional[str]:
+        tokbuf = self.tokbuf
+
+        # if there's a newline directly after a statement, we're done
+        if not tokbuf:
+            return None
+
+        # retrieve comments after non-discard elements
+        comments: typing.List[LexToken] = []
+        new_tokbuf = typing.Deque[LexToken]()
+
+        # This is different: we only extract tokens here
+        while tokbuf:
+            tok = tokbuf.popleft()
+            if tok.type == "NEWLINE":
+                break
+            elif tok.type in ("COMMENT_SINGLELINE", "COMMENT_MULTILINE"):
+                comments.append(tok)
+            else:
+                new_tokbuf.append(tok)
+                if comments:
+                    break
+
+        new_tokbuf.extend(tokbuf)
+        self.tokbuf = new_tokbuf
+
+        if comments:
+            return self._extract_comments(comments)
+
+        return None
+
+    def _extract_comments(self, comments: typing.List[LexToken]):
+        # Now we have comments, need to extract the text from them
+        comment_lines: typing.List[str] = []
+        for c in comments:
+            text = c.value
+            if c.type == "COMMENT_SINGLELINE":
+                if text.startswith("///") or text.startswith("//!"):
+                    comment_lines.append(text.rstrip("\n"))
+            else:
+                if text.startswith("/**") or text.startswith("/*!"):
+                    # not sure why, but get double new lines
+                    text = text.replace("\n\n", "\n")
+                    # strip prefixing whitespace
+                    text = _multicomment_re.sub("\n*", text)
+                    comment_lines = text.splitlines()
+
+        comment_str = "\n".join(comment_lines)
+        if comment_str:
+            return comment_str
+
+        return None
+
+
+class BoundedTokenStream(TokenStream):
+    """
+    Provides tokens from a fixed list of tokens.
+
+    Intended for use when you have a group of tokens that you know
+    must be consumed, such as a paren grouping or some type of
+    lookahead case
+    """
+
+    def __init__(self, toks: typing.List[LexToken]) -> None:
+        self.tokbuf = typing.Deque[LexToken](toks)
+
+    def has_tokens(self) -> bool:
+        return len(self.tokbuf) > 0
+
+    def _fill_tokbuf(self, tokbuf: typing.Deque[LexToken]) -> bool:
+        from .errors import CxxParseError
+
+        raise CxxParseError("no more tokens left in this group")
+
+    def current_location(self) -> Location:
+        if self.tokbuf:
+            return self.tokbuf[0].location
+        raise ValueError("internal error")
+
+    def get_doxygen(self) -> typing.Optional[str]:
+        # comment tokens aren't going to be in this stream
+        return None
+
+    def get_doxygen_after(self) -> typing.Optional[str]:
+        return None
 
 
 if __name__ == "__main__":  # pragma: no cover
     try:
-        lex.runmain(lexer=Lexer(None))
+        lex.runmain(lexer=PlyLexer(None))
     except EOFError:
         pass

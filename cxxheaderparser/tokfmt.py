@@ -1,6 +1,6 @@
 import typing
 
-from .lexer import LexToken, Lexer
+from .lexer import LexToken, PlyLexer, LexerTokenStream
 from .types import Token
 
 # key: token type, value: (left spacing, right spacing)
@@ -32,7 +32,7 @@ _want_spacing = {
     "&": (0, 2),
 }
 
-_want_spacing.update(dict.fromkeys(Lexer.keywords, (2, 2)))
+_want_spacing.update(dict.fromkeys(PlyLexer.keywords, (2, 2)))
 
 
 def tokfmt(toks: typing.List[Token]) -> str:
@@ -67,9 +67,9 @@ if __name__ == "__main__":  # pragma: no cover
     parser.add_argument("header")
     args = parser.parse_args()
 
-    lexer = Lexer(args.header)
-    with open(lexer.filename) as fp:
-        lexer.input(fp.read())  # type: ignore
+    filename: str = args.header
+    with open(filename) as fp:
+        lexer = LexerTokenStream(filename, fp.read())
 
     toks: typing.List[Token] = []
     while True:

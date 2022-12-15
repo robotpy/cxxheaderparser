@@ -1,6 +1,6 @@
 import pytest
 
-from cxxheaderparser.lexer import Lexer
+from cxxheaderparser.lexer import PlyLexer
 from cxxheaderparser.tokfmt import tokfmt
 from cxxheaderparser.types import Token
 
@@ -40,11 +40,11 @@ def test_tokfmt(instr: str) -> None:
     Each input string is exactly what the output of tokfmt should be
     """
     toks = []
-    lexer = Lexer("")
+    lexer = PlyLexer("")
     lexer.input(instr)
 
     while True:
-        tok = lexer.token_eof_ok()
+        tok = lexer.token()
         if not tok:
             break
 
