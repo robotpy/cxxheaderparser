@@ -179,6 +179,7 @@ class PlyLexer:
         # misc
         "DIVIDE",
         "NEWLINE",
+        "WHITESPACE",
         "ELLIPSIS",
         "DBL_LBRACKET",
         "DBL_RBRACKET",
@@ -329,7 +330,8 @@ class PlyLexer:
         + "[FfLl]?)"
     )
 
-    t_ignore = " \t\r?@\f"
+    t_WHITESPACE = "[ \t]+"
+    t_ignore = "\r"
 
     # The following floating and integer constants are defined as
     # functions to impose a strict order (otherwise, decimal
@@ -531,7 +533,12 @@ class TokenStream:
         """
         raise NotImplementedError
 
-    _discard_types = {"NEWLINE", "COMMENT_SINGLELINE", "COMMENT_MULTILINE"}
+    _discard_types = {
+        "NEWLINE",
+        "COMMENT_SINGLELINE",
+        "COMMENT_MULTILINE",
+        "WHITESPACE",
+    }
 
     def token(self) -> LexToken:
         tokbuf = self.tokbuf
@@ -610,6 +617,27 @@ class LexerTokenStream(TokenStream):
     Provides tokens from using PlyLexer on the given input text
     """
 
+    _user_defined_literal_start = {
+        "FLOAT_CONST",
+        "HEX_FLOAT_CONST",
+        "INT_CONST_HEX",
+        "INT_CONST_BIN",
+        "INT_CONST_OCT",
+        "INT_CONST_DEC",
+        "INT_CONST_CHAR",
+        "CHAR_CONST",
+        "WCHAR_CONST",
+        "U8CHAR_CONST",
+        "U16CHAR_CONST",
+        "U32CHAR_CONST",
+        # String literals
+        "STRING_LITERAL",
+        "WSTRING_LITERAL",
+        "U8STRING_LITERAL",
+        "U16STRING_LITERAL",
+        "U32STRING_LITERAL",
+    }
+
     def __init__(self, filename: typing.Optional[str], content: str) -> None:
         self._lex = PlyLexer(filename)
         self._lex.input(content)
@@ -623,12 +651,27 @@ class LexerTokenStream(TokenStream):
         if tok is None:
             return False
 
+        udl_start = self._user_defined_literal_start
+
         while True:
             tok.location = self._lex.current_location()
             tokbuf.append(tok)
 
             if tok.type == "NEWLINE":
                 break
+
+            # detect/combine user defined literals
+            if tok.type in udl_start:
+                tok2 = get_token()
+                if tok2 is None:
+                    break
+
+                if tok2.type != "NAME" or tok2.value[0] != "_":
+                    tok = tok2
+                    continue
+
+                tok.value = tok.value + tok2.value
+                tok.type = f"UD_{tok.type}"
 
             tok = get_token()
             if tok is None:
@@ -659,6 +702,8 @@ class LexerTokenStream(TokenStream):
                 tok = tokbuf.popleft()
                 if tok.type == "NEWLINE":
                     comments.clear()
+                elif tok.type == "WHITESPACE":
+                    pass
                 elif tok.type in ("COMMENT_SINGLELINE", "COMMENT_MULTILINE"):
                     comments.append(tok)
                 else:
@@ -693,6 +738,8 @@ class LexerTokenStream(TokenStream):
             tok = tokbuf.popleft()
             if tok.type == "NEWLINE":
                 break
+            elif tok.type == "WHITESPACE":
+                new_tokbuf.append(tok)
             elif tok.type in ("COMMENT_SINGLELINE", "COMMENT_MULTILINE"):
                 comments.append(tok)
             else:

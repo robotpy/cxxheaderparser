@@ -1,6 +1,6 @@
 import pytest
 
-from cxxheaderparser.lexer import PlyLexer
+from cxxheaderparser.lexer import PlyLexer, LexerTokenStream
 from cxxheaderparser.tokfmt import tokfmt
 from cxxheaderparser.types import Token
 
@@ -48,6 +48,7 @@ def test_tokfmt(instr: str) -> None:
         if not tok:
             break
 
-        toks.append(Token(tok.value, tok.type))
+        if tok.type not in LexerTokenStream._discard_types:
+            toks.append(Token(tok.value, tok.type))
 
     assert tokfmt(toks) == instr
