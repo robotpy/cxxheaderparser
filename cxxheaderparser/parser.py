@@ -308,10 +308,14 @@ class CxxParser:
             ";": lambda _1, _2: None,
         }
 
+        _keep_doxygen = {"__declspec", "alignas", "__attribute__", "DBL_LBRACKET"}
+
         tok = None
 
         get_token_eof_ok = self.lex.token_eof_ok
         get_doxygen = self.lex.get_doxygen
+
+        doxygen = None
 
         try:
             while True:
@@ -319,14 +323,19 @@ class CxxParser:
                 if not tok:
                     break
 
-                doxygen = get_doxygen()
+                if doxygen is None:
+                    doxygen = get_doxygen()
 
                 fn = _translation_unit_tokens.get(tok.type)
                 if fn:
                     fn(tok, doxygen)
+
+                    if tok.type not in _keep_doxygen:
+                        doxygen = None
                 else:
                     # this processes ambiguous declarations
                     self._parse_declarations(tok, doxygen)
+                    doxygen = None
 
         except Exception as e:
             if self.verbose:

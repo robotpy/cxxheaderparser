@@ -329,3 +329,50 @@ def test_doxygen_namespace() -> None:
             }
         )
     )
+
+
+def test_doxygen_declspec() -> None:
+    content = """
+      /// declspec comment
+      __declspec(thread) int i = 1;
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            variables=[
+                Variable(
+                    name=PQName(segments=[NameSpecifier(name="i")]),
+                    type=Type(
+                        typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                    ),
+                    value=Value(tokens=[Token(value="1")]),
+                    doxygen="/// declspec comment",
+                )
+            ]
+        )
+    )
+
+
+def test_doxygen_attribute() -> None:
+    content = """
+      /// hasattr comment
+      [[nodiscard]]
+      int hasattr();
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            functions=[
+                Function(
+                    return_type=Type(
+                        typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                    ),
+                    name=PQName(segments=[NameSpecifier(name="hasattr")]),
+                    parameters=[],
+                    doxygen="/// hasattr comment",
+                )
+            ]
+        )
+    )
