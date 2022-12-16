@@ -209,16 +209,13 @@ def test_doxygen_fn_3slash() -> None:
     )
 
 
-def test_doxygen_fn_cstyle() -> None:
+def test_doxygen_fn_cstyle1() -> None:
     content = """
-      // clang-format off
-      
       /**
        * fn comment
        */
       void
       fn();
-      
     """
     data = parse_string(content, cleandoc=True)
 
@@ -232,6 +229,32 @@ def test_doxygen_fn_cstyle() -> None:
                     name=PQName(segments=[NameSpecifier(name="fn")]),
                     parameters=[],
                     doxygen="/**\n* fn comment\n*/",
+                )
+            ]
+        )
+    )
+
+
+def test_doxygen_fn_cstyle2() -> None:
+    content = """
+      /*!
+      * fn comment
+      */
+      void
+      fn();
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            functions=[
+                Function(
+                    return_type=Type(
+                        typename=PQName(segments=[FundamentalSpecifier(name="void")])
+                    ),
+                    name=PQName(segments=[NameSpecifier(name="fn")]),
+                    parameters=[],
+                    doxygen="/*!\n* fn comment\n*/",
                 )
             ]
         )
@@ -292,6 +315,44 @@ def test_doxygen_var_after() -> None:
     )
 
 
+def test_doxygen_multiple_variables() -> None:
+    content = """
+      int x; /// this is x
+      int y; /// this is y
+             /// this is also y
+      int z; /// this is z
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            variables=[
+                Variable(
+                    name=PQName(segments=[NameSpecifier(name="x")]),
+                    type=Type(
+                        typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                    ),
+                    doxygen="/// this is x",
+                ),
+                Variable(
+                    name=PQName(segments=[NameSpecifier(name="y")]),
+                    type=Type(
+                        typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                    ),
+                    doxygen="/// this is y\n/// this is also y",
+                ),
+                Variable(
+                    name=PQName(segments=[NameSpecifier(name="z")]),
+                    type=Type(
+                        typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                    ),
+                    doxygen="/// this is z",
+                ),
+            ]
+        )
+    )
+
+
 def test_doxygen_namespace() -> None:
     content = """
       /**
@@ -327,5 +388,52 @@ def test_doxygen_namespace() -> None:
                     },
                 ),
             }
+        )
+    )
+
+
+def test_doxygen_declspec() -> None:
+    content = """
+      /// declspec comment
+      __declspec(thread) int i = 1;
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            variables=[
+                Variable(
+                    name=PQName(segments=[NameSpecifier(name="i")]),
+                    type=Type(
+                        typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                    ),
+                    value=Value(tokens=[Token(value="1")]),
+                    doxygen="/// declspec comment",
+                )
+            ]
+        )
+    )
+
+
+def test_doxygen_attribute() -> None:
+    content = """
+      /// hasattr comment
+      [[nodiscard]]
+      int hasattr();
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            functions=[
+                Function(
+                    return_type=Type(
+                        typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                    ),
+                    name=PQName(segments=[NameSpecifier(name="hasattr")]),
+                    parameters=[],
+                    doxygen="/// hasattr comment",
+                )
+            ]
         )
     )

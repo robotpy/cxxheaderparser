@@ -236,3 +236,34 @@ def test_final() -> None:
             ],
         )
     )
+
+
+#
+# User defined literals
+#
+
+
+def test_user_defined_literal() -> None:
+    content = """
+      units::volt_t v = 1_V;
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            variables=[
+                Variable(
+                    name=PQName(segments=[NameSpecifier(name="v")]),
+                    type=Type(
+                        typename=PQName(
+                            segments=[
+                                NameSpecifier(name="units"),
+                                NameSpecifier(name="volt_t"),
+                            ]
+                        )
+                    ),
+                    value=Value(tokens=[Token(value="1_V")]),
+                )
+            ]
+        )
+    )

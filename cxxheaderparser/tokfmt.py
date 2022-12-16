@@ -1,15 +1,28 @@
 import typing
 
-from .lexer import LexToken, Lexer
+from .lexer import LexToken, PlyLexer, LexerTokenStream
 from .types import Token
 
 # key: token type, value: (left spacing, right spacing)
 _want_spacing = {
-    "NUMBER": (2, 2),
-    "FLOAT_NUMBER": (2, 2),
+    "FLOAT_CONST": (2, 2),
+    "HEX_FLOAT_CONST": (2, 2),
+    "INT_CONST_HEX": (2, 2),
+    "INT_CONST_BIN": (2, 2),
+    "INT_CONST_OCT": (2, 2),
+    "INT_CONST_DEC": (2, 2),
+    "INT_CONST_CHAR": (2, 2),
     "NAME": (2, 2),
-    "CHAR_LITERAL": (2, 2),
+    "CHAR_CONST": (2, 2),
+    "WCHAR_CONST": (2, 2),
+    "U8CHAR_CONST": (2, 2),
+    "U16CHAR_CONST": (2, 2),
+    "U32CHAR_CONST": (2, 2),
     "STRING_LITERAL": (2, 2),
+    "WSTRING_LITERAL": (2, 2),
+    "U8STRING_LITERAL": (2, 2),
+    "U16STRING_LITERAL": (2, 2),
+    "U32STRING_LITERAL": (2, 2),
     "ELLIPSIS": (2, 2),
     ">": (0, 2),
     ")": (0, 1),
@@ -19,7 +32,7 @@ _want_spacing = {
     "&": (0, 2),
 }
 
-_want_spacing.update(dict.fromkeys(Lexer.keywords, (2, 2)))
+_want_spacing.update(dict.fromkeys(PlyLexer.keywords, (2, 2)))
 
 
 def tokfmt(toks: typing.List[Token]) -> str:
@@ -54,9 +67,9 @@ if __name__ == "__main__":  # pragma: no cover
     parser.add_argument("header")
     args = parser.parse_args()
 
-    lexer = Lexer(args.header)
-    with open(lexer.filename) as fp:
-        lexer.input(fp.read())  # type: ignore
+    filename: str = args.header
+    with open(filename) as fp:
+        lexer = LexerTokenStream(filename, fp.read())
 
     toks: typing.List[Token] = []
     while True:

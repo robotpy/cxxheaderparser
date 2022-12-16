@@ -1,6 +1,7 @@
 import typing
 
-from .lexer import LexToken
+if typing.TYPE_CHECKING:
+    from .lexer import LexToken
 
 
 class CxxParseError(Exception):
