@@ -4,8 +4,9 @@ import inspect
 import re
 import typing
 
+from . import lexer
 from .errors import CxxParseError
-from .lexer import Lexer, LexToken, Location, PhonyEnding
+from .lexer import LexToken, Location, PhonyEnding
 from .options import ParserOptions
 from .parserstate import (
     ClassBlockState,
@@ -80,8 +81,7 @@ class CxxParser:
         self.visitor = visitor
         self.filename = filename
 
-        self.lex = Lexer(filename)
-        self.lex.input(content)
+        self.lex: lexer.TokenStream = lexer.LexerTokenStream(filename, content)
 
         global_ns = NamespaceDecl([], False)
         self.current_namespace = global_ns
@@ -308,25 +308,34 @@ class CxxParser:
             ";": lambda _1, _2: None,
         }
 
+        _keep_doxygen = {"__declspec", "alignas", "__attribute__", "DBL_LBRACKET"}
+
         tok = None
 
         get_token_eof_ok = self.lex.token_eof_ok
         get_doxygen = self.lex.get_doxygen
 
+        doxygen = None
+
         try:
             while True:
+                if doxygen is None:
+                    doxygen = get_doxygen()
+
                 tok = get_token_eof_ok()
                 if not tok:
                     break
 
-                doxygen = get_doxygen()
-
                 fn = _translation_unit_tokens.get(tok.type)
                 if fn:
                     fn(tok, doxygen)
+
+                    if tok.type not in _keep_doxygen:
+                        doxygen = None
                 else:
                     # this processes ambiguous declarations
                     self._parse_declarations(tok, doxygen)
+                    doxygen = None
 
         except Exception as e:
             if self.verbose:
@@ -610,7 +619,12 @@ class CxxParser:
                 # append a token to make other parsing components happy
                 raw_toks.append(PhonyEnding)
 
-                with self.lex.set_group_of_tokens(raw_toks) as remainder:
+                old_lex = self.lex
+                try:
+                    # set up a temporary token stream with the tokens we need to parse
+                    tmp_lex = lexer.BoundedTokenStream(raw_toks)
+                    self.lex = tmp_lex
+
                     try:
                         parsed_type, mods = self._parse_type(None)
                         if parsed_type is None:
@@ -622,8 +636,11 @@ class CxxParser:
                     except CxxParseError:
                         dtype = None
                     else:
-                        if remainder:
+                        if tmp_lex.has_tokens():
                             dtype = None
+
+                finally:
+                    self.lex = old_lex
 
             if self.lex.token_if("ELLIPSIS"):
                 param_pack = True
@@ -939,12 +956,16 @@ class CxxParser:
         values: typing.List[Enumerator] = []
 
         while True:
+            doxygen = self.lex.get_doxygen()
+
             name_tok = self._next_token_must_be("}", "NAME")
             if name_tok.value == "}":
                 break
 
+            if doxygen is None:
+                doxygen = self.lex.get_doxygen_after()
+
             name = name_tok.value
-            doxygen = self.lex.get_doxygen()
             value = None
 
             tok = self._next_token_must_be("}", ",", "=", "DBL_LBRACKET")
@@ -1171,7 +1192,7 @@ class CxxParser:
 
     def _parse_bitfield(self) -> int:
         # is a integral constant expression... for now, just do integers
-        tok = self._next_token_must_be("NUMBER")
+        tok = self._next_token_must_be("INT_CONST_DEC")
         return int(tok.value)
 
     def _parse_field(
@@ -1244,7 +1265,7 @@ class CxxParser:
 
         if doxygen is None:
             # try checking after the var
-            doxygen = self.lex.get_doxygen()
+            doxygen = self.lex.get_doxygen_after()
 
         if is_typedef:
             if not name:
