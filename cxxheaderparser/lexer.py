@@ -685,7 +685,6 @@ class LexerTokenStream(TokenStream):
         return self._lex.current_location()
 
     def get_doxygen(self) -> typing.Optional[str]:
-
         tokbuf = self.tokbuf
 
         # fill the token buffer if it's empty (which indicates a newline)

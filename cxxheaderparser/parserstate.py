@@ -29,7 +29,6 @@ class ParsedTypeModifiers(typing.NamedTuple):
 
 
 class State:
-
     #: parent state
     parent: typing.Optional["State"]
 
@@ -49,7 +48,6 @@ class EmptyBlockState(State):
 
 
 class ExternBlockState(State):
-
     #: The linkage for this extern block
     linkage: str
 
@@ -62,7 +60,6 @@ class ExternBlockState(State):
 
 
 class NamespaceBlockState(State):
-
     #: The incremental namespace for this block
     namespace: NamespaceDecl
 
@@ -77,7 +74,6 @@ class NamespaceBlockState(State):
 
 
 class ClassBlockState(State):
-
     #: class decl block being processed
     class_decl: ClassDecl
 

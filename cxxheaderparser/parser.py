@@ -213,7 +213,6 @@ class CxxParser:
         *init_tokens: LexToken,
         token_map: typing.Optional[typing.Dict[str, str]] = None,
     ) -> LexTokenList:
-
         if token_map is None:
             token_map = self._balanced_token_map
 
@@ -427,7 +426,6 @@ class CxxParser:
         self.visitor.on_namespace_start(state)
 
     def _parse_extern(self, tok: LexToken, doxygen: typing.Optional[str]) -> None:
-
         etok = self.lex.token_if("STRING_LITERAL", "template")
         if etok:
             if etok.type == "STRING_LITERAL":
@@ -535,7 +533,6 @@ class CxxParser:
 
         if not lex.token_if(">"):
             while True:
-
                 tok = lex.token()
                 tok_type = tok.type
 
@@ -603,7 +600,6 @@ class CxxParser:
         # On entry, < has just been consumed
 
         while True:
-
             # We don't know whether each argument will be a type or an expression.
             # Retrieve the expression first, then try to parse the name using those
             # tokens. If it succeeds we're done, otherwise we use the value
@@ -615,7 +611,6 @@ class CxxParser:
             dtype = None
 
             if raw_toks and raw_toks[0].type in self._pqname_start_tokens:
-
                 # append a token to make other parsing components happy
                 raw_toks.append(PhonyEnding)
 
@@ -1124,7 +1119,6 @@ class CxxParser:
     def _process_access_specifier(
         self, tok: LexToken, doxygen: typing.Optional[str]
     ) -> None:
-
         state = self.state
         if not isinstance(state, ClassBlockState):
             raise self._parse_error(tok)
@@ -1205,7 +1199,6 @@ class CxxParser:
         location: Location,
         is_typedef: bool,
     ) -> None:
-
         state = self.state
         state.location = location
         if isinstance(state, ClassBlockState):
@@ -1386,7 +1379,6 @@ class CxxParser:
 
         # parse out operators as that's generally useful
         if tok_value == "operator":
-
             op_parts = self._parse_pqname_name_operator()
             op = "".join(o.value for o in op_parts)
             name = f"operator{op}"
@@ -1614,7 +1606,6 @@ class CxxParser:
         vararg = False
 
         while True:
-
             if self.lex.token_if("ELLIPSIS"):
                 vararg = True
                 self._next_token_must_be(")")
@@ -1789,7 +1780,6 @@ class CxxParser:
         multiple_name_segments = len(pqname.segments) > 1
 
         if (is_class_block or multiple_name_segments) and not is_typedef:
-
             props.update(dict.fromkeys(mods.meths.keys(), True))
 
             method: Method
@@ -1901,7 +1891,6 @@ class CxxParser:
     #
 
     def _parse_array_type(self, tok: LexToken, dtype: DecoratedType) -> Array:
-
         assert tok.type == "["
 
         if isinstance(dtype, (Reference, MoveReference)):
@@ -2157,7 +2146,6 @@ class CxxParser:
         # paren or it's a constructor
         tok = self.lex.token_if("(")
         if tok:
-
             dsegments: typing.List[PQNameSegment] = []
             if isinstance(dtype, Type):
                 dsegments = dtype.typename.segments
@@ -2166,7 +2154,6 @@ class CxxParser:
             # the method name to the class name
             is_class_block = isinstance(state, ClassBlockState)
             if (is_class_block or len(dsegments) > 1) and isinstance(dtype, Type):
-
                 if not is_class_block:
                     # must be an instance of a class
                     cls_name = getattr(dsegments[-2], "name", None)
@@ -2397,7 +2384,6 @@ class CxxParser:
         is_friend: bool,
         location: Location,
     ) -> bool:
-
         # check for forward declaration or friend declaration
         if self.lex.token_if(";"):
             if is_typedef:
@@ -2435,7 +2421,6 @@ class CxxParser:
 
         tok = self.lex.token_if_in_set(self._class_enum_stage2)
         if tok:
-
             classkey = parsed_type.typename.classkey
             # var is ok because it could be carried on to any variables
             mods.validate(
