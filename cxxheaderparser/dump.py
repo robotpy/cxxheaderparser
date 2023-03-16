@@ -10,7 +10,6 @@ from .simple import parse_file
 
 
 def dumpmain() -> None:
-
     parser = argparse.ArgumentParser()
     parser.add_argument("header")
     parser.add_argument(

@@ -22,6 +22,7 @@ from cxxheaderparser.simple import (
     ParsedData,
 )
 
+
 # friends
 def test_various_friends() -> None:
     content = """
