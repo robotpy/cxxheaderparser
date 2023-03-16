@@ -4,6 +4,7 @@ from cxxheaderparser.errors import CxxParseError
 from cxxheaderparser.types import (
     ForwardDecl,
     FundamentalSpecifier,
+    NamespaceAlias,
     NameSpecifier,
     PQName,
     Token,
@@ -168,3 +169,29 @@ def test_invalid_inline_namespace() -> None:
     err = "<str>:1: parse error evaluating 'inline': a nested namespace definition cannot be inline"
     with pytest.raises(CxxParseError, match=re.escape(err)):
         parse_string(content, cleandoc=True)
+
+
+def test_ns_alias() -> None:
+    content = """
+      namespace ANS = my::ns;
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            ns_alias=[NamespaceAlias(alias="ANS", names=["my", "ns"])]
+        )
+    )
+
+
+def test_ns_alias_global() -> None:
+    content = """
+      namespace ANS = ::my::ns;
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            ns_alias=[NamespaceAlias(alias="ANS", names=["::", "my", "ns"])]
+        )
+    )

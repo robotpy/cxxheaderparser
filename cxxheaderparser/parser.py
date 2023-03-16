@@ -35,6 +35,7 @@ from .types import (
     Method,
     MoveReference,
     NameSpecifier,
+    NamespaceAlias,
     NamespaceDecl,
     Operator,
     PQNameSegment,
@@ -404,13 +405,26 @@ class CxxParser:
 
         names = []
         location = tok.location
+        ns_alias: typing.Union[typing.Literal[False], LexToken] = False
 
         tok = self._next_token_must_be("NAME", "{")
         if tok.type != "{":
+            endtok = "{"
+            # Check for namespace alias here
+            etok = self.lex.token_if("=")
+            if etok:
+                ns_alias = tok
+                endtok = ";"
+                # They can start with ::
+                maybe_tok = self.lex.token_if("DBL_COLON")
+                if maybe_tok:
+                    names.append(maybe_tok.value)
+                tok = self._next_token_must_be("NAME")
+
             while True:
                 names.append(tok.value)
-                tok = self._next_token_must_be("DBL_COLON", "{")
-                if tok.type == "{":
+                tok = self._next_token_must_be("DBL_COLON", endtok)
+                if tok.type == endtok:
                     break
 
                 tok = self._next_token_must_be("NAME")
@@ -418,7 +432,10 @@ class CxxParser:
         if inline and len(names) > 1:
             raise CxxParseError("a nested namespace definition cannot be inline")
 
-        # TODO: namespace_alias_definition
+        if ns_alias:
+            alias = NamespaceAlias(ns_alias.value, names)
+            self.visitor.on_namespace_alias(self.state, alias)
+            return
 
         ns = NamespaceDecl(names, inline, doxygen)
         state = self._push_state(NamespaceBlockState, ns)
