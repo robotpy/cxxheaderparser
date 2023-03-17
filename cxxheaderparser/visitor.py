@@ -14,6 +14,7 @@ from .types import (
     FriendDecl,
     Function,
     Method,
+    NamespaceAlias,
     TemplateInst,
     Typedef,
     UsingAlias,
@@ -92,6 +93,11 @@ class CxxVisitor(Protocol):
     def on_namespace_end(self, state: NamespaceBlockState) -> None:
         """
         Called at the end of a ``namespace`` block
+        """
+
+    def on_namespace_alias(self, state: State, alias: NamespaceAlias) -> None:
+        """
+        Called when a ``namespace`` alias is encountered
         """
 
     def on_forward_decl(self, state: State, fdecl: ForwardDecl) -> None:

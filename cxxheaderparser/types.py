@@ -39,6 +39,26 @@ class Value:
 
 
 @dataclass
+class NamespaceAlias:
+    """
+    A namespace alias
+
+    .. code-block:: c++
+
+        namespace ANS = my::ns;
+                  ~~~   ~~~~~~
+
+    """
+
+    alias: str
+
+    #: These are the names (split by ::) for the namespace that this alias
+    #: refers to, but does not include any parent namespace names. It may
+    #: include a leading "::", but does not include a following :: string.
+    names: typing.List[str]
+
+
+@dataclass
 class NamespaceDecl:
     """
     Namespace declarations
