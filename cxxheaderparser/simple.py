@@ -39,6 +39,7 @@ from .types import (
     FriendDecl,
     Function,
     Method,
+    NamespaceAlias,
     TemplateInst,
     Typedef,
     UsingAlias,
@@ -110,6 +111,7 @@ class NamespaceScope:
     using: typing.List[UsingDecl] = field(default_factory=list)
     using_ns: typing.List["UsingNamespace"] = field(default_factory=list)
     using_alias: typing.List[UsingAlias] = field(default_factory=list)
+    ns_alias: typing.List[NamespaceAlias] = field(default_factory=list)
 
     #: Explicit template instantiations
     template_insts: typing.List[TemplateInst] = field(default_factory=list)
@@ -260,6 +262,10 @@ class SimpleCxxVisitor:
     def on_namespace_end(self, state: NamespaceBlockState) -> None:
         self.block = self.block_stack.pop()
         self.namespace = self.ns_stack.pop()
+
+    def on_namespace_alias(self, state: State, alias: NamespaceAlias) -> None:
+        assert isinstance(self.block, NamespaceScope)
+        self.block.ns_alias.append(alias)
 
     def on_forward_decl(self, state: State, fdecl: ForwardDecl) -> None:
         self.block.forward_decls.append(fdecl)
