@@ -952,7 +952,7 @@ class CxxParser:
         self.visitor.on_enum(self.state, enum)
 
         # Finish it up
-        self._finish_class_or_enum(enum.typename, is_typedef, mods)
+        self._finish_class_or_enum(enum.typename, is_typedef, mods, "enum")
 
     def _parse_enumerator_list(self) -> typing.List[Enumerator]:
         """
@@ -1131,7 +1131,7 @@ class CxxParser:
         self.visitor.on_class_start(state)
 
     def _finish_class_decl(self, state: ClassBlockState) -> None:
-        self._finish_class_or_enum(state.class_decl.typename, state.typedef, state.mods)
+        self._finish_class_or_enum(state.class_decl.typename, state.typedef, state.mods, state.class_decl.classkey)
 
     def _process_access_specifier(
         self, tok: LexToken, doxygen: typing.Optional[str]
@@ -2473,6 +2473,7 @@ class CxxParser:
         name: PQName,
         is_typedef: bool,
         mods: ParsedTypeModifiers,
+        classkey: str
     ) -> None:
         parsed_type = Type(name)
 
@@ -2481,6 +2482,20 @@ class CxxParser:
             self._consume_gcc_attribute(tok)
 
         if not is_typedef and self.lex.token_if(";"):
+            # if parent scope is a class, add the anonymous
+            # union to the parent fields
+            if isinstance(self.state, ClassBlockState):
+                class_state = self.state
+                
+                access = self._current_access
+                assert access is not None
+                
+                if classkey == "struct" or classkey == "union":
+                    f = Field(
+                        type=Type(name),
+                        access=access,
+                    )
+                    self.visitor.on_class_field(class_state, f)
             return
 
         while True:
