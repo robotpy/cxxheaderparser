@@ -154,7 +154,7 @@ def test_union_anon_in_struct() -> None:
                                 )
                             ),
                             name="z",
-                        )
+                        ),
                     ],
                 )
             ]

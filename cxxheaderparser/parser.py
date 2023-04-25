@@ -1131,7 +1131,12 @@ class CxxParser:
         self.visitor.on_class_start(state)
 
     def _finish_class_decl(self, state: ClassBlockState) -> None:
-        self._finish_class_or_enum(state.class_decl.typename, state.typedef, state.mods, state.class_decl.classkey)
+        self._finish_class_or_enum(
+            state.class_decl.typename,
+            state.typedef,
+            state.mods,
+            state.class_decl.classkey,
+        )
 
     def _process_access_specifier(
         self, tok: LexToken, doxygen: typing.Optional[str]
@@ -2469,11 +2474,7 @@ class CxxParser:
         return False
 
     def _finish_class_or_enum(
-        self,
-        name: PQName,
-        is_typedef: bool,
-        mods: ParsedTypeModifiers,
-        classkey: str
+        self, name: PQName, is_typedef: bool, mods: ParsedTypeModifiers, classkey: str
     ) -> None:
         parsed_type = Type(name)
 
@@ -2486,10 +2487,10 @@ class CxxParser:
             # union to the parent fields
             if isinstance(self.state, ClassBlockState):
                 class_state = self.state
-                
+
                 access = self._current_access
                 assert access is not None
-                
+
                 if classkey == "struct" or classkey == "union":
                     f = Field(
                         type=Type(name),
