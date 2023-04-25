@@ -2474,7 +2474,11 @@ class CxxParser:
         return False
 
     def _finish_class_or_enum(
-        self, name: PQName, is_typedef: bool, mods: ParsedTypeModifiers, classkey: str
+        self,
+        name: PQName,
+        is_typedef: bool,
+        mods: ParsedTypeModifiers,
+        classkey: typing.Optional[str],
     ) -> None:
         parsed_type = Type(name)
 
@@ -2491,7 +2495,7 @@ class CxxParser:
                 access = self._current_access
                 assert access is not None
 
-                if classkey == "struct" or classkey == "union":
+                if classkey is not None and (classkey == "union"):
                     f = Field(
                         type=Type(name),
                         access=access,
