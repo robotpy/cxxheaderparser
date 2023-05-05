@@ -13,16 +13,16 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - uses: psf/black@stable
   
   check-mypy:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     # - uses: jpetrucciani/mypy-check@0.930
     # .. can't use that because we need to install pytest
-    - uses: actions/setup-python@v2
+    - uses: actions/setup-python@v4
       with:
         python-version: 3.8
     - name: Install requirements
@@ -33,15 +33,15 @@ jobs:
         mypy .
 
   check-doc:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
     
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         submodules: recursive
         fetch-depth: 0
 
-    - uses: actions/setup-python@v2
+    - uses: actions/setup-python@v4
       with:
         python-version: 3.8
     - name: Sphinx
@@ -54,22 +54,22 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [windows-latest, macos-latest, ubuntu-18.04]
+        os: [windows-latest, macos-latest, ubuntu-20.04]
         python_version: [3.6, 3.7, 3.8, 3.9, "3.10"]
         architecture: [x86, x64]
         exclude:
         - os: macos-latest
           architecture: x86
-        - os: ubuntu-18.04
+        - os: ubuntu-20.04
           architecture: x86
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         submodules: recursive
         fetch-depth: 0
     
-    - uses: actions/setup-python@v2
+    - uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python_version }}
         architecture: ${{ matrix.architecture }}
@@ -97,12 +97,12 @@ jobs:
     if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags')
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         submodules: recursive
         fetch-depth: 0
     
-    - uses: actions/setup-python@v2
+    - uses: actions/setup-python@v4
       with:
         python-version: 3.8
     - run: pip --disable-pip-version-check install wheel
