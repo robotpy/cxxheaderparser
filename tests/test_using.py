@@ -1,33 +1,27 @@
 # Note: testcases generated via `python -m cxxheaderparser.gentest`
-
-from cxxheaderparser.types import (
-    BaseClass,
-    ClassDecl,
-    Function,
-    FunctionType,
-    FundamentalSpecifier,
-    Method,
-    NameSpecifier,
-    PQName,
-    Parameter,
-    Pointer,
-    Reference,
-    TemplateArgument,
-    TemplateDecl,
-    TemplateSpecialization,
-    TemplateTypeParam,
-    Token,
-    Type,
-    UsingAlias,
-    UsingDecl,
-)
-from cxxheaderparser.simple import (
-    ClassScope,
-    NamespaceScope,
-    UsingNamespace,
-    parse_string,
-    ParsedData,
-)
+from cxxheaderparser.simple import ClassScope
+from cxxheaderparser.simple import NamespaceScope
+from cxxheaderparser.simple import parse_string
+from cxxheaderparser.simple import ParsedData
+from cxxheaderparser.simple import UsingNamespace
+from cxxheaderparser.types import BaseClass
+from cxxheaderparser.types import ClassDecl
+from cxxheaderparser.types import Function
+from cxxheaderparser.types import FunctionType
+from cxxheaderparser.types import FundamentalSpecifier
+from cxxheaderparser.types import Method
+from cxxheaderparser.types import NameSpecifier
+from cxxheaderparser.types import Parameter
+from cxxheaderparser.types import Pointer
+from cxxheaderparser.types import PQName
+from cxxheaderparser.types import Reference
+from cxxheaderparser.types import TemplateArgument
+from cxxheaderparser.types import TemplateDecl
+from cxxheaderparser.types import TemplateSpecialization
+from cxxheaderparser.types import TemplateTypeParam
+from cxxheaderparser.types import Type
+from cxxheaderparser.types import UsingAlias
+from cxxheaderparser.types import UsingDecl
 
 
 def test_using_namespace() -> None:
@@ -36,7 +30,7 @@ def test_using_namespace() -> None:
       using namespace foo::bar;
       using namespace ::foo;
       using namespace ::foo::bar;
-      
+
     """
     data = parse_string(content, cleandoc=True)
 
@@ -47,8 +41,8 @@ def test_using_namespace() -> None:
                 UsingNamespace(ns="foo::bar"),
                 UsingNamespace(ns="::foo"),
                 UsingNamespace(ns="::foo::bar"),
-            ]
-        )
+            ],
+        ),
     )
 
 
@@ -67,22 +61,13 @@ def test_using_declaration() -> None:
             using=[
                 UsingDecl(
                     typename=PQName(
-                        segments=[NameSpecifier(name=""), NameSpecifier(name="foo")]
-                    )
+                        segments=[NameSpecifier(name=""), NameSpecifier(name="foo")],
+                    ),
                 ),
                 UsingDecl(
                     typename=PQName(
-                        segments=[NameSpecifier(name="foo"), NameSpecifier(name="bar")]
-                    )
-                ),
-                UsingDecl(
-                    typename=PQName(
-                        segments=[
-                            NameSpecifier(name=""),
-                            NameSpecifier(name="foo"),
-                            NameSpecifier(name="bar"),
-                        ]
-                    )
+                        segments=[NameSpecifier(name="foo"), NameSpecifier(name="bar")],
+                    ),
                 ),
                 UsingDecl(
                     typename=PQName(
@@ -90,16 +75,25 @@ def test_using_declaration() -> None:
                             NameSpecifier(name=""),
                             NameSpecifier(name="foo"),
                             NameSpecifier(name="bar"),
-                        ]
-                    )
+                        ],
+                    ),
                 ),
                 UsingDecl(
                     typename=PQName(
-                        segments=[NameSpecifier(name="foo"), NameSpecifier(name="bar")]
-                    )
+                        segments=[
+                            NameSpecifier(name=""),
+                            NameSpecifier(name="foo"),
+                            NameSpecifier(name="bar"),
+                        ],
+                    ),
                 ),
-            ]
-        )
+                UsingDecl(
+                    typename=PQName(
+                        segments=[NameSpecifier(name="foo"), NameSpecifier(name="bar")],
+                    ),
+                ),
+            ],
+        ),
     )
 
 
@@ -116,9 +110,9 @@ def test_alias_declaration_1() -> None:
                 UsingAlias(
                     alias="alias",
                     type=Type(typename=PQName(segments=[NameSpecifier(name="foo")])),
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -144,23 +138,23 @@ def test_alias_declaration_2() -> None:
                                                 arg=Type(
                                                     typename=PQName(
                                                         segments=[
-                                                            NameSpecifier(name="T")
-                                                        ]
-                                                    )
-                                                )
-                                            )
-                                        ]
+                                                            NameSpecifier(name="T"),
+                                                        ],
+                                                    ),
+                                                ),
+                                            ),
+                                        ],
                                     ),
-                                )
-                            ]
-                        )
+                                ),
+                            ],
+                        ),
                     ),
                     template=TemplateDecl(
-                        params=[TemplateTypeParam(typekey="typename", name="T")]
+                        params=[TemplateTypeParam(typekey="typename", name="T")],
                     ),
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -181,12 +175,12 @@ def test_alias_declaration_3() -> None:
                                 NameSpecifier(name=""),
                                 NameSpecifier(name="foo"),
                                 NameSpecifier(name="bar"),
-                            ]
-                        )
+                            ],
+                        ),
                     ),
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -214,23 +208,23 @@ def test_alias_declaration_4() -> None:
                                                 arg=Type(
                                                     typename=PQName(
                                                         segments=[
-                                                            NameSpecifier(name="T")
-                                                        ]
-                                                    )
-                                                )
-                                            )
-                                        ]
+                                                            NameSpecifier(name="T"),
+                                                        ],
+                                                    ),
+                                                ),
+                                            ),
+                                        ],
                                     ),
                                 ),
-                            ]
-                        )
+                            ],
+                        ),
                     ),
                     template=TemplateDecl(
-                        params=[TemplateTypeParam(typekey="typename", name="T")]
+                        params=[TemplateTypeParam(typekey="typename", name="T")],
                     ),
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -250,12 +244,12 @@ def test_alias_declaration_5() -> None:
                             segments=[
                                 NameSpecifier(name="foo"),
                                 NameSpecifier(name="bar"),
-                            ]
-                        )
+                            ],
+                        ),
                     ),
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -281,44 +275,44 @@ def test_alias_declaration_6() -> None:
                                                 arg=Type(
                                                     typename=PQName(
                                                         segments=[
-                                                            NameSpecifier(name="T")
-                                                        ]
-                                                    )
-                                                )
-                                            )
-                                        ]
+                                                            NameSpecifier(name="T"),
+                                                        ],
+                                                    ),
+                                                ),
+                                            ),
+                                        ],
                                     ),
                                 ),
                                 NameSpecifier(name="bar"),
-                            ]
-                        )
+                            ],
+                        ),
                     ),
                     template=TemplateDecl(
-                        params=[TemplateTypeParam(typekey="typename", name="T")]
+                        params=[TemplateTypeParam(typekey="typename", name="T")],
                     ),
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
 def test_using_many_things() -> None:
     content = """
       // clang-format off
-      
+
       using std::thing;
       using MyThing = SomeThing;
       namespace a {
           using std::string;
           using VoidFunction = std::function<void()>;
-      
+
           void fn(string &s, VoidFunction fn, thing * t);
-      
+
           class A : public B {
           public:
               using B::B;
               using IntFunction = std::function<int()>;
-      
+
               void a(string &s, IntFunction fn, thing * t);
           };
       }
@@ -333,17 +327,17 @@ def test_using_many_things() -> None:
                         segments=[
                             NameSpecifier(name="std"),
                             NameSpecifier(name="thing"),
-                        ]
-                    )
-                )
+                        ],
+                    ),
+                ),
             ],
             using_alias=[
                 UsingAlias(
                     alias="MyThing",
                     type=Type(
-                        typename=PQName(segments=[NameSpecifier(name="SomeThing")])
+                        typename=PQName(segments=[NameSpecifier(name="SomeThing")]),
                     ),
-                )
+                ),
             ],
             namespaces={
                 "a": NamespaceScope(
@@ -352,23 +346,26 @@ def test_using_many_things() -> None:
                         ClassScope(
                             class_decl=ClassDecl(
                                 typename=PQName(
-                                    segments=[NameSpecifier(name="A")], classkey="class"
+                                    segments=[NameSpecifier(name="A")],
+                                    classkey="class",
                                 ),
                                 bases=[
                                     BaseClass(
                                         access="public",
                                         typename=PQName(
-                                            segments=[NameSpecifier(name="B")]
+                                            segments=[NameSpecifier(name="B")],
                                         ),
-                                    )
+                                    ),
                                 ],
                             ),
                             methods=[
                                 Method(
                                     return_type=Type(
                                         typename=PQName(
-                                            segments=[FundamentalSpecifier(name="void")]
-                                        )
+                                            segments=[
+                                                FundamentalSpecifier(name="void"),
+                                            ],
+                                        ),
                                     ),
                                     name=PQName(segments=[NameSpecifier(name="a")]),
                                     parameters=[
@@ -377,10 +374,12 @@ def test_using_many_things() -> None:
                                                 ref_to=Type(
                                                     typename=PQName(
                                                         segments=[
-                                                            NameSpecifier(name="string")
-                                                        ]
-                                                    )
-                                                )
+                                                            NameSpecifier(
+                                                                name="string",
+                                                            ),
+                                                        ],
+                                                    ),
+                                                ),
                                             ),
                                             name="s",
                                         ),
@@ -389,10 +388,10 @@ def test_using_many_things() -> None:
                                                 typename=PQName(
                                                     segments=[
                                                         NameSpecifier(
-                                                            name="IntFunction"
-                                                        )
-                                                    ]
-                                                )
+                                                            name="IntFunction",
+                                                        ),
+                                                    ],
+                                                ),
                                             ),
                                             name="fn",
                                         ),
@@ -401,16 +400,16 @@ def test_using_many_things() -> None:
                                                 ptr_to=Type(
                                                     typename=PQName(
                                                         segments=[
-                                                            NameSpecifier(name="thing")
-                                                        ]
-                                                    )
-                                                )
+                                                            NameSpecifier(name="thing"),
+                                                        ],
+                                                    ),
+                                                ),
                                             ),
                                             name="t",
                                         ),
                                     ],
                                     access="public",
-                                )
+                                ),
                             ],
                             using=[
                                 UsingDecl(
@@ -418,10 +417,10 @@ def test_using_many_things() -> None:
                                         segments=[
                                             NameSpecifier(name="B"),
                                             NameSpecifier(name="B"),
-                                        ]
+                                        ],
                                     ),
                                     access="public",
-                                )
+                                ),
                             ],
                             using_alias=[
                                 UsingAlias(
@@ -440,31 +439,31 @@ def test_using_many_things() -> None:
                                                                         typename=PQName(
                                                                             segments=[
                                                                                 FundamentalSpecifier(
-                                                                                    name="int"
-                                                                                )
-                                                                            ]
-                                                                        )
+                                                                                    name="int",
+                                                                                ),
+                                                                            ],
+                                                                        ),
                                                                     ),
                                                                     parameters=[],
-                                                                )
-                                                            )
-                                                        ]
+                                                                ),
+                                                            ),
+                                                        ],
                                                     ),
                                                 ),
-                                            ]
-                                        )
+                                            ],
+                                        ),
                                     ),
                                     access="public",
-                                )
+                                ),
                             ],
-                        )
+                        ),
                     ],
                     functions=[
                         Function(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="void")]
-                                )
+                                    segments=[FundamentalSpecifier(name="void")],
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="fn")]),
                             parameters=[
@@ -472,9 +471,9 @@ def test_using_many_things() -> None:
                                     type=Reference(
                                         ref_to=Type(
                                             typename=PQName(
-                                                segments=[NameSpecifier(name="string")]
-                                            )
-                                        )
+                                                segments=[NameSpecifier(name="string")],
+                                            ),
+                                        ),
                                     ),
                                     name="s",
                                 ),
@@ -482,9 +481,9 @@ def test_using_many_things() -> None:
                                     type=Type(
                                         typename=PQName(
                                             segments=[
-                                                NameSpecifier(name="VoidFunction")
-                                            ]
-                                        )
+                                                NameSpecifier(name="VoidFunction"),
+                                            ],
+                                        ),
                                     ),
                                     name="fn",
                                 ),
@@ -492,14 +491,14 @@ def test_using_many_things() -> None:
                                     type=Pointer(
                                         ptr_to=Type(
                                             typename=PQName(
-                                                segments=[NameSpecifier(name="thing")]
-                                            )
-                                        )
+                                                segments=[NameSpecifier(name="thing")],
+                                            ),
+                                        ),
                                     ),
                                     name="t",
                                 ),
                             ],
-                        )
+                        ),
                     ],
                     using=[
                         UsingDecl(
@@ -507,9 +506,9 @@ def test_using_many_things() -> None:
                                 segments=[
                                     NameSpecifier(name="std"),
                                     NameSpecifier(name="string"),
-                                ]
-                            )
-                        )
+                                ],
+                            ),
+                        ),
                     ],
                     using_alias=[
                         UsingAlias(
@@ -528,25 +527,25 @@ def test_using_many_things() -> None:
                                                                 typename=PQName(
                                                                     segments=[
                                                                         FundamentalSpecifier(
-                                                                            name="void"
-                                                                        )
-                                                                    ]
-                                                                )
+                                                                            name="void",
+                                                                        ),
+                                                                    ],
+                                                                ),
                                                             ),
                                                             parameters=[],
-                                                        )
-                                                    )
-                                                ]
+                                                        ),
+                                                    ),
+                                                ],
                                             ),
                                         ),
-                                    ]
-                                )
+                                    ],
+                                ),
                             ),
-                        )
+                        ),
                     ],
-                )
+                ),
             },
-        )
+        ),
     )
 
 
@@ -565,8 +564,9 @@ def test_using_template_in_class() -> None:
                 ClassScope(
                     class_decl=ClassDecl(
                         typename=PQName(
-                            segments=[NameSpecifier(name="X")], classkey="class"
-                        )
+                            segments=[NameSpecifier(name="X")],
+                            classkey="class",
+                        ),
                     ),
                     using_alias=[
                         UsingAlias(
@@ -583,27 +583,29 @@ def test_using_template_in_class() -> None:
                                                             typename=PQName(
                                                                 segments=[
                                                                     NameSpecifier(
-                                                                        name="T"
-                                                                    )
-                                                                ]
-                                                            )
-                                                        )
-                                                    )
-                                                ]
+                                                                        name="T",
+                                                                    ),
+                                                                ],
+                                                            ),
+                                                        ),
+                                                    ),
+                                                ],
                                             ),
-                                        )
-                                    ]
-                                )
+                                        ),
+                                    ],
+                                ),
                             ),
                             template=TemplateDecl(
-                                params=[TemplateTypeParam(typekey="typename", name="T")]
+                                params=[
+                                    TemplateTypeParam(typekey="typename", name="T"),
+                                ],
                             ),
                             access="private",
-                        )
+                        ),
                     ],
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -624,10 +626,11 @@ def test_using_typename_in_class() -> None:
                 ClassScope(
                     class_decl=ClassDecl(
                         typename=PQName(
-                            segments=[NameSpecifier(name="P")], classkey="class"
+                            segments=[NameSpecifier(name="P")],
+                            classkey="class",
                         ),
                         template=TemplateDecl(
-                            params=[TemplateTypeParam(typekey="class", name="D")]
+                            params=[TemplateTypeParam(typekey="class", name="D")],
                         ),
                     ),
                     methods=[
@@ -638,15 +641,15 @@ def test_using_typename_in_class() -> None:
                                 Parameter(
                                     type=Type(
                                         typename=PQName(
-                                            segments=[NameSpecifier(name="State")]
-                                        )
+                                            segments=[NameSpecifier(name="State")],
+                                        ),
                                     ),
                                     name="st",
-                                )
+                                ),
                             ],
                             access="public",
                             constructor=True,
-                        )
+                        ),
                     ],
                     using_alias=[
                         UsingAlias(
@@ -664,19 +667,19 @@ def test_using_typename_in_class() -> None:
                                                             typename=PQName(
                                                                 segments=[
                                                                     NameSpecifier(
-                                                                        name="D"
-                                                                    )
-                                                                ]
-                                                            )
-                                                        )
-                                                    )
-                                                ]
+                                                                        name="D",
+                                                                    ),
+                                                                ],
+                                                            ),
+                                                        ),
+                                                    ),
+                                                ],
                                             ),
                                         ),
                                         NameSpecifier(name="A"),
                                     ],
                                     has_typename=True,
-                                )
+                                ),
                             ),
                             access="private",
                         ),
@@ -695,24 +698,24 @@ def test_using_typename_in_class() -> None:
                                                             typename=PQName(
                                                                 segments=[
                                                                     NameSpecifier(
-                                                                        name="D"
-                                                                    )
-                                                                ]
-                                                            )
-                                                        )
-                                                    )
-                                                ]
+                                                                        name="D",
+                                                                    ),
+                                                                ],
+                                                            ),
+                                                        ),
+                                                    ),
+                                                ],
                                             ),
                                         ),
                                         NameSpecifier(name="S"),
                                     ],
                                     has_typename=True,
-                                )
+                                ),
                             ),
                             access="public",
                         ),
                     ],
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )

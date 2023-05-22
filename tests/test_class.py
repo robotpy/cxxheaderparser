@@ -1,41 +1,36 @@
 # Note: testcases generated via `python -m cxxheaderparser.gentest`
-
-from cxxheaderparser.types import (
-    AnonymousName,
-    Array,
-    BaseClass,
-    ClassDecl,
-    EnumDecl,
-    Enumerator,
-    Field,
-    ForwardDecl,
-    Function,
-    FundamentalSpecifier,
-    Method,
-    MoveReference,
-    NameSpecifier,
-    Operator,
-    PQName,
-    Parameter,
-    Pointer,
-    Reference,
-    TemplateArgument,
-    TemplateDecl,
-    TemplateSpecialization,
-    TemplateTypeParam,
-    Token,
-    Type,
-    Typedef,
-    UsingDecl,
-    Value,
-    Variable,
-)
-from cxxheaderparser.simple import (
-    ClassScope,
-    NamespaceScope,
-    parse_string,
-    ParsedData,
-)
+from cxxheaderparser.simple import ClassScope
+from cxxheaderparser.simple import NamespaceScope
+from cxxheaderparser.simple import parse_string
+from cxxheaderparser.simple import ParsedData
+from cxxheaderparser.types import AnonymousName
+from cxxheaderparser.types import Array
+from cxxheaderparser.types import BaseClass
+from cxxheaderparser.types import ClassDecl
+from cxxheaderparser.types import EnumDecl
+from cxxheaderparser.types import Enumerator
+from cxxheaderparser.types import Field
+from cxxheaderparser.types import ForwardDecl
+from cxxheaderparser.types import Function
+from cxxheaderparser.types import FundamentalSpecifier
+from cxxheaderparser.types import Method
+from cxxheaderparser.types import MoveReference
+from cxxheaderparser.types import NameSpecifier
+from cxxheaderparser.types import Operator
+from cxxheaderparser.types import Parameter
+from cxxheaderparser.types import Pointer
+from cxxheaderparser.types import PQName
+from cxxheaderparser.types import Reference
+from cxxheaderparser.types import TemplateArgument
+from cxxheaderparser.types import TemplateDecl
+from cxxheaderparser.types import TemplateSpecialization
+from cxxheaderparser.types import TemplateTypeParam
+from cxxheaderparser.types import Token
+from cxxheaderparser.types import Type
+from cxxheaderparser.types import Typedef
+from cxxheaderparser.types import UsingDecl
+from cxxheaderparser.types import Value
+from cxxheaderparser.types import Variable
 
 
 def test_class_member_spec_1() -> None:
@@ -61,8 +56,9 @@ def test_class_member_spec_1() -> None:
                 ClassScope(
                     class_decl=ClassDecl(
                         typename=PQName(
-                            segments=[NameSpecifier(name="S")], classkey="class"
-                        )
+                            segments=[NameSpecifier(name="S")],
+                            classkey="class",
+                        ),
                     ),
                     classes=[
                         ClassScope(
@@ -81,18 +77,19 @@ def test_class_member_spec_1() -> None:
                                             segments=[
                                                 NameSpecifier(name="std"),
                                                 NameSpecifier(name="string"),
-                                            ]
-                                        )
+                                            ],
+                                        ),
                                     ),
                                     access="public",
-                                )
+                                ),
                             ],
-                        )
+                        ),
                     ],
                     enums=[
                         EnumDecl(
                             typename=PQName(
-                                segments=[AnonymousName(id=1)], classkey="enum"
+                                segments=[AnonymousName(id=1)],
+                                classkey="enum",
                             ),
                             values=[
                                 Enumerator(name="NORTH"),
@@ -101,15 +98,15 @@ def test_class_member_spec_1() -> None:
                                 Enumerator(name="WEST"),
                             ],
                             access="private",
-                        )
+                        ),
                     ],
                     fields=[
                         Field(
                             name="d1",
                             type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="int")]
-                                )
+                                    segments=[FundamentalSpecifier(name="int")],
+                                ),
                             ),
                             access="private",
                         ),
@@ -118,8 +115,8 @@ def test_class_member_spec_1() -> None:
                             type=Array(
                                 array_of=Type(
                                     typename=PQName(
-                                        segments=[FundamentalSpecifier(name="int")]
-                                    )
+                                        segments=[FundamentalSpecifier(name="int")],
+                                    ),
                                 ),
                                 size=Value(tokens=[Token(value="10")]),
                             ),
@@ -131,14 +128,14 @@ def test_class_member_spec_1() -> None:
                                     Token(value=","),
                                     Token(value="2"),
                                     Token(value="}"),
-                                ]
+                                ],
                             ),
                         ),
                         Field(
                             name="d2",
                             type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="int")]
+                                    segments=[FundamentalSpecifier(name="int")],
                                 ),
                                 const=True,
                             ),
@@ -153,8 +150,8 @@ def test_class_member_spec_1() -> None:
                                     segments=[
                                         NameSpecifier(name="std"),
                                         NameSpecifier(name="string"),
-                                    ]
-                                )
+                                    ],
+                                ),
                             ),
                             access="private",
                         ),
@@ -166,9 +163,9 @@ def test_class_member_spec_1() -> None:
                                         segments=[
                                             NameSpecifier(name="std"),
                                             NameSpecifier(name="string"),
-                                        ]
-                                    )
-                                )
+                                        ],
+                                    ),
+                                ),
                             ),
                             access="private",
                         ),
@@ -178,7 +175,7 @@ def test_class_member_spec_1() -> None:
                                 typename=PQName(
                                     segments=[NameSpecifier(name="NestedS")],
                                     classkey="struct",
-                                )
+                                ),
                             ),
                             access="private",
                         ),
@@ -189,8 +186,8 @@ def test_class_member_spec_1() -> None:
                                     typename=PQName(
                                         segments=[NameSpecifier(name="NestedS")],
                                         classkey="struct",
-                                    )
-                                )
+                                    ),
+                                ),
                             ),
                             access="private",
                         ),
@@ -199,18 +196,18 @@ def test_class_member_spec_1() -> None:
                         Method(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="void")]
-                                )
+                                    segments=[FundamentalSpecifier(name="void")],
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="f1")]),
                             parameters=[
                                 Parameter(
                                     type=Type(
                                         typename=PQName(
-                                            segments=[FundamentalSpecifier(name="int")]
-                                        )
-                                    )
-                                )
+                                            segments=[FundamentalSpecifier(name="int")],
+                                        ),
+                                    ),
+                                ),
                             ],
                             access="private",
                             pure_virtual=True,
@@ -222,18 +219,18 @@ def test_class_member_spec_1() -> None:
                                     segments=[
                                         NameSpecifier(name="std"),
                                         NameSpecifier(name="string"),
-                                    ]
-                                )
+                                    ],
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="f2")]),
                             parameters=[
                                 Parameter(
                                     type=Type(
                                         typename=PQName(
-                                            segments=[FundamentalSpecifier(name="int")]
-                                        )
-                                    )
-                                )
+                                            segments=[FundamentalSpecifier(name="int")],
+                                        ),
+                                    ),
+                                ),
                             ],
                             access="private",
                         ),
@@ -242,8 +239,8 @@ def test_class_member_spec_1() -> None:
                         Typedef(
                             type=Type(
                                 typename=PQName(
-                                    segments=[NameSpecifier(name="NestedS")]
-                                )
+                                    segments=[NameSpecifier(name="NestedS")],
+                                ),
                             ),
                             name="value_type",
                             access="private",
@@ -252,17 +249,17 @@ def test_class_member_spec_1() -> None:
                             type=Pointer(
                                 ptr_to=Type(
                                     typename=PQName(
-                                        segments=[NameSpecifier(name="NestedS")]
-                                    )
-                                )
+                                        segments=[NameSpecifier(name="NestedS")],
+                                    ),
+                                ),
                             ),
                             name="pointer_type",
                             access="private",
                         ),
                     ],
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -271,7 +268,7 @@ def test_class_member_spec_2() -> None:
       class M {
         std::size_t C;
         std::vector<int> data;
-      
+
       public:
         M(std::size_t R, std::size_t C)
             : C(C), data(R * C) {}                 // constructor definition
@@ -291,8 +288,9 @@ def test_class_member_spec_2() -> None:
                 ClassScope(
                     class_decl=ClassDecl(
                         typename=PQName(
-                            segments=[NameSpecifier(name="M")], classkey="class"
-                        )
+                            segments=[NameSpecifier(name="M")],
+                            classkey="class",
+                        ),
                     ),
                     fields=[
                         Field(
@@ -302,8 +300,8 @@ def test_class_member_spec_2() -> None:
                                     segments=[
                                         NameSpecifier(name="std"),
                                         NameSpecifier(name="size_t"),
-                                    ]
-                                )
+                                    ],
+                                ),
                             ),
                             name="C",
                         ),
@@ -322,17 +320,17 @@ def test_class_member_spec_2() -> None:
                                                             typename=PQName(
                                                                 segments=[
                                                                     FundamentalSpecifier(
-                                                                        name="int"
-                                                                    )
-                                                                ]
-                                                            )
-                                                        )
-                                                    )
-                                                ]
+                                                                        name="int",
+                                                                    ),
+                                                                ],
+                                                            ),
+                                                        ),
+                                                    ),
+                                                ],
                                             ),
                                         ),
-                                    ]
-                                )
+                                    ],
+                                ),
                             ),
                             name="data",
                         ),
@@ -348,8 +346,8 @@ def test_class_member_spec_2() -> None:
                                             segments=[
                                                 NameSpecifier(name="std"),
                                                 NameSpecifier(name="size_t"),
-                                            ]
-                                        )
+                                            ],
+                                        ),
                                     ),
                                     name="R",
                                 ),
@@ -359,8 +357,8 @@ def test_class_member_spec_2() -> None:
                                             segments=[
                                                 NameSpecifier(name="std"),
                                                 NameSpecifier(name="size_t"),
-                                            ]
-                                        )
+                                            ],
+                                        ),
                                     ),
                                     name="C",
                                 ),
@@ -372,24 +370,24 @@ def test_class_member_spec_2() -> None:
                         Operator(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="int")]
-                                )
+                                    segments=[FundamentalSpecifier(name="int")],
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="operator()")]),
                             parameters=[
                                 Parameter(
                                     type=Type(
                                         typename=PQName(
-                                            segments=[NameSpecifier(name="size_t")]
-                                        )
+                                            segments=[NameSpecifier(name="size_t")],
+                                        ),
                                     ),
                                     name="r",
                                 ),
                                 Parameter(
                                     type=Type(
                                         typename=PQName(
-                                            segments=[NameSpecifier(name="size_t")]
-                                        )
+                                            segments=[NameSpecifier(name="size_t")],
+                                        ),
                                     ),
                                     name="c",
                                 ),
@@ -403,25 +401,25 @@ def test_class_member_spec_2() -> None:
                             return_type=Reference(
                                 ref_to=Type(
                                     typename=PQName(
-                                        segments=[FundamentalSpecifier(name="int")]
-                                    )
-                                )
+                                        segments=[FundamentalSpecifier(name="int")],
+                                    ),
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="operator()")]),
                             parameters=[
                                 Parameter(
                                     type=Type(
                                         typename=PQName(
-                                            segments=[NameSpecifier(name="size_t")]
-                                        )
+                                            segments=[NameSpecifier(name="size_t")],
+                                        ),
                                     ),
                                     name="r",
                                 ),
                                 Parameter(
                                     type=Type(
                                         typename=PQName(
-                                            segments=[NameSpecifier(name="size_t")]
-                                        )
+                                            segments=[NameSpecifier(name="size_t")],
+                                        ),
                                     ),
                                     name="c",
                                 ),
@@ -431,9 +429,9 @@ def test_class_member_spec_2() -> None:
                             operator="()",
                         ),
                     ],
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -456,8 +454,9 @@ def test_class_member_spec_3() -> None:
                 ClassScope(
                     class_decl=ClassDecl(
                         typename=PQName(
-                            segments=[NameSpecifier(name="S")], classkey="class"
-                        )
+                            segments=[NameSpecifier(name="S")],
+                            classkey="class",
+                        ),
                     ),
                     fields=[
                         Field(
@@ -465,12 +464,12 @@ def test_class_member_spec_3() -> None:
                             type=Pointer(
                                 ptr_to=Type(
                                     typename=PQName(
-                                        segments=[FundamentalSpecifier(name="int")]
-                                    )
-                                )
+                                        segments=[FundamentalSpecifier(name="int")],
+                                    ),
+                                ),
                             ),
                             access="private",
-                        )
+                        ),
                     ],
                     methods=[
                         Method(
@@ -488,12 +487,12 @@ def test_class_member_spec_3() -> None:
                                     type=Reference(
                                         ref_to=Type(
                                             typename=PQName(
-                                                segments=[NameSpecifier(name="S")]
+                                                segments=[NameSpecifier(name="S")],
                                             ),
                                             const=True,
-                                        )
-                                    )
-                                )
+                                        ),
+                                    ),
+                                ),
                             ],
                             access="public",
                             constructor=True,
@@ -507,9 +506,9 @@ def test_class_member_spec_3() -> None:
                             virtual=True,
                         ),
                     ],
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -533,31 +532,33 @@ def test_class_using() -> None:
                 ClassScope(
                     class_decl=ClassDecl(
                         typename=PQName(
-                            segments=[NameSpecifier(name="Base")], classkey="class"
-                        )
+                            segments=[NameSpecifier(name="Base")],
+                            classkey="class",
+                        ),
                     ),
                     fields=[
                         Field(
                             name="d",
                             type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="int")]
-                                )
+                                    segments=[FundamentalSpecifier(name="int")],
+                                ),
                             ),
                             access="protected",
-                        )
+                        ),
                     ],
                 ),
                 ClassScope(
                     class_decl=ClassDecl(
                         typename=PQName(
-                            segments=[NameSpecifier(name="Derived")], classkey="class"
+                            segments=[NameSpecifier(name="Derived")],
+                            classkey="class",
                         ),
                         bases=[
                             BaseClass(
                                 access="public",
                                 typename=PQName(segments=[NameSpecifier(name="Base")]),
-                            )
+                            ),
                         ],
                     ),
                     using=[
@@ -566,7 +567,7 @@ def test_class_using() -> None:
                                 segments=[
                                     NameSpecifier(name="Base"),
                                     NameSpecifier(name="Base"),
-                                ]
+                                ],
                             ),
                             access="public",
                         ),
@@ -575,14 +576,14 @@ def test_class_using() -> None:
                                 segments=[
                                     NameSpecifier(name="Base"),
                                     NameSpecifier(name="d"),
-                                ]
+                                ],
                             ),
                             access="public",
                         ),
                     ],
                 ),
-            ]
-        )
+            ],
+        ),
     )
 
 
@@ -591,7 +592,7 @@ def test_class_member_spec_6() -> None:
       struct S {
         template<typename T>
         void f(T&& n);
- 
+
         template<class CharT>
         struct NestedS {
           std::basic_string<CharT> s;
@@ -606,8 +607,9 @@ def test_class_member_spec_6() -> None:
                 ClassScope(
                     class_decl=ClassDecl(
                         typename=PQName(
-                            segments=[NameSpecifier(name="S")], classkey="struct"
-                        )
+                            segments=[NameSpecifier(name="S")],
+                            classkey="struct",
+                        ),
                     ),
                     classes=[
                         ClassScope(
@@ -618,8 +620,11 @@ def test_class_member_spec_6() -> None:
                                 ),
                                 template=TemplateDecl(
                                     params=[
-                                        TemplateTypeParam(typekey="class", name="CharT")
-                                    ]
+                                        TemplateTypeParam(
+                                            typekey="class",
+                                            name="CharT",
+                                        ),
+                                    ],
                                 ),
                                 access="public",
                             ),
@@ -639,29 +644,29 @@ def test_class_member_spec_6() -> None:
                                                                     typename=PQName(
                                                                         segments=[
                                                                             NameSpecifier(
-                                                                                name="CharT"
-                                                                            )
-                                                                        ]
-                                                                    )
-                                                                )
-                                                            )
-                                                        ]
+                                                                                name="CharT",
+                                                                            ),
+                                                                        ],
+                                                                    ),
+                                                                ),
+                                                            ),
+                                                        ],
                                                     ),
                                                 ),
-                                            ]
-                                        )
+                                            ],
+                                        ),
                                     ),
                                     name="s",
-                                )
+                                ),
                             ],
-                        )
+                        ),
                     ],
                     methods=[
                         Method(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="void")]
-                                )
+                                    segments=[FundamentalSpecifier(name="void")],
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="f")]),
                             parameters=[
@@ -669,22 +674,24 @@ def test_class_member_spec_6() -> None:
                                     type=MoveReference(
                                         moveref_to=Type(
                                             typename=PQName(
-                                                segments=[NameSpecifier(name="T")]
-                                            )
-                                        )
+                                                segments=[NameSpecifier(name="T")],
+                                            ),
+                                        ),
                                     ),
                                     name="n",
-                                )
+                                ),
                             ],
                             template=TemplateDecl(
-                                params=[TemplateTypeParam(typekey="typename", name="T")]
+                                params=[
+                                    TemplateTypeParam(typekey="typename", name="T"),
+                                ],
                             ),
                             access="public",
-                        )
+                        ),
                     ],
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -706,23 +713,24 @@ def test_class_fn_default_params() -> None:
                 ClassScope(
                     class_decl=ClassDecl(
                         typename=PQName(
-                            segments=[NameSpecifier(name="Hen")], classkey="class"
-                        )
+                            segments=[NameSpecifier(name="Hen")],
+                            classkey="class",
+                        ),
                     ),
                     methods=[
                         Method(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="void")]
-                                )
+                                    segments=[FundamentalSpecifier(name="void")],
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="add")]),
                             parameters=[
                                 Parameter(
                                     type=Type(
                                         typename=PQName(
-                                            segments=[FundamentalSpecifier(name="int")]
-                                        )
+                                            segments=[FundamentalSpecifier(name="int")],
+                                        ),
                                     ),
                                     name="a",
                                     default=Value(tokens=[Token(value="100")]),
@@ -730,8 +738,8 @@ def test_class_fn_default_params() -> None:
                                 Parameter(
                                     type=Type(
                                         typename=PQName(
-                                            segments=[NameSpecifier(name="b")]
-                                        )
+                                            segments=[NameSpecifier(name="b")],
+                                        ),
                                     ),
                                     default=Value(tokens=[Token(value="0xfd")]),
                                 ),
@@ -739,9 +747,9 @@ def test_class_fn_default_params() -> None:
                                     type=Type(
                                         typename=PQName(
                                             segments=[
-                                                FundamentalSpecifier(name="float")
-                                            ]
-                                        )
+                                                FundamentalSpecifier(name="float"),
+                                            ],
+                                        ),
                                     ),
                                     name="c",
                                     default=Value(tokens=[Token(value="1.7e-3")]),
@@ -750,9 +758,9 @@ def test_class_fn_default_params() -> None:
                                     type=Type(
                                         typename=PQName(
                                             segments=[
-                                                FundamentalSpecifier(name="float")
-                                            ]
-                                        )
+                                                FundamentalSpecifier(name="float"),
+                                            ],
+                                        ),
                                     ),
                                     name="d",
                                     default=Value(tokens=[Token(value="3.14")]),
@@ -763,16 +771,16 @@ def test_class_fn_default_params() -> None:
                         Method(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="void")]
-                                )
+                                    segments=[FundamentalSpecifier(name="void")],
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="join")]),
                             parameters=[
                                 Parameter(
                                     type=Type(
                                         typename=PQName(
-                                            segments=[NameSpecifier(name="string")]
-                                        )
+                                            segments=[NameSpecifier(name="string")],
+                                        ),
                                     ),
                                     name="s1",
                                     default=Value(tokens=[Token(value='""')]),
@@ -780,8 +788,8 @@ def test_class_fn_default_params() -> None:
                                 Parameter(
                                     type=Type(
                                         typename=PQName(
-                                            segments=[NameSpecifier(name="string")]
-                                        )
+                                            segments=[NameSpecifier(name="string")],
+                                        ),
                                     ),
                                     name="s2",
                                     default=Value(tokens=[Token(value='"nothing"')]),
@@ -790,9 +798,9 @@ def test_class_fn_default_params() -> None:
                             access="public",
                         ),
                     ],
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -811,26 +819,27 @@ def test_class_fn_inline_virtual() -> None:
                 ClassScope(
                     class_decl=ClassDecl(
                         typename=PQName(
-                            segments=[NameSpecifier(name="B")], classkey="class"
-                        )
+                            segments=[NameSpecifier(name="B")],
+                            classkey="class",
+                        ),
                     ),
                     methods=[
                         Method(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="int")]
-                                )
+                                    segments=[FundamentalSpecifier(name="int")],
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="aMethod")]),
                             parameters=[],
                             inline=True,
                             access="public",
                             virtual=True,
-                        )
+                        ),
                     ],
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -851,14 +860,14 @@ def test_class_fn_pure_virtual_const() -> None:
                         typename=PQName(
                             segments=[NameSpecifier(name="StoneClass")],
                             classkey="class",
-                        )
+                        ),
                     ),
                     methods=[
                         Method(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="int")]
-                                )
+                                    segments=[FundamentalSpecifier(name="int")],
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="getNum2")]),
                             parameters=[],
@@ -870,17 +879,17 @@ def test_class_fn_pure_virtual_const() -> None:
                         Method(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="int")]
-                                )
+                                    segments=[FundamentalSpecifier(name="int")],
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="getNum3")]),
                             parameters=[],
                             access="private",
                         ),
                     ],
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -899,15 +908,16 @@ def test_class_fn_return_global_ns() -> None:
                 ClassScope(
                     class_decl=ClassDecl(
                         typename=PQName(
-                            segments=[NameSpecifier(name="Avacado")], classkey="struct"
-                        )
+                            segments=[NameSpecifier(name="Avacado")],
+                            classkey="struct",
+                        ),
                     ),
                     methods=[
                         Method(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[NameSpecifier(name="uint8_t")]
-                                )
+                                    segments=[NameSpecifier(name="uint8_t")],
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="foo")]),
                             parameters=[],
@@ -920,8 +930,8 @@ def test_class_fn_return_global_ns() -> None:
                                     segments=[
                                         NameSpecifier(name=""),
                                         NameSpecifier(name="uint8_t"),
-                                    ]
-                                )
+                                    ],
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="bar")]),
                             parameters=[],
@@ -929,9 +939,9 @@ def test_class_fn_return_global_ns() -> None:
                             access="public",
                         ),
                     ],
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -940,7 +950,7 @@ def test_class_ns_class() -> None:
       namespace ns {
         class N;
       };
-      
+
       class ns::N {};
     """
     data = parse_string(content, cleandoc=True)
@@ -956,9 +966,9 @@ def test_class_ns_class() -> None:
                                 NameSpecifier(name="N"),
                             ],
                             classkey="class",
-                        )
-                    )
-                )
+                        ),
+                    ),
+                ),
             ],
             namespaces={
                 "ns": NamespaceScope(
@@ -966,13 +976,14 @@ def test_class_ns_class() -> None:
                     forward_decls=[
                         ForwardDecl(
                             typename=PQName(
-                                segments=[NameSpecifier(name="N")], classkey="class"
-                            )
-                        )
+                                segments=[NameSpecifier(name="N")],
+                                classkey="class",
+                            ),
+                        ),
                     ],
-                )
+                ),
             },
-        )
+        ),
     )
 
 
@@ -998,12 +1009,12 @@ def test_class_ns_w_base() -> None:
                             BaseClass(
                                 access="public",
                                 typename=PQName(segments=[NameSpecifier(name="Plant")]),
-                            )
+                            ),
                         ],
-                    )
-                )
-            ]
-        )
+                    ),
+                ),
+            ],
+        ),
     )
 
 
@@ -1012,7 +1023,7 @@ def test_class_inner_class() -> None:
       class C {
         class Inner {};
       };
-      
+
     """
     data = parse_string(content, cleandoc=True)
 
@@ -1022,8 +1033,9 @@ def test_class_inner_class() -> None:
                 ClassScope(
                     class_decl=ClassDecl(
                         typename=PQName(
-                            segments=[NameSpecifier(name="C")], classkey="class"
-                        )
+                            segments=[NameSpecifier(name="C")],
+                            classkey="class",
+                        ),
                     ),
                     classes=[
                         ClassScope(
@@ -1033,12 +1045,12 @@ def test_class_inner_class() -> None:
                                     classkey="class",
                                 ),
                                 access="private",
-                            )
-                        )
+                            ),
+                        ),
                     ],
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -1047,7 +1059,7 @@ def test_class_inner_fwd_class() -> None:
       class C {
         class N;
       };
-      
+
       class C::N {};
     """
     data = parse_string(content, cleandoc=True)
@@ -1058,16 +1070,18 @@ def test_class_inner_fwd_class() -> None:
                 ClassScope(
                     class_decl=ClassDecl(
                         typename=PQName(
-                            segments=[NameSpecifier(name="C")], classkey="class"
-                        )
+                            segments=[NameSpecifier(name="C")],
+                            classkey="class",
+                        ),
                     ),
                     forward_decls=[
                         ForwardDecl(
                             typename=PQName(
-                                segments=[NameSpecifier(name="N")], classkey="class"
+                                segments=[NameSpecifier(name="N")],
+                                classkey="class",
                             ),
                             access="private",
-                        )
+                        ),
                     ],
                 ),
                 ClassScope(
@@ -1075,11 +1089,11 @@ def test_class_inner_fwd_class() -> None:
                         typename=PQName(
                             segments=[NameSpecifier(name="C"), NameSpecifier(name="N")],
                             classkey="class",
-                        )
-                    )
+                        ),
+                    ),
                 ),
-            ]
-        )
+            ],
+        ),
     )
 
 
@@ -1103,7 +1117,7 @@ def test_class_inner_var_access() -> None:
                         typename=PQName(
                             segments=[NameSpecifier(name="Bug_3488053")],
                             classkey="class",
-                        )
+                        ),
                     ),
                     classes=[
                         ClassScope(
@@ -1119,17 +1133,17 @@ def test_class_inner_var_access() -> None:
                                     access="public",
                                     type=Type(
                                         typename=PQName(
-                                            segments=[FundamentalSpecifier(name="int")]
-                                        )
+                                            segments=[FundamentalSpecifier(name="int")],
+                                        ),
                                     ),
                                     name="x",
-                                )
+                                ),
                             ],
-                        )
+                        ),
                     ],
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -1139,21 +1153,21 @@ def test_class_ns_and_inner() -> None:
       class RoosterOuterClass {
       public:
         int member1;
-      
+
         class RoosterSubClass1 {
         public:
           int publicMember1;
-      
+
         private:
           int privateMember1;
         };
-      
+
       private:
         int member2;
         class RoosterSubClass2 {
         public:
           int publicMember2;
-      
+
         private:
           int privateMember2;
         };
@@ -1173,14 +1187,14 @@ def test_class_ns_and_inner() -> None:
                                 typename=PQName(
                                     segments=[NameSpecifier(name="RoosterOuterClass")],
                                     classkey="class",
-                                )
+                                ),
                             ),
                             classes=[
                                 ClassScope(
                                     class_decl=ClassDecl(
                                         typename=PQName(
                                             segments=[
-                                                NameSpecifier(name="RoosterSubClass1")
+                                                NameSpecifier(name="RoosterSubClass1"),
                                             ],
                                             classkey="class",
                                         ),
@@ -1192,9 +1206,11 @@ def test_class_ns_and_inner() -> None:
                                             type=Type(
                                                 typename=PQName(
                                                     segments=[
-                                                        FundamentalSpecifier(name="int")
-                                                    ]
-                                                )
+                                                        FundamentalSpecifier(
+                                                            name="int",
+                                                        ),
+                                                    ],
+                                                ),
                                             ),
                                             name="publicMember1",
                                         ),
@@ -1203,9 +1219,11 @@ def test_class_ns_and_inner() -> None:
                                             type=Type(
                                                 typename=PQName(
                                                     segments=[
-                                                        FundamentalSpecifier(name="int")
-                                                    ]
-                                                )
+                                                        FundamentalSpecifier(
+                                                            name="int",
+                                                        ),
+                                                    ],
+                                                ),
                                             ),
                                             name="privateMember1",
                                         ),
@@ -1215,7 +1233,7 @@ def test_class_ns_and_inner() -> None:
                                     class_decl=ClassDecl(
                                         typename=PQName(
                                             segments=[
-                                                NameSpecifier(name="RoosterSubClass2")
+                                                NameSpecifier(name="RoosterSubClass2"),
                                             ],
                                             classkey="class",
                                         ),
@@ -1227,9 +1245,11 @@ def test_class_ns_and_inner() -> None:
                                             type=Type(
                                                 typename=PQName(
                                                     segments=[
-                                                        FundamentalSpecifier(name="int")
-                                                    ]
-                                                )
+                                                        FundamentalSpecifier(
+                                                            name="int",
+                                                        ),
+                                                    ],
+                                                ),
                                             ),
                                             name="publicMember2",
                                         ),
@@ -1238,9 +1258,11 @@ def test_class_ns_and_inner() -> None:
                                             type=Type(
                                                 typename=PQName(
                                                     segments=[
-                                                        FundamentalSpecifier(name="int")
-                                                    ]
-                                                )
+                                                        FundamentalSpecifier(
+                                                            name="int",
+                                                        ),
+                                                    ],
+                                                ),
                                             ),
                                             name="privateMember2",
                                         ),
@@ -1252,8 +1274,8 @@ def test_class_ns_and_inner() -> None:
                                     access="public",
                                     type=Type(
                                         typename=PQName(
-                                            segments=[FundamentalSpecifier(name="int")]
-                                        )
+                                            segments=[FundamentalSpecifier(name="int")],
+                                        ),
                                     ),
                                     name="member1",
                                 ),
@@ -1261,17 +1283,17 @@ def test_class_ns_and_inner() -> None:
                                     access="private",
                                     type=Type(
                                         typename=PQName(
-                                            segments=[FundamentalSpecifier(name="int")]
-                                        )
+                                            segments=[FundamentalSpecifier(name="int")],
+                                        ),
                                     ),
                                     name="member2",
                                 ),
                             ],
-                        )
+                        ),
                     ],
-                )
-            }
-        )
+                ),
+            },
+        ),
     )
 
 
@@ -1279,7 +1301,7 @@ def test_class_struct_access() -> None:
     content = """
       struct SampleStruct {
         unsigned int meth();
-      
+
       private:
         int prop;
       };
@@ -1294,34 +1316,36 @@ def test_class_struct_access() -> None:
                         typename=PQName(
                             segments=[NameSpecifier(name="SampleStruct")],
                             classkey="struct",
-                        )
+                        ),
                     ),
                     fields=[
                         Field(
                             access="private",
                             type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="int")]
-                                )
+                                    segments=[FundamentalSpecifier(name="int")],
+                                ),
                             ),
                             name="prop",
-                        )
+                        ),
                     ],
                     methods=[
                         Method(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="unsigned int")]
-                                )
+                                    segments=[
+                                        FundamentalSpecifier(name="unsigned int"),
+                                    ],
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="meth")]),
                             parameters=[],
                             access="public",
-                        )
+                        ),
                     ],
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -1339,15 +1363,16 @@ def test_class_volatile_move_deleted_fn() -> None:
                 ClassScope(
                     class_decl=ClassDecl(
                         typename=PQName(
-                            segments=[NameSpecifier(name="C")], classkey="struct"
-                        )
+                            segments=[NameSpecifier(name="C")],
+                            classkey="struct",
+                        ),
                     ),
                     methods=[
                         Method(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="void")]
-                                )
+                                    segments=[FundamentalSpecifier(name="void")],
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="foo")]),
                             parameters=[],
@@ -1355,11 +1380,11 @@ def test_class_volatile_move_deleted_fn() -> None:
                             volatile=True,
                             ref_qualifier="&&",
                             deleted=True,
-                        )
+                        ),
                     ],
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -1383,8 +1408,9 @@ def test_class_bitfield_1() -> None:
                 ClassScope(
                     class_decl=ClassDecl(
                         typename=PQName(
-                            segments=[NameSpecifier(name="S")], classkey="struct"
-                        )
+                            segments=[NameSpecifier(name="S")],
+                            classkey="struct",
+                        ),
                     ),
                     fields=[
                         Field(
@@ -1392,9 +1418,9 @@ def test_class_bitfield_1() -> None:
                             type=Type(
                                 typename=PQName(
                                     segments=[
-                                        FundamentalSpecifier(name="unsigned char")
-                                    ]
-                                )
+                                        FundamentalSpecifier(name="unsigned char"),
+                                    ],
+                                ),
                             ),
                             access="public",
                             bits=3,
@@ -1403,9 +1429,9 @@ def test_class_bitfield_1() -> None:
                             type=Type(
                                 typename=PQName(
                                     segments=[
-                                        FundamentalSpecifier(name="unsigned char")
-                                    ]
-                                )
+                                        FundamentalSpecifier(name="unsigned char"),
+                                    ],
+                                ),
                             ),
                             access="public",
                             bits=2,
@@ -1415,9 +1441,9 @@ def test_class_bitfield_1() -> None:
                             type=Type(
                                 typename=PQName(
                                     segments=[
-                                        FundamentalSpecifier(name="unsigned char")
-                                    ]
-                                )
+                                        FundamentalSpecifier(name="unsigned char"),
+                                    ],
+                                ),
                             ),
                             access="public",
                             bits=6,
@@ -1427,17 +1453,17 @@ def test_class_bitfield_1() -> None:
                             type=Type(
                                 typename=PQName(
                                     segments=[
-                                        FundamentalSpecifier(name="unsigned char")
-                                    ]
-                                )
+                                        FundamentalSpecifier(name="unsigned char"),
+                                    ],
+                                ),
                             ),
                             access="public",
                             bits=2,
                         ),
                     ],
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -1460,15 +1486,15 @@ def test_class_bitfield_2() -> None:
                         typename=PQName(
                             segments=[NameSpecifier(name="HAL_ControlWord")],
                             classkey="struct",
-                        )
+                        ),
                     ),
                     fields=[
                         Field(
                             name="x",
                             type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="int")]
-                                )
+                                    segments=[FundamentalSpecifier(name="int")],
+                                ),
                             ),
                             access="public",
                             bits=1,
@@ -1477,19 +1503,19 @@ def test_class_bitfield_2() -> None:
                             name="y",
                             type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="int")]
-                                )
+                                    segments=[FundamentalSpecifier(name="int")],
+                                ),
                             ),
                             access="public",
                             bits=1,
                         ),
                     ],
-                )
+                ),
             ],
             functions=[
                 Function(
                     return_type=Type(
-                        typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                        typename=PQName(segments=[FundamentalSpecifier(name="int")]),
                     ),
                     name=PQName(segments=[NameSpecifier(name="HAL_GetControlWord")]),
                     parameters=[
@@ -1497,14 +1523,16 @@ def test_class_bitfield_2() -> None:
                             type=Pointer(
                                 ptr_to=Type(
                                     typename=PQName(
-                                        segments=[NameSpecifier(name="HAL_ControlWord")]
-                                    )
-                                )
+                                        segments=[
+                                            NameSpecifier(name="HAL_ControlWord"),
+                                        ],
+                                    ),
+                                ),
                             ),
                             name="controlWord",
-                        )
+                        ),
                     ],
-                )
+                ),
             ],
             typedefs=[
                 Typedef(
@@ -1512,12 +1540,12 @@ def test_class_bitfield_2() -> None:
                         typename=PQName(
                             segments=[NameSpecifier(name="HAL_ControlWord")],
                             classkey="struct",
-                        )
+                        ),
                     ),
                     name="HAL_ControlWord",
-                )
+                ),
             ],
-        )
+        ),
     )
 
 
@@ -1535,8 +1563,9 @@ def test_class_anon_struct_as_globalvar() -> None:
                 ClassScope(
                     class_decl=ClassDecl(
                         typename=PQName(
-                            classkey="struct", segments=[AnonymousName(id=1)]
-                        )
+                            classkey="struct",
+                            segments=[AnonymousName(id=1)],
+                        ),
                     ),
                     fields=[
                         Field(
@@ -1544,20 +1573,21 @@ def test_class_anon_struct_as_globalvar() -> None:
                             type=Type(
                                 typename=PQName(
                                     segments=[FundamentalSpecifier(name="int")],
-                                )
+                                ),
                             ),
                             access="public",
-                        )
+                        ),
                     ],
-                )
+                ),
             ],
             variables=[
                 Variable(
                     name=PQName(segments=[NameSpecifier(name="unnamed")]),
                     type=Type(
                         typename=PQName(
-                            classkey="struct", segments=[AnonymousName(id=1)]
-                        )
+                            classkey="struct",
+                            segments=[AnonymousName(id=1)],
+                        ),
                     ),
                 ),
                 Variable(
@@ -1565,13 +1595,14 @@ def test_class_anon_struct_as_globalvar() -> None:
                     type=Pointer(
                         ptr_to=Type(
                             typename=PQName(
-                                classkey="struct", segments=[AnonymousName(id=1)]
-                            )
-                        )
+                                classkey="struct",
+                                segments=[AnonymousName(id=1)],
+                            ),
+                        ),
                     ),
                 ),
             ],
-        )
+        ),
     )
 
 
@@ -1593,13 +1624,14 @@ def test_class_anon_struct_as_classvar() -> None:
                         typename=PQName(
                             segments=[NameSpecifier(name="AnonHolderClass")],
                             classkey="struct",
-                        )
+                        ),
                     ),
                     classes=[
                         ClassScope(
                             class_decl=ClassDecl(
                                 typename=PQName(
-                                    segments=[AnonymousName(id=1)], classkey="struct"
+                                    segments=[AnonymousName(id=1)],
+                                    classkey="struct",
                                 ),
                                 access="public",
                             ),
@@ -1608,28 +1640,29 @@ def test_class_anon_struct_as_classvar() -> None:
                                     access="public",
                                     type=Type(
                                         typename=PQName(
-                                            segments=[FundamentalSpecifier(name="int")]
-                                        )
+                                            segments=[FundamentalSpecifier(name="int")],
+                                        ),
                                     ),
                                     name="x",
-                                )
+                                ),
                             ],
-                        )
+                        ),
                     ],
                     fields=[
                         Field(
                             access="public",
                             type=Type(
                                 typename=PQName(
-                                    segments=[AnonymousName(id=1)], classkey="struct"
-                                )
+                                    segments=[AnonymousName(id=1)],
+                                    classkey="struct",
+                                ),
                             ),
                             name="a",
-                        )
+                        ),
                     ],
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -1637,12 +1670,12 @@ def test_initializer_with_initializer_list_1() -> None:
     content = """
       struct ComplexInit : SomeBase {
         ComplexInit(int i) : m_stuff{i, 2} { auto i = something(); }
-      
+
         void fn();
-      
+
         std::vector<int> m_stuff;
       };
-      
+
     """
     data = parse_string(content, cleandoc=True)
 
@@ -1659,9 +1692,9 @@ def test_initializer_with_initializer_list_1() -> None:
                             BaseClass(
                                 access="public",
                                 typename=PQName(
-                                    segments=[NameSpecifier(name="SomeBase")]
+                                    segments=[NameSpecifier(name="SomeBase")],
                                 ),
-                            )
+                            ),
                         ],
                     ),
                     fields=[
@@ -1680,20 +1713,20 @@ def test_initializer_with_initializer_list_1() -> None:
                                                             typename=PQName(
                                                                 segments=[
                                                                     FundamentalSpecifier(
-                                                                        name="int"
-                                                                    )
-                                                                ]
-                                                            )
-                                                        )
-                                                    )
-                                                ]
+                                                                        name="int",
+                                                                    ),
+                                                                ],
+                                                            ),
+                                                        ),
+                                                    ),
+                                                ],
                                             ),
                                         ),
-                                    ]
-                                )
+                                    ],
+                                ),
                             ),
                             name="m_stuff",
-                        )
+                        ),
                     ],
                     methods=[
                         Method(
@@ -1703,11 +1736,11 @@ def test_initializer_with_initializer_list_1() -> None:
                                 Parameter(
                                     type=Type(
                                         typename=PQName(
-                                            segments=[FundamentalSpecifier(name="int")]
-                                        )
+                                            segments=[FundamentalSpecifier(name="int")],
+                                        ),
                                     ),
                                     name="i",
-                                )
+                                ),
                             ],
                             has_body=True,
                             access="public",
@@ -1716,17 +1749,17 @@ def test_initializer_with_initializer_list_1() -> None:
                         Method(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="void")]
-                                )
+                                    segments=[FundamentalSpecifier(name="void")],
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="fn")]),
                             parameters=[],
                             access="public",
                         ),
                     ],
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -1747,10 +1780,11 @@ def test_initializer_with_initializer_list_2() -> None:
                 ClassScope(
                     class_decl=ClassDecl(
                         typename=PQName(
-                            segments=[NameSpecifier(name="future")], classkey="class"
+                            segments=[NameSpecifier(name="future")],
+                            classkey="class",
                         ),
                         template=TemplateDecl(
-                            params=[TemplateTypeParam(typekey="typename", name="T")]
+                            params=[TemplateTypeParam(typekey="typename", name="T")],
                         ),
                         final=True,
                     ),
@@ -1773,34 +1807,36 @@ def test_initializer_with_initializer_list_2() -> None:
                                                                         typename=PQName(
                                                                             segments=[
                                                                                 NameSpecifier(
-                                                                                    name="R"
-                                                                                )
-                                                                            ]
-                                                                        )
-                                                                    )
-                                                                )
-                                                            ]
+                                                                                    name="R",
+                                                                                ),
+                                                                            ],
+                                                                        ),
+                                                                    ),
+                                                                ),
+                                                            ],
                                                         ),
-                                                    )
-                                                ]
-                                            )
-                                        )
+                                                    ),
+                                                ],
+                                            ),
+                                        ),
                                     ),
                                     name="oth",
-                                )
+                                ),
                             ],
                             has_body=True,
                             template=TemplateDecl(
-                                params=[TemplateTypeParam(typekey="typename", name="R")]
+                                params=[
+                                    TemplateTypeParam(typekey="typename", name="R"),
+                                ],
                             ),
                             noexcept=Value(tokens=[]),
                             access="public",
                             constructor=True,
-                        )
+                        ),
                     ],
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -1821,8 +1857,9 @@ def test_class_with_arrays() -> None:
                 ClassScope(
                     class_decl=ClassDecl(
                         typename=PQName(
-                            segments=[NameSpecifier(name="Bird")], classkey="class"
-                        )
+                            segments=[NameSpecifier(name="Bird")],
+                            classkey="class",
+                        ),
                     ),
                     fields=[
                         Field(
@@ -1830,8 +1867,8 @@ def test_class_with_arrays() -> None:
                             type=Array(
                                 array_of=Type(
                                     typename=PQName(
-                                        segments=[FundamentalSpecifier(name="int")]
-                                    )
+                                        segments=[FundamentalSpecifier(name="int")],
+                                    ),
                                 ),
                                 size=Value(tokens=[Token(value="MAX_ITEM")]),
                             ),
@@ -1842,8 +1879,8 @@ def test_class_with_arrays() -> None:
                             type=Array(
                                 array_of=Type(
                                     typename=PQName(
-                                        segments=[FundamentalSpecifier(name="int")]
-                                    )
+                                        segments=[FundamentalSpecifier(name="int")],
+                                    ),
                                 ),
                                 size=Value(tokens=[Token(value="7")]),
                             ),
@@ -1853,13 +1890,13 @@ def test_class_with_arrays() -> None:
                             access="private",
                             type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="int")]
-                                )
+                                    segments=[FundamentalSpecifier(name="int")],
+                                ),
                             ),
                             name="oneItem",
                         ),
                     ],
-                )
+                ),
             ],
             variables=[
                 Variable(
@@ -1869,9 +1906,9 @@ def test_class_with_arrays() -> None:
                         const=True,
                     ),
                     value=Value(tokens=[Token(value="7")]),
-                )
+                ),
             ],
-        )
+        ),
     )
 
 
@@ -1891,41 +1928,42 @@ def test_class_fn_inline_impl() -> None:
                 ClassScope(
                     class_decl=ClassDecl(
                         typename=PQName(
-                            segments=[NameSpecifier(name="Monkey")], classkey="class"
-                        )
+                            segments=[NameSpecifier(name="Monkey")],
+                            classkey="class",
+                        ),
                     ),
                     methods=[
                         Method(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="void")]
-                                )
+                                    segments=[FundamentalSpecifier(name="void")],
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="Create")]),
                             parameters=[],
                             static=True,
                             access="private",
-                        )
+                        ),
                     ],
-                )
+                ),
             ],
             method_impls=[
                 Method(
                     return_type=Type(
-                        typename=PQName(segments=[FundamentalSpecifier(name="void")])
+                        typename=PQName(segments=[FundamentalSpecifier(name="void")]),
                     ),
                     name=PQName(
                         segments=[
                             NameSpecifier(name="Monkey"),
                             NameSpecifier(name="Create"),
-                        ]
+                        ],
                     ),
                     parameters=[],
                     inline=True,
                     has_body=True,
-                )
+                ),
             ],
-        )
+        ),
     )
 
 
@@ -1935,7 +1973,7 @@ def test_class_fn_virtual_final_override() -> None:
         virtual void foo() final;
         virtual void foo2();
       };
-      
+
       struct Lime final : Lemon {
         void abc();
         void foo2() override;
@@ -1949,15 +1987,16 @@ def test_class_fn_virtual_final_override() -> None:
                 ClassScope(
                     class_decl=ClassDecl(
                         typename=PQName(
-                            segments=[NameSpecifier(name="Lemon")], classkey="struct"
-                        )
+                            segments=[NameSpecifier(name="Lemon")],
+                            classkey="struct",
+                        ),
                     ),
                     methods=[
                         Method(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="void")]
-                                )
+                                    segments=[FundamentalSpecifier(name="void")],
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="foo")]),
                             parameters=[],
@@ -1968,8 +2007,8 @@ def test_class_fn_virtual_final_override() -> None:
                         Method(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="void")]
-                                )
+                                    segments=[FundamentalSpecifier(name="void")],
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="foo2")]),
                             parameters=[],
@@ -1981,13 +2020,14 @@ def test_class_fn_virtual_final_override() -> None:
                 ClassScope(
                     class_decl=ClassDecl(
                         typename=PQName(
-                            segments=[NameSpecifier(name="Lime")], classkey="struct"
+                            segments=[NameSpecifier(name="Lime")],
+                            classkey="struct",
                         ),
                         bases=[
                             BaseClass(
                                 access="public",
                                 typename=PQName(segments=[NameSpecifier(name="Lemon")]),
-                            )
+                            ),
                         ],
                         final=True,
                     ),
@@ -1995,8 +2035,8 @@ def test_class_fn_virtual_final_override() -> None:
                         Method(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="void")]
-                                )
+                                    segments=[FundamentalSpecifier(name="void")],
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="abc")]),
                             parameters=[],
@@ -2005,8 +2045,8 @@ def test_class_fn_virtual_final_override() -> None:
                         Method(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="void")]
-                                )
+                                    segments=[FundamentalSpecifier(name="void")],
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="foo2")]),
                             parameters=[],
@@ -2015,8 +2055,8 @@ def test_class_fn_virtual_final_override() -> None:
                         ),
                     ],
                 ),
-            ]
-        )
+            ],
+        ),
     )
 
 
@@ -2025,12 +2065,12 @@ def test_class_fn_return_class() -> None:
       class Peach {
         int abc;
       };
-      
+
       class Plumb {
         class Peach *doSomethingGreat(class Peach *pInCurPtr);
         class Peach *var;
       };
-      
+
       class Peach *Plumb::myMethod(class Peach *pInPtr) {
         return pInPtr;
       }
@@ -2043,26 +2083,28 @@ def test_class_fn_return_class() -> None:
                 ClassScope(
                     class_decl=ClassDecl(
                         typename=PQName(
-                            segments=[NameSpecifier(name="Peach")], classkey="class"
-                        )
+                            segments=[NameSpecifier(name="Peach")],
+                            classkey="class",
+                        ),
                     ),
                     fields=[
                         Field(
                             access="private",
                             type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="int")]
-                                )
+                                    segments=[FundamentalSpecifier(name="int")],
+                                ),
                             ),
                             name="abc",
-                        )
+                        ),
                     ],
                 ),
                 ClassScope(
                     class_decl=ClassDecl(
                         typename=PQName(
-                            segments=[NameSpecifier(name="Plumb")], classkey="class"
-                        )
+                            segments=[NameSpecifier(name="Plumb")],
+                            classkey="class",
+                        ),
                     ),
                     fields=[
                         Field(
@@ -2072,11 +2114,11 @@ def test_class_fn_return_class() -> None:
                                     typename=PQName(
                                         segments=[NameSpecifier(name="Peach")],
                                         classkey="class",
-                                    )
-                                )
+                                    ),
+                                ),
                             ),
                             name="var",
-                        )
+                        ),
                     ],
                     methods=[
                         Method(
@@ -2085,11 +2127,11 @@ def test_class_fn_return_class() -> None:
                                     typename=PQName(
                                         segments=[NameSpecifier(name="Peach")],
                                         classkey="class",
-                                    )
-                                )
+                                    ),
+                                ),
                             ),
                             name=PQName(
-                                segments=[NameSpecifier(name="doSomethingGreat")]
+                                segments=[NameSpecifier(name="doSomethingGreat")],
                             ),
                             parameters=[
                                 Parameter(
@@ -2098,14 +2140,14 @@ def test_class_fn_return_class() -> None:
                                             typename=PQName(
                                                 segments=[NameSpecifier(name="Peach")],
                                                 classkey="class",
-                                            )
-                                        )
+                                            ),
+                                        ),
                                     ),
                                     name="pInCurPtr",
-                                )
+                                ),
                             ],
                             access="private",
-                        )
+                        ),
                     ],
                 ),
             ],
@@ -2114,15 +2156,16 @@ def test_class_fn_return_class() -> None:
                     return_type=Pointer(
                         ptr_to=Type(
                             typename=PQName(
-                                segments=[NameSpecifier(name="Peach")], classkey="class"
-                            )
-                        )
+                                segments=[NameSpecifier(name="Peach")],
+                                classkey="class",
+                            ),
+                        ),
                     ),
                     name=PQName(
                         segments=[
                             NameSpecifier(name="Plumb"),
                             NameSpecifier(name="myMethod"),
-                        ]
+                        ],
                     ),
                     parameters=[
                         Parameter(
@@ -2131,16 +2174,16 @@ def test_class_fn_return_class() -> None:
                                     typename=PQName(
                                         segments=[NameSpecifier(name="Peach")],
                                         classkey="class",
-                                    )
-                                )
+                                    ),
+                                ),
                             ),
                             name="pInPtr",
-                        )
+                        ),
                     ],
                     has_body=True,
-                )
+                ),
             ],
-        )
+        ),
     )
 
 
@@ -2150,14 +2193,14 @@ def test_class_fn_template_impl() -> None:
       private:
         template <typename T> int *tFunc(int count);
       };
-      
+
       template <typename T> int *Owl::tFunc(int count) {
         if (count == 0) {
           return NULL;
         }
         return NULL;
       }
-      
+
     """
     data = parse_string(content, cleandoc=True)
 
@@ -2167,67 +2210,72 @@ def test_class_fn_template_impl() -> None:
                 ClassScope(
                     class_decl=ClassDecl(
                         typename=PQName(
-                            segments=[NameSpecifier(name="Owl")], classkey="class"
-                        )
+                            segments=[NameSpecifier(name="Owl")],
+                            classkey="class",
+                        ),
                     ),
                     methods=[
                         Method(
                             return_type=Pointer(
                                 ptr_to=Type(
                                     typename=PQName(
-                                        segments=[FundamentalSpecifier(name="int")]
-                                    )
-                                )
+                                        segments=[FundamentalSpecifier(name="int")],
+                                    ),
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="tFunc")]),
                             parameters=[
                                 Parameter(
                                     type=Type(
                                         typename=PQName(
-                                            segments=[FundamentalSpecifier(name="int")]
-                                        )
+                                            segments=[FundamentalSpecifier(name="int")],
+                                        ),
                                     ),
                                     name="count",
-                                )
+                                ),
                             ],
                             template=TemplateDecl(
-                                params=[TemplateTypeParam(typekey="typename", name="T")]
+                                params=[
+                                    TemplateTypeParam(typekey="typename", name="T"),
+                                ],
                             ),
                             access="private",
-                        )
+                        ),
                     ],
-                )
+                ),
             ],
             method_impls=[
                 Method(
                     return_type=Pointer(
                         ptr_to=Type(
-                            typename=PQName(segments=[FundamentalSpecifier(name="int")])
-                        )
+                            typename=PQName(
+                                segments=[FundamentalSpecifier(name="int")],
+                            ),
+                        ),
                     ),
                     name=PQName(
                         segments=[
                             NameSpecifier(name="Owl"),
                             NameSpecifier(name="tFunc"),
-                        ]
+                        ],
                     ),
                     parameters=[
                         Parameter(
                             type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="int")]
-                                )
+                                    segments=[FundamentalSpecifier(name="int")],
+                                ),
                             ),
                             name="count",
-                        )
+                        ),
                     ],
                     has_body=True,
                     template=TemplateDecl(
-                        params=[TemplateTypeParam(typekey="typename", name="T")]
+                        params=[TemplateTypeParam(typekey="typename", name="T")],
                     ),
-                )
+                ),
             ],
-        )
+        ),
     )
 
 
@@ -2246,44 +2294,47 @@ def test_class_fn_inline_template_impl() -> None:
                 ClassScope(
                     class_decl=ClassDecl(
                         typename=PQName(
-                            segments=[NameSpecifier(name="Chicken")], classkey="class"
-                        )
+                            segments=[NameSpecifier(name="Chicken")],
+                            classkey="class",
+                        ),
                     ),
                     methods=[
                         Method(
                             return_type=Type(
-                                typename=PQName(segments=[NameSpecifier(name="T")])
+                                typename=PQName(segments=[NameSpecifier(name="T")]),
                             ),
                             name=PQName(segments=[NameSpecifier(name="Get")]),
                             parameters=[],
                             static=True,
                             template=TemplateDecl(
-                                params=[TemplateTypeParam(typekey="typename", name="T")]
+                                params=[
+                                    TemplateTypeParam(typekey="typename", name="T"),
+                                ],
                             ),
                             access="private",
-                        )
+                        ),
                     ],
-                )
+                ),
             ],
             method_impls=[
                 Method(
                     return_type=Type(
-                        typename=PQName(segments=[NameSpecifier(name="T")])
+                        typename=PQName(segments=[NameSpecifier(name="T")]),
                     ),
                     name=PQName(
                         segments=[
                             NameSpecifier(name="Chicken"),
                             NameSpecifier(name="Get"),
-                        ]
+                        ],
                     ),
                     parameters=[],
                     has_body=True,
                     template=TemplateDecl(
-                        params=[TemplateTypeParam(typekey="typename", name="T")]
+                        params=[TemplateTypeParam(typekey="typename", name="T")],
                     ),
-                )
+                ),
             ],
-        )
+        ),
     )
 
 
@@ -2302,8 +2353,9 @@ def test_class_fn_explicit_constructors() -> None:
                 ClassScope(
                     class_decl=ClassDecl(
                         typename=PQName(
-                            segments=[NameSpecifier(name="Lizzard")], classkey="class"
-                        )
+                            segments=[NameSpecifier(name="Lizzard")],
+                            classkey="class",
+                        ),
                     ),
                     methods=[
                         Method(
@@ -2320,20 +2372,20 @@ def test_class_fn_explicit_constructors() -> None:
                                 Parameter(
                                     type=Type(
                                         typename=PQName(
-                                            segments=[FundamentalSpecifier(name="int")]
-                                        )
+                                            segments=[FundamentalSpecifier(name="int")],
+                                        ),
                                     ),
                                     name="a",
-                                )
+                                ),
                             ],
                             access="private",
                             constructor=True,
                             explicit=True,
                         ),
                     ],
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -2354,23 +2406,23 @@ def test_class_fn_default_constructor() -> None:
                         typename=PQName(
                             segments=[NameSpecifier(name="DefaultConstDest")],
                             classkey="class",
-                        )
+                        ),
                     ),
                     methods=[
                         Method(
                             return_type=None,
                             name=PQName(
-                                segments=[NameSpecifier(name="DefaultConstDest")]
+                                segments=[NameSpecifier(name="DefaultConstDest")],
                             ),
                             parameters=[],
                             access="public",
                             constructor=True,
                             default=True,
-                        )
+                        ),
                     ],
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -2389,8 +2441,9 @@ def test_class_fn_delete_constructor() -> None:
                 ClassScope(
                     class_decl=ClassDecl(
                         typename=PQName(
-                            segments=[NameSpecifier(name="A")], classkey="class"
-                        )
+                            segments=[NameSpecifier(name="A")],
+                            classkey="class",
+                        ),
                     ),
                     methods=[
                         Method(
@@ -2400,11 +2453,11 @@ def test_class_fn_delete_constructor() -> None:
                             access="public",
                             constructor=True,
                             deleted=True,
-                        )
+                        ),
                     ],
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -2425,16 +2478,17 @@ def test_class_multi_vars() -> None:
                 ClassScope(
                     class_decl=ClassDecl(
                         typename=PQName(
-                            segments=[NameSpecifier(name="Grape")], classkey="class"
-                        )
+                            segments=[NameSpecifier(name="Grape")],
+                            classkey="class",
+                        ),
                     ),
                     fields=[
                         Field(
                             access="public",
                             type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="int")]
-                                )
+                                    segments=[FundamentalSpecifier(name="int")],
+                                ),
                             ),
                             name="a",
                         ),
@@ -2442,8 +2496,8 @@ def test_class_multi_vars() -> None:
                             access="public",
                             type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="int")]
-                                )
+                                    segments=[FundamentalSpecifier(name="int")],
+                                ),
                             ),
                             name="b",
                         ),
@@ -2451,8 +2505,8 @@ def test_class_multi_vars() -> None:
                             access="public",
                             type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="int")]
-                                )
+                                    segments=[FundamentalSpecifier(name="int")],
+                                ),
                             ),
                             name="c",
                         ),
@@ -2470,28 +2524,28 @@ def test_class_multi_vars() -> None:
                                                             typename=PQName(
                                                                 segments=[
                                                                     NameSpecifier(
-                                                                        name="string"
-                                                                    )
-                                                                ]
-                                                            )
-                                                        )
+                                                                        name="string",
+                                                                    ),
+                                                                ],
+                                                            ),
+                                                        ),
                                                     ),
                                                     TemplateArgument(
                                                         arg=Type(
                                                             typename=PQName(
                                                                 segments=[
                                                                     FundamentalSpecifier(
-                                                                        name="int"
-                                                                    )
-                                                                ]
-                                                            )
-                                                        )
+                                                                        name="int",
+                                                                    ),
+                                                                ],
+                                                            ),
+                                                        ),
                                                     ),
-                                                ]
+                                                ],
                                             ),
-                                        )
-                                    ]
-                                )
+                                        ),
+                                    ],
+                                ),
                             ),
                             name="d",
                         ),
@@ -2509,28 +2563,28 @@ def test_class_multi_vars() -> None:
                                                             typename=PQName(
                                                                 segments=[
                                                                     NameSpecifier(
-                                                                        name="string"
-                                                                    )
-                                                                ]
-                                                            )
-                                                        )
+                                                                        name="string",
+                                                                    ),
+                                                                ],
+                                                            ),
+                                                        ),
                                                     ),
                                                     TemplateArgument(
                                                         arg=Type(
                                                             typename=PQName(
                                                                 segments=[
                                                                     FundamentalSpecifier(
-                                                                        name="int"
-                                                                    )
-                                                                ]
-                                                            )
-                                                        )
+                                                                        name="int",
+                                                                    ),
+                                                                ],
+                                                            ),
+                                                        ),
                                                     ),
-                                                ]
+                                                ],
                                             ),
-                                        )
-                                    ]
-                                )
+                                        ),
+                                    ],
+                                ),
                             ),
                             name="e",
                         ),
@@ -2548,35 +2602,35 @@ def test_class_multi_vars() -> None:
                                                             typename=PQName(
                                                                 segments=[
                                                                     NameSpecifier(
-                                                                        name="string"
-                                                                    )
-                                                                ]
-                                                            )
-                                                        )
+                                                                        name="string",
+                                                                    ),
+                                                                ],
+                                                            ),
+                                                        ),
                                                     ),
                                                     TemplateArgument(
                                                         arg=Type(
                                                             typename=PQName(
                                                                 segments=[
                                                                     FundamentalSpecifier(
-                                                                        name="int"
-                                                                    )
-                                                                ]
-                                                            )
-                                                        )
+                                                                        name="int",
+                                                                    ),
+                                                                ],
+                                                            ),
+                                                        ),
                                                     ),
-                                                ]
+                                                ],
                                             ),
-                                        )
-                                    ]
-                                )
+                                        ),
+                                    ],
+                                ),
                             ),
                             name="f",
                         ),
                     ],
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -2597,14 +2651,14 @@ def test_class_static_const_var_expr() -> None:
                         typename=PQName(
                             segments=[NameSpecifier(name="PandaClass")],
                             classkey="class",
-                        )
+                        ),
                     ),
                     fields=[
                         Field(
                             access="private",
                             type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="int")]
+                                    segments=[FundamentalSpecifier(name="int")],
                                 ),
                                 const=True,
                             ),
@@ -2618,7 +2672,7 @@ def test_class_static_const_var_expr() -> None:
                                     Token(value=")"),
                                     Token(value="-"),
                                     Token(value="1"),
-                                ]
+                                ],
                             ),
                             static=True,
                         ),
@@ -2626,7 +2680,7 @@ def test_class_static_const_var_expr() -> None:
                             access="private",
                             type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="int")]
+                                    segments=[FundamentalSpecifier(name="int")],
                                 ),
                                 const=True,
                             ),
@@ -2637,14 +2691,14 @@ def test_class_static_const_var_expr() -> None:
                                     Token(value="("),
                                     Token(value="int"),
                                     Token(value=")"),
-                                ]
+                                ],
                             ),
                             static=True,
                         ),
                     ],
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -2668,7 +2722,7 @@ def test_class_fwd_struct() -> None:
                         typename=PQName(
                             segments=[NameSpecifier(name="PotatoClass")],
                             classkey="class",
-                        )
+                        ),
                     ),
                     classes=[
                         ClassScope(
@@ -2684,13 +2738,13 @@ def test_class_fwd_struct() -> None:
                                     access="public",
                                     type=Type(
                                         typename=PQName(
-                                            segments=[FundamentalSpecifier(name="int")]
-                                        )
+                                            segments=[FundamentalSpecifier(name="int")],
+                                        ),
                                     ),
                                     name="a",
-                                )
+                                ),
                             ],
-                        )
+                        ),
                     ],
                     fields=[
                         Field(
@@ -2698,12 +2752,12 @@ def test_class_fwd_struct() -> None:
                             type=Pointer(
                                 ptr_to=Type(
                                     typename=PQName(
-                                        segments=[NameSpecifier(name="FwdStruct")]
-                                    )
-                                )
+                                        segments=[NameSpecifier(name="FwdStruct")],
+                                    ),
+                                ),
                             ),
                             name="ptr",
-                        )
+                        ),
                     ],
                     forward_decls=[
                         ForwardDecl(
@@ -2712,11 +2766,11 @@ def test_class_fwd_struct() -> None:
                                 classkey="struct",
                             ),
                             access="private",
-                        )
+                        ),
                     ],
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -2735,8 +2789,9 @@ def test_class_multi_array() -> None:
                 ClassScope(
                     class_decl=ClassDecl(
                         typename=PQName(
-                            segments=[NameSpecifier(name="Picture")], classkey="struct"
-                        )
+                            segments=[NameSpecifier(name="Picture")],
+                            classkey="struct",
+                        ),
                     ),
                     fields=[
                         Field(
@@ -2744,8 +2799,8 @@ def test_class_multi_array() -> None:
                             type=Array(
                                 array_of=Type(
                                     typename=PQName(
-                                        segments=[FundamentalSpecifier(name="char")]
-                                    )
+                                        segments=[FundamentalSpecifier(name="char")],
+                                    ),
                                 ),
                                 size=Value(tokens=[Token(value="25")]),
                             ),
@@ -2759,10 +2814,10 @@ def test_class_multi_array() -> None:
                                         typename=PQName(
                                             segments=[
                                                 FundamentalSpecifier(
-                                                    name="unsigned int"
-                                                )
-                                            ]
-                                        )
+                                                    name="unsigned int",
+                                                ),
+                                            ],
+                                        ),
                                     ),
                                     size=Value(tokens=[Token(value="256")]),
                                 ),
@@ -2771,9 +2826,9 @@ def test_class_multi_array() -> None:
                             name="pdata",
                         ),
                     ],
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -2797,15 +2852,16 @@ def test_class_noexcept() -> None:
                 ClassScope(
                     class_decl=ClassDecl(
                         typename=PQName(
-                            segments=[NameSpecifier(name="Grackle")], classkey="struct"
-                        )
+                            segments=[NameSpecifier(name="Grackle")],
+                            classkey="struct",
+                        ),
                     ),
                     methods=[
                         Method(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="void")]
-                                )
+                                    segments=[FundamentalSpecifier(name="void")],
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="no_noexcept")]),
                             parameters=[],
@@ -2814,8 +2870,8 @@ def test_class_noexcept() -> None:
                         Method(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="void")]
-                                )
+                                    segments=[FundamentalSpecifier(name="void")],
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="just_noexcept")]),
                             parameters=[],
@@ -2825,11 +2881,11 @@ def test_class_noexcept() -> None:
                         Method(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="void")]
-                                )
+                                    segments=[FundamentalSpecifier(name="void")],
+                                ),
                             ),
                             name=PQName(
-                                segments=[NameSpecifier(name="const_noexcept")]
+                                segments=[NameSpecifier(name="const_noexcept")],
                             ),
                             parameters=[],
                             noexcept=Value(tokens=[]),
@@ -2839,8 +2895,8 @@ def test_class_noexcept() -> None:
                         Method(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="void")]
-                                )
+                                    segments=[FundamentalSpecifier(name="void")],
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="noexcept_bool")]),
                             parameters=[],
@@ -2850,11 +2906,11 @@ def test_class_noexcept() -> None:
                         Method(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="void")]
-                                )
+                                    segments=[FundamentalSpecifier(name="void")],
+                                ),
                             ),
                             name=PQName(
-                                segments=[NameSpecifier(name="const_noexcept_bool")]
+                                segments=[NameSpecifier(name="const_noexcept_bool")],
                             ),
                             parameters=[],
                             noexcept=Value(tokens=[Token(value="true")]),
@@ -2864,13 +2920,13 @@ def test_class_noexcept() -> None:
                         Method(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="void")]
-                                )
+                                    segments=[FundamentalSpecifier(name="void")],
+                                ),
                             ),
                             name=PQName(
                                 segments=[
-                                    NameSpecifier(name="noexcept_noexceptOperator")
-                                ]
+                                    NameSpecifier(name="noexcept_noexceptOperator"),
+                                ],
                             ),
                             parameters=[],
                             noexcept=Value(
@@ -2881,22 +2937,22 @@ def test_class_noexcept() -> None:
                                     Token(value="("),
                                     Token(value=")"),
                                     Token(value=")"),
-                                ]
+                                ],
                             ),
                             access="public",
                         ),
                         Method(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="void")]
-                                )
+                                    segments=[FundamentalSpecifier(name="void")],
+                                ),
                             ),
                             name=PQName(
                                 segments=[
                                     NameSpecifier(
-                                        name="const_noexcept_noexceptOperator"
-                                    )
-                                ]
+                                        name="const_noexcept_noexceptOperator",
+                                    ),
+                                ],
                             ),
                             parameters=[],
                             noexcept=Value(
@@ -2907,15 +2963,15 @@ def test_class_noexcept() -> None:
                                     Token(value="("),
                                     Token(value=")"),
                                     Token(value=")"),
-                                ]
+                                ],
                             ),
                             access="public",
                             const=True,
                         ),
                     ],
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -2924,11 +2980,11 @@ def test_class_volatile() -> None:
       class Foo
       {
       public:
-      
+
       private:
-      
+
       volatile bool               myToShutDown;
-      
+
       };
     """
     data = parse_string(content, cleandoc=True)
@@ -2939,24 +2995,25 @@ def test_class_volatile() -> None:
                 ClassScope(
                     class_decl=ClassDecl(
                         typename=PQName(
-                            segments=[NameSpecifier(name="Foo")], classkey="class"
-                        )
+                            segments=[NameSpecifier(name="Foo")],
+                            classkey="class",
+                        ),
                     ),
                     fields=[
                         Field(
                             access="private",
                             type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="bool")]
+                                    segments=[FundamentalSpecifier(name="bool")],
                                 ),
                                 volatile=True,
                             ),
                             name="myToShutDown",
-                        )
+                        ),
                     ],
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -2965,9 +3022,9 @@ def test_class_mutable() -> None:
       class Foo
       {
       private:
-      
+
       mutable volatile Standard_Integer myRefCount_;
-      
+
       };
     """
     data = parse_string(content, cleandoc=True)
@@ -2978,25 +3035,26 @@ def test_class_mutable() -> None:
                 ClassScope(
                     class_decl=ClassDecl(
                         typename=PQName(
-                            segments=[NameSpecifier(name="Foo")], classkey="class"
-                        )
+                            segments=[NameSpecifier(name="Foo")],
+                            classkey="class",
+                        ),
                     ),
                     fields=[
                         Field(
                             access="private",
                             type=Type(
                                 typename=PQName(
-                                    segments=[NameSpecifier(name="Standard_Integer")]
+                                    segments=[NameSpecifier(name="Standard_Integer")],
                                 ),
                                 volatile=True,
                             ),
                             name="myRefCount_",
                             mutable=True,
-                        )
+                        ),
                     ],
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -3018,8 +3076,9 @@ def test_nested_class_access() -> None:
                 ClassScope(
                     class_decl=ClassDecl(
                         typename=PQName(
-                            segments=[NameSpecifier(name="Outer")], classkey="class"
-                        )
+                            segments=[NameSpecifier(name="Outer")],
+                            classkey="class",
+                        ),
                     ),
                     classes=[
                         ClassScope(
@@ -3034,31 +3093,33 @@ def test_nested_class_access() -> None:
                                 Method(
                                     return_type=Type(
                                         typename=PQName(
-                                            segments=[FundamentalSpecifier(name="void")]
-                                        )
+                                            segments=[
+                                                FundamentalSpecifier(name="void"),
+                                            ],
+                                        ),
                                     ),
                                     name=PQName(segments=[NameSpecifier(name="fn")]),
                                     parameters=[],
                                     access="public",
-                                )
+                                ),
                             ],
-                        )
+                        ),
                     ],
                     methods=[
                         Method(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="void")]
-                                )
+                                    segments=[FundamentalSpecifier(name="void")],
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="ofn")]),
                             parameters=[],
                             access="private",
-                        )
+                        ),
                     ],
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -3082,20 +3143,23 @@ def test_class_with_typedef() -> None:
                 ClassScope(
                     class_decl=ClassDecl(
                         typename=PQName(
-                            segments=[NameSpecifier(name="A")], classkey="class"
+                            segments=[NameSpecifier(name="A")],
+                            classkey="class",
                         ),
                         template=TemplateDecl(
-                            params=[TemplateTypeParam(typekey="class", name="SomeType")]
+                            params=[
+                                TemplateTypeParam(typekey="class", name="SomeType"),
+                            ],
                         ),
                     ),
                     fields=[
                         Field(
                             access="protected",
                             type=Type(
-                                typename=PQName(segments=[NameSpecifier(name="C")])
+                                typename=PQName(segments=[NameSpecifier(name="C")]),
                             ),
                             name="aCInstance",
-                        )
+                        ),
                     ],
                     methods=[
                         Method(
@@ -3104,7 +3168,7 @@ def test_class_with_typedef() -> None:
                             parameters=[],
                             access="public",
                             constructor=True,
-                        )
+                        ),
                     ],
                     typedefs=[
                         Typedef(
@@ -3120,25 +3184,25 @@ def test_class_with_typedef() -> None:
                                                             typename=PQName(
                                                                 segments=[
                                                                     NameSpecifier(
-                                                                        name="SomeType"
-                                                                    )
-                                                                ]
-                                                            )
-                                                        )
-                                                    )
-                                                ]
+                                                                        name="SomeType",
+                                                                    ),
+                                                                ],
+                                                            ),
+                                                        ),
+                                                    ),
+                                                ],
                                             ),
-                                        )
-                                    ]
-                                )
+                                        ),
+                                    ],
+                                ),
                             ),
                             name="C",
                             access="public",
-                        )
+                        ),
                     ],
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -3159,15 +3223,16 @@ def test_class_ref_qualifiers() -> None:
                 ClassScope(
                     class_decl=ClassDecl(
                         typename=PQName(
-                            segments=[NameSpecifier(name="X")], classkey="struct"
-                        )
+                            segments=[NameSpecifier(name="X")],
+                            classkey="struct",
+                        ),
                     ),
                     methods=[
                         Method(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="void")]
-                                )
+                                    segments=[FundamentalSpecifier(name="void")],
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="fn0")]),
                             parameters=[],
@@ -3176,8 +3241,8 @@ def test_class_ref_qualifiers() -> None:
                         Method(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="void")]
-                                )
+                                    segments=[FundamentalSpecifier(name="void")],
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="fn1")]),
                             parameters=[],
@@ -3187,8 +3252,8 @@ def test_class_ref_qualifiers() -> None:
                         Method(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="void")]
-                                )
+                                    segments=[FundamentalSpecifier(name="void")],
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="fn2")]),
                             parameters=[],
@@ -3198,8 +3263,8 @@ def test_class_ref_qualifiers() -> None:
                         Method(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="void")]
-                                )
+                                    segments=[FundamentalSpecifier(name="void")],
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="fn3")]),
                             parameters=[],
@@ -3208,9 +3273,9 @@ def test_class_ref_qualifiers() -> None:
                             pure_virtual=True,
                         ),
                     ],
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -3225,16 +3290,16 @@ def test_method_outside_class() -> None:
             method_impls=[
                 Method(
                     return_type=Type(
-                        typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                        typename=PQName(segments=[FundamentalSpecifier(name="int")]),
                     ),
                     name=PQName(
-                        segments=[NameSpecifier(name="foo"), NameSpecifier(name="bar")]
+                        segments=[NameSpecifier(name="foo"), NameSpecifier(name="bar")],
                     ),
                     parameters=[],
                     has_body=True,
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -3250,13 +3315,13 @@ def test_constructor_outside_class() -> None:
                 Method(
                     return_type=None,
                     name=PQName(
-                        segments=[NameSpecifier(name="foo"), NameSpecifier(name="foo")]
+                        segments=[NameSpecifier(name="foo"), NameSpecifier(name="foo")],
                     ),
                     parameters=[],
                     inline=True,
                     has_body=True,
                     constructor=True,
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )

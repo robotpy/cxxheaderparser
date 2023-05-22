@@ -64,7 +64,9 @@ class NamespaceBlockState(State):
     namespace: NamespaceDecl
 
     def __init__(
-        self, parent: typing.Optional[State], namespace: NamespaceDecl
+        self,
+        parent: typing.Optional[State],
+        namespace: NamespaceDecl,
     ) -> None:
         super().__init__(parent)
         self.namespace = namespace

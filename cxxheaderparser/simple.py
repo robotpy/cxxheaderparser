@@ -1,8 +1,6 @@
-"""
-
-The simple parser/collector iterates over the C++ file and returns a data
-structure with all elements in it. Not quite as flexible as implementing
-your own parser listener, but you can accomplish most things with it.
+"""The simple parser/collector iterates over the C++ file and returns a data
+structure with all elements in it. Not quite as flexible as implementing your
+own parser listener, but you can accomplish most things with it.
 
 cxxheaderparser's unit tests predominantly use the simple API for parsing,
 so you can expect it to be pretty stable.
@@ -21,41 +19,33 @@ to start:
     parsed_data = parse_string(content)
 
 See below for the contents of the returned :class:`ParsedData`.
-
 """
-
-import sys
 import inspect
+import sys
 import typing
+from dataclasses import dataclass
+from dataclasses import field
 
-
-from dataclasses import dataclass, field
-
-from .types import (
-    ClassDecl,
-    EnumDecl,
-    Field,
-    ForwardDecl,
-    FriendDecl,
-    Function,
-    Method,
-    NamespaceAlias,
-    TemplateInst,
-    Typedef,
-    UsingAlias,
-    UsingDecl,
-    Variable,
-)
-
-from .parserstate import (
-    State,
-    EmptyBlockState,
-    ClassBlockState,
-    ExternBlockState,
-    NamespaceBlockState,
-)
-from .parser import CxxParser
 from .options import ParserOptions
+from .parser import CxxParser
+from .parserstate import ClassBlockState
+from .parserstate import EmptyBlockState
+from .parserstate import ExternBlockState
+from .parserstate import NamespaceBlockState
+from .parserstate import State
+from .types import ClassDecl
+from .types import EnumDecl
+from .types import Field
+from .types import ForwardDecl
+from .types import FriendDecl
+from .types import Function
+from .types import Method
+from .types import NamespaceAlias
+from .types import TemplateInst
+from .types import Typedef
+from .types import UsingAlias
+from .types import UsingDecl
+from .types import Variable
 
 #
 # Data structure
@@ -64,9 +54,7 @@ from .options import ParserOptions
 
 @dataclass
 class ClassScope:
-    """
-    Contains all data collected for a single C++ class
-    """
+    """Contains all data collected for a single C++ class."""
 
     #: Information about the class declaration is here
     class_decl: ClassDecl
@@ -86,9 +74,10 @@ class ClassScope:
 
 @dataclass
 class NamespaceScope:
-    """
-    Contains all data collected for a single namespace. Content for child
-    namespaces are found in the ``namespaces`` attribute.
+    """Contains all data collected for a single namespace.
+
+    Content for child namespaces are found in the ``namespaces``
+    attribute.
     """
 
     name: str = ""
@@ -187,9 +176,8 @@ class ParsedData:
 
 
 class SimpleCxxVisitor:
-    """
-    A simple visitor that stores all of the C++ elements passed to it
-    in an "easy" to use data structure
+    """A simple visitor that stores all of the C++ elements passed to it in an
+    "easy" to use data structure.
 
     You probably don't want to use this directly, use :func:`parse_file`
     or  :func:`parse_string` instead.
@@ -340,9 +328,7 @@ def parse_string(
     options: typing.Optional[ParserOptions] = None,
     cleandoc: bool = False,
 ) -> ParsedData:
-    """
-    Simple function to parse a header and return a data structure
-    """
+    """Simple function to parse a header and return a data structure."""
     if cleandoc:
         content = inspect.cleandoc(content)
 
@@ -359,9 +345,8 @@ def parse_file(
     *,
     options: typing.Optional[ParserOptions] = None,
 ) -> ParsedData:
-    """
-    Simple function to parse a header from a file and return a data structure
-    """
+    """Simple function to parse a header from a file and return a data
+    structure."""
 
     if encoding is None:
         encoding = "utf-8-sig"

@@ -1,20 +1,18 @@
 import argparse
 import dataclasses
 import inspect
-import re
 import subprocess
 import typing
 
 from .errors import CxxParseError
 from .options import ParserOptions
-from .simple import parse_string, ParsedData
+from .simple import parse_string
+from .simple import ParsedData
 
 
 def nondefault_repr(data: ParsedData) -> str:
-    """
-    Similar to the default dataclass repr, but exclude any
-    default parameters or parameters with compare=False
-    """
+    """Similar to the default dataclass repr, but exclude any default
+    parameters or parameters with compare=False."""
 
     is_dataclass = dataclasses.is_dataclass
     get_fields = dataclasses.fields
@@ -26,10 +24,7 @@ def nondefault_repr(data: ParsedData) -> str:
             for f in get_fields(o):
                 if f.repr and f.compare:
                     v = getattr(o, f.name)
-                    if f.default_factory is not MISSING:
-                        default = f.default_factory()
-                    else:
-                        default = f.default
+                    default = f.default_factory() if f.default_factory is not MISSING else f.default
 
                     if v != default:
                         vals.append(f"{f.name}={_inner_repr(v)}")
@@ -53,7 +48,7 @@ def gentest(infile: str, name: str, outfile: str, verbose: bool, fail: bool) -> 
     # Goal is to allow making a unit test as easy as running this dumper
     # on a file and copy/pasting this into a test
 
-    with open(infile, "r") as fp:
+    with open(infile) as fp:
         content = fp.read()
 
     options = ParserOptions(verbose=verbose)
@@ -94,12 +89,13 @@ def gentest(infile: str, name: str, outfile: str, verbose: bool, fail: bool) -> 
             content = """{content}
             """
             {stmt.strip()}
-    '''
+    ''',
     )
 
     # format it with black
     stmt = subprocess.check_output(
-        ["black", "-", "-q"], input=stmt.encode("utf-8")
+        ["black", "-", "-q"],
+        input=stmt.encode("utf-8"),
     ).decode("utf-8")
 
     if outfile == "-":
@@ -116,7 +112,11 @@ if __name__ == "__main__":
     parser.add_argument("-v", "--verbose", default=False, action="store_true")
     parser.add_argument("-o", "--output", default="-")
     parser.add_argument(
-        "-x", "--fail", default=False, action="store_true", help="Expect failure"
+        "-x",
+        "--fail",
+        default=False,
+        action="store_true",
+        help="Expect failure",
     )
     args = parser.parse_args()
 

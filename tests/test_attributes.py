@@ -1,31 +1,26 @@
 # Note: testcases generated via `python -m cxxheaderparser.gentest`
-
-from cxxheaderparser.types import (
-    ClassDecl,
-    EnumDecl,
-    Enumerator,
-    Field,
-    FriendDecl,
-    Function,
-    FundamentalSpecifier,
-    Method,
-    NameSpecifier,
-    PQName,
-    Pointer,
-    TemplateDecl,
-    TemplateTypeParam,
-    Token,
-    Type,
-    Typedef,
-    Value,
-    Variable,
-)
-from cxxheaderparser.simple import (
-    ClassScope,
-    NamespaceScope,
-    parse_string,
-    ParsedData,
-)
+from cxxheaderparser.simple import ClassScope
+from cxxheaderparser.simple import NamespaceScope
+from cxxheaderparser.simple import parse_string
+from cxxheaderparser.simple import ParsedData
+from cxxheaderparser.types import ClassDecl
+from cxxheaderparser.types import EnumDecl
+from cxxheaderparser.types import Enumerator
+from cxxheaderparser.types import Field
+from cxxheaderparser.types import FriendDecl
+from cxxheaderparser.types import Function
+from cxxheaderparser.types import FundamentalSpecifier
+from cxxheaderparser.types import Method
+from cxxheaderparser.types import NameSpecifier
+from cxxheaderparser.types import Pointer
+from cxxheaderparser.types import PQName
+from cxxheaderparser.types import TemplateDecl
+from cxxheaderparser.types import TemplateTypeParam
+from cxxheaderparser.types import Token
+from cxxheaderparser.types import Type
+from cxxheaderparser.types import Typedef
+from cxxheaderparser.types import Value
+from cxxheaderparser.types import Variable
 
 
 def test_attributes_everywhere() -> None:
@@ -35,15 +30,15 @@ def test_attributes_everywhere() -> None:
     content = """
       struct [[deprecated]] S {};
       [[deprecated]] typedef S *PS;
-      
+
       [[deprecated]] int x;
       union U {
         [[deprecated]] int n;
       };
       [[deprecated]] void f();
-      
+
       enum [[deprecated]] E{A [[deprecated]], B [[deprecated]] = 42};
-      
+
       struct alignas(8) AS {};
     """
     data = parse_string(content, cleandoc=True)
@@ -54,73 +49,79 @@ def test_attributes_everywhere() -> None:
                 ClassScope(
                     class_decl=ClassDecl(
                         typename=PQName(
-                            segments=[NameSpecifier(name="S")], classkey="struct"
-                        )
-                    )
+                            segments=[NameSpecifier(name="S")],
+                            classkey="struct",
+                        ),
+                    ),
                 ),
                 ClassScope(
                     class_decl=ClassDecl(
                         typename=PQName(
-                            segments=[NameSpecifier(name="U")], classkey="union"
-                        )
+                            segments=[NameSpecifier(name="U")],
+                            classkey="union",
+                        ),
                     ),
                     fields=[
                         Field(
                             access="public",
                             type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="int")]
-                                )
+                                    segments=[FundamentalSpecifier(name="int")],
+                                ),
                             ),
                             name="n",
-                        )
+                        ),
                     ],
                 ),
                 ClassScope(
                     class_decl=ClassDecl(
                         typename=PQName(
-                            segments=[NameSpecifier(name="AS")], classkey="struct"
-                        )
-                    )
+                            segments=[NameSpecifier(name="AS")],
+                            classkey="struct",
+                        ),
+                    ),
                 ),
             ],
             enums=[
                 EnumDecl(
                     typename=PQName(
-                        segments=[NameSpecifier(name="E")], classkey="enum"
+                        segments=[NameSpecifier(name="E")],
+                        classkey="enum",
                     ),
                     values=[
                         Enumerator(name="A"),
                         Enumerator(name="B", value=Value(tokens=[Token(value="42")])),
                     ],
-                )
+                ),
             ],
             functions=[
                 Function(
                     return_type=Type(
-                        typename=PQName(segments=[FundamentalSpecifier(name="void")])
+                        typename=PQName(segments=[FundamentalSpecifier(name="void")]),
                     ),
                     name=PQName(segments=[NameSpecifier(name="f")]),
                     parameters=[],
-                )
+                ),
             ],
             typedefs=[
                 Typedef(
                     type=Pointer(
-                        ptr_to=Type(typename=PQName(segments=[NameSpecifier(name="S")]))
+                        ptr_to=Type(
+                            typename=PQName(segments=[NameSpecifier(name="S")]),
+                        ),
                     ),
                     name="PS",
-                )
+                ),
             ],
             variables=[
                 Variable(
                     name=PQName(segments=[NameSpecifier(name="x")]),
                     type=Type(
-                        typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                        typename=PQName(segments=[FundamentalSpecifier(name="int")]),
                     ),
-                )
+                ),
             ],
-        )
+        ),
     )
 
 
@@ -139,16 +140,17 @@ def test_attributes_gcc_enum_packed() -> None:
             enums=[
                 EnumDecl(
                     typename=PQName(
-                        segments=[NameSpecifier(name="Wheat")], classkey="enum"
+                        segments=[NameSpecifier(name="Wheat")],
+                        classkey="enum",
                     ),
                     values=[
                         Enumerator(name="w1"),
                         Enumerator(name="w2"),
                         Enumerator(name="w3"),
                     ],
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -167,41 +169,42 @@ def test_friendly_declspec() -> None:
                 ClassScope(
                     class_decl=ClassDecl(
                         typename=PQName(
-                            segments=[NameSpecifier(name="D")], classkey="struct"
-                        )
+                            segments=[NameSpecifier(name="D")],
+                            classkey="struct",
+                        ),
                     ),
                     friends=[
                         FriendDecl(
                             fn=Method(
                                 return_type=Type(
                                     typename=PQName(
-                                        segments=[FundamentalSpecifier(name="void")]
-                                    )
+                                        segments=[FundamentalSpecifier(name="void")],
+                                    ),
                                 ),
                                 name=PQName(segments=[NameSpecifier(name="my_friend")]),
                                 parameters=[],
                                 access="public",
-                            )
-                        )
+                            ),
+                        ),
                     ],
                     methods=[
                         Method(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="void")]
-                                )
+                                    segments=[FundamentalSpecifier(name="void")],
+                                ),
                             ),
                             name=PQName(
-                                segments=[NameSpecifier(name="static_declspec")]
+                                segments=[NameSpecifier(name="static_declspec")],
                             ),
                             parameters=[],
                             static=True,
                             access="public",
-                        )
+                        ),
                     ],
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -218,16 +221,16 @@ def test_declspec_template() -> None:
             functions=[
                 Function(
                     return_type=Type(
-                        typename=PQName(segments=[NameSpecifier(name="T2")])
+                        typename=PQName(segments=[NameSpecifier(name="T2")]),
                     ),
                     name=PQName(segments=[NameSpecifier(name="fn")]),
                     parameters=[],
                     static=True,
                     has_body=True,
                     template=TemplateDecl(
-                        params=[TemplateTypeParam(typekey="class", name="T2")]
+                        params=[TemplateTypeParam(typekey="class", name="T2")],
                     ),
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )

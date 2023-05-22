@@ -1,21 +1,16 @@
 # Note: testcases generated via `python -m cxxheaderparser.gentest`
-
-from cxxheaderparser.types import (
-    ClassDecl,
-    FundamentalSpecifier,
-    NameSpecifier,
-    Operator,
-    PQName,
-    Parameter,
-    Reference,
-    Type,
-)
-from cxxheaderparser.simple import (
-    ClassScope,
-    NamespaceScope,
-    parse_string,
-    ParsedData,
-)
+from cxxheaderparser.simple import ClassScope
+from cxxheaderparser.simple import NamespaceScope
+from cxxheaderparser.simple import parse_string
+from cxxheaderparser.simple import ParsedData
+from cxxheaderparser.types import ClassDecl
+from cxxheaderparser.types import FundamentalSpecifier
+from cxxheaderparser.types import NameSpecifier
+from cxxheaderparser.types import Operator
+from cxxheaderparser.types import Parameter
+from cxxheaderparser.types import PQName
+from cxxheaderparser.types import Reference
+from cxxheaderparser.types import Type
 
 
 def test_class_operators() -> None:
@@ -73,14 +68,14 @@ def test_class_operators() -> None:
                         typename=PQName(
                             segments=[NameSpecifier(name="OperatorClass")],
                             classkey="class",
-                        )
+                        ),
                     ),
                     methods=[
                         Operator(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="void")]
-                                )
+                                    segments=[FundamentalSpecifier(name="void")],
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="operator=")]),
                             parameters=[
@@ -89,13 +84,13 @@ def test_class_operators() -> None:
                                         ref_to=Type(
                                             typename=PQName(
                                                 segments=[
-                                                    NameSpecifier(name="Sample25Class")
-                                                ]
+                                                    NameSpecifier(name="Sample25Class"),
+                                                ],
                                             ),
                                             const=True,
-                                        )
-                                    )
-                                )
+                                        ),
+                                    ),
+                                ),
                             ],
                             access="public",
                             operator="=",
@@ -103,8 +98,8 @@ def test_class_operators() -> None:
                         Operator(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="void")]
-                                )
+                                    segments=[FundamentalSpecifier(name="void")],
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="operator-=")]),
                             parameters=[
@@ -113,13 +108,13 @@ def test_class_operators() -> None:
                                         ref_to=Type(
                                             typename=PQName(
                                                 segments=[
-                                                    NameSpecifier(name="Sample25Class")
-                                                ]
+                                                    NameSpecifier(name="Sample25Class"),
+                                                ],
                                             ),
                                             const=True,
-                                        )
-                                    )
-                                )
+                                        ),
+                                    ),
+                                ),
                             ],
                             access="public",
                             operator="-=",
@@ -127,8 +122,8 @@ def test_class_operators() -> None:
                         Operator(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="void")]
-                                )
+                                    segments=[FundamentalSpecifier(name="void")],
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="operator+=")]),
                             parameters=[],
@@ -138,8 +133,8 @@ def test_class_operators() -> None:
                         Operator(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="void")]
-                                )
+                                    segments=[FundamentalSpecifier(name="void")],
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="operator[]")]),
                             parameters=[],
@@ -149,8 +144,8 @@ def test_class_operators() -> None:
                         Operator(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="bool")]
-                                )
+                                    segments=[FundamentalSpecifier(name="bool")],
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="operator==")]),
                             parameters=[
@@ -159,14 +154,14 @@ def test_class_operators() -> None:
                                         ref_to=Type(
                                             typename=PQName(
                                                 segments=[
-                                                    FundamentalSpecifier(name="int")
-                                                ]
+                                                    FundamentalSpecifier(name="int"),
+                                                ],
                                             ),
                                             const=True,
-                                        )
+                                        ),
                                     ),
                                     name="b",
-                                )
+                                ),
                             ],
                             access="public",
                             operator="==",
@@ -175,9 +170,9 @@ def test_class_operators() -> None:
                             return_type=Reference(
                                 ref_to=Type(
                                     typename=PQName(
-                                        segments=[NameSpecifier(name="OperatorClass")]
-                                    )
-                                )
+                                        segments=[NameSpecifier(name="OperatorClass")],
+                                    ),
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="operator+")]),
                             parameters=[],
@@ -187,8 +182,8 @@ def test_class_operators() -> None:
                         Operator(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="void")]
-                                )
+                                    segments=[FundamentalSpecifier(name="void")],
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="operator-")]),
                             parameters=[],
@@ -198,8 +193,8 @@ def test_class_operators() -> None:
                         Operator(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="void")]
-                                )
+                                    segments=[FundamentalSpecifier(name="void")],
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="operator*")]),
                             parameters=[],
@@ -209,8 +204,8 @@ def test_class_operators() -> None:
                         Operator(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="void")]
-                                )
+                                    segments=[FundamentalSpecifier(name="void")],
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="operator\\")]),
                             parameters=[],
@@ -220,8 +215,8 @@ def test_class_operators() -> None:
                         Operator(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="void")]
-                                )
+                                    segments=[FundamentalSpecifier(name="void")],
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="operator%")]),
                             parameters=[],
@@ -231,8 +226,8 @@ def test_class_operators() -> None:
                         Operator(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="void")]
-                                )
+                                    segments=[FundamentalSpecifier(name="void")],
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="operator^")]),
                             parameters=[],
@@ -242,8 +237,8 @@ def test_class_operators() -> None:
                         Operator(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="void")]
-                                )
+                                    segments=[FundamentalSpecifier(name="void")],
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="operator|")]),
                             parameters=[],
@@ -253,8 +248,8 @@ def test_class_operators() -> None:
                         Operator(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="void")]
-                                )
+                                    segments=[FundamentalSpecifier(name="void")],
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="operator&")]),
                             parameters=[],
@@ -264,8 +259,8 @@ def test_class_operators() -> None:
                         Operator(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="void")]
-                                )
+                                    segments=[FundamentalSpecifier(name="void")],
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="operator~")]),
                             parameters=[],
@@ -275,8 +270,8 @@ def test_class_operators() -> None:
                         Operator(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="void")]
-                                )
+                                    segments=[FundamentalSpecifier(name="void")],
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="operator<<")]),
                             parameters=[],
@@ -286,8 +281,8 @@ def test_class_operators() -> None:
                         Operator(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="void")]
-                                )
+                                    segments=[FundamentalSpecifier(name="void")],
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="operator>>")]),
                             parameters=[],
@@ -297,8 +292,8 @@ def test_class_operators() -> None:
                         Operator(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="void")]
-                                )
+                                    segments=[FundamentalSpecifier(name="void")],
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="operator!=")]),
                             parameters=[],
@@ -308,8 +303,8 @@ def test_class_operators() -> None:
                         Operator(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="void")]
-                                )
+                                    segments=[FundamentalSpecifier(name="void")],
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="operator<")]),
                             parameters=[],
@@ -319,8 +314,8 @@ def test_class_operators() -> None:
                         Operator(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="void")]
-                                )
+                                    segments=[FundamentalSpecifier(name="void")],
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="operator>")]),
                             parameters=[],
@@ -330,8 +325,8 @@ def test_class_operators() -> None:
                         Operator(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="void")]
-                                )
+                                    segments=[FundamentalSpecifier(name="void")],
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="operator>=")]),
                             parameters=[],
@@ -341,8 +336,8 @@ def test_class_operators() -> None:
                         Operator(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="void")]
-                                )
+                                    segments=[FundamentalSpecifier(name="void")],
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="operator<=")]),
                             parameters=[],
@@ -352,8 +347,8 @@ def test_class_operators() -> None:
                         Operator(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="void")]
-                                )
+                                    segments=[FundamentalSpecifier(name="void")],
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="operator!")]),
                             parameters=[],
@@ -363,8 +358,8 @@ def test_class_operators() -> None:
                         Operator(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="void")]
-                                )
+                                    segments=[FundamentalSpecifier(name="void")],
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="operator&&")]),
                             parameters=[],
@@ -374,8 +369,8 @@ def test_class_operators() -> None:
                         Operator(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="void")]
-                                )
+                                    segments=[FundamentalSpecifier(name="void")],
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="operator||")]),
                             parameters=[],
@@ -385,8 +380,8 @@ def test_class_operators() -> None:
                         Operator(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="void")]
-                                )
+                                    segments=[FundamentalSpecifier(name="void")],
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="operator+=")]),
                             parameters=[],
@@ -396,8 +391,8 @@ def test_class_operators() -> None:
                         Operator(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="void")]
-                                )
+                                    segments=[FundamentalSpecifier(name="void")],
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="operator-=")]),
                             parameters=[],
@@ -407,8 +402,8 @@ def test_class_operators() -> None:
                         Operator(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="void")]
-                                )
+                                    segments=[FundamentalSpecifier(name="void")],
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="operator*=")]),
                             parameters=[],
@@ -418,8 +413,8 @@ def test_class_operators() -> None:
                         Operator(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="void")]
-                                )
+                                    segments=[FundamentalSpecifier(name="void")],
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="operator\\=")]),
                             parameters=[],
@@ -429,8 +424,8 @@ def test_class_operators() -> None:
                         Operator(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="void")]
-                                )
+                                    segments=[FundamentalSpecifier(name="void")],
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="operator%=")]),
                             parameters=[],
@@ -440,8 +435,8 @@ def test_class_operators() -> None:
                         Operator(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="void")]
-                                )
+                                    segments=[FundamentalSpecifier(name="void")],
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="operator&=")]),
                             parameters=[],
@@ -451,8 +446,8 @@ def test_class_operators() -> None:
                         Operator(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="void")]
-                                )
+                                    segments=[FundamentalSpecifier(name="void")],
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="operator|=")]),
                             parameters=[],
@@ -462,8 +457,8 @@ def test_class_operators() -> None:
                         Operator(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="void")]
-                                )
+                                    segments=[FundamentalSpecifier(name="void")],
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="operator^=")]),
                             parameters=[],
@@ -473,8 +468,8 @@ def test_class_operators() -> None:
                         Operator(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="void")]
-                                )
+                                    segments=[FundamentalSpecifier(name="void")],
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="operator<<=")]),
                             parameters=[],
@@ -484,8 +479,8 @@ def test_class_operators() -> None:
                         Operator(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="void")]
-                                )
+                                    segments=[FundamentalSpecifier(name="void")],
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="operator>>=")]),
                             parameters=[],
@@ -495,8 +490,8 @@ def test_class_operators() -> None:
                         Operator(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="void")]
-                                )
+                                    segments=[FundamentalSpecifier(name="void")],
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="operator++")]),
                             parameters=[],
@@ -506,8 +501,8 @@ def test_class_operators() -> None:
                         Operator(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="void")]
-                                )
+                                    segments=[FundamentalSpecifier(name="void")],
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="operator--")]),
                             parameters=[],
@@ -517,8 +512,8 @@ def test_class_operators() -> None:
                         Operator(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="void")]
-                                )
+                                    segments=[FundamentalSpecifier(name="void")],
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="operator()")]),
                             parameters=[],
@@ -528,8 +523,8 @@ def test_class_operators() -> None:
                         Operator(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="void")]
-                                )
+                                    segments=[FundamentalSpecifier(name="void")],
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="operator->")]),
                             parameters=[],
@@ -539,8 +534,8 @@ def test_class_operators() -> None:
                         Operator(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="void")]
-                                )
+                                    segments=[FundamentalSpecifier(name="void")],
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="operator,")]),
                             parameters=[],
@@ -548,15 +543,15 @@ def test_class_operators() -> None:
                             operator=",",
                         ),
                     ],
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
 def test_conversion_operators() -> None:
     content = """
-      
+
       class Foo
       {
       public:
@@ -573,13 +568,14 @@ def test_conversion_operators() -> None:
                 ClassScope(
                     class_decl=ClassDecl(
                         typename=PQName(
-                            segments=[NameSpecifier(name="Foo")], classkey="class"
-                        )
+                            segments=[NameSpecifier(name="Foo")],
+                            classkey="class",
+                        ),
                     ),
                     methods=[
                         Operator(
                             return_type=Type(
-                                typename=PQName(segments=[NameSpecifier(name="Type1")])
+                                typename=PQName(segments=[NameSpecifier(name="Type1")]),
                             ),
                             name=PQName(segments=[NameSpecifier(name="operator")]),
                             parameters=[],
@@ -590,7 +586,7 @@ def test_conversion_operators() -> None:
                         ),
                         Operator(
                             return_type=Type(
-                                typename=PQName(segments=[NameSpecifier(name="Type2")])
+                                typename=PQName(segments=[NameSpecifier(name="Type2")]),
                             ),
                             name=PQName(segments=[NameSpecifier(name="operator")]),
                             parameters=[],
@@ -602,8 +598,8 @@ def test_conversion_operators() -> None:
                         Operator(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="bool")]
-                                )
+                                    segments=[FundamentalSpecifier(name="bool")],
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="operator")]),
                             parameters=[],
@@ -613,7 +609,7 @@ def test_conversion_operators() -> None:
                             operator="conversion",
                         ),
                     ],
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )

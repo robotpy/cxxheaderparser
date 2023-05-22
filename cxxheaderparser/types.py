@@ -1,11 +1,11 @@
 import typing
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+from dataclasses import field
 
 
 @dataclass
 class Token:
-    """
-    In an ideal world, this Token class would not be exposed via the user
+    """In an ideal world, this Token class would not be exposed via the user
     visible API. Unfortunately, getting to that point would take a significant
     amount of effort.
 
@@ -25,8 +25,7 @@ class Token:
 
 @dataclass
 class Value:
-    """
-    A unparsed list of tokens
+    """A unparsed list of tokens.
 
     .. code-block:: c++
 
@@ -40,14 +39,12 @@ class Value:
 
 @dataclass
 class NamespaceAlias:
-    """
-    A namespace alias
+    """A namespace alias.
 
     .. code-block:: c++
 
         namespace ANS = my::ns;
                   ~~~   ~~~~~~
-
     """
 
     alias: str
@@ -60,8 +57,7 @@ class NamespaceAlias:
 
 @dataclass
 class NamespaceDecl:
-    """
-    Namespace declarations
+    """Namespace declarations.
 
     .. code-block:: c++
 
@@ -82,8 +78,7 @@ class NamespaceDecl:
 
 @dataclass
 class DecltypeSpecifier:
-    """
-    Contents of a decltype (inside the parentheses)
+    """Contents of a decltype (inside the parentheses)
 
     .. code-block:: c++
 
@@ -97,23 +92,19 @@ class DecltypeSpecifier:
 
 @dataclass
 class FundamentalSpecifier:
-    """
-    A specifier that only contains fundamental types
-    """
+    """A specifier that only contains fundamental types."""
 
     name: str
 
 
 @dataclass
 class NameSpecifier:
-    """
-    An individual segment of a type name
+    """An individual segment of a type name.
 
     .. code-block:: c++
 
         Foo::Bar
         ~~~
-
     """
 
     name: str
@@ -123,19 +114,18 @@ class NameSpecifier:
 
 @dataclass
 class AutoSpecifier:
-    """
-    Used for an auto return type
-    """
+    """Used for an auto return type."""
 
     name: str = "auto"
 
 
 @dataclass
 class AnonymousName:
-    """
-    A name for an anonymous class, such as in a typedef. There is no string
-    associated with this name, only an integer id. Things that share the same
-    anonymous name have anonymous name instances with the same id
+    """A name for an anonymous class, such as in a typedef.
+
+    There is no string associated with this name, only an integer id.
+    Things that share the same anonymous name have anonymous name
+    instances with the same id
     """
 
     #: Unique id associated with this name (only unique per parser instance!)
@@ -143,15 +133,17 @@ class AnonymousName:
 
 
 PQNameSegment = typing.Union[
-    AnonymousName, FundamentalSpecifier, NameSpecifier, DecltypeSpecifier, AutoSpecifier
+    AnonymousName,
+    FundamentalSpecifier,
+    NameSpecifier,
+    DecltypeSpecifier,
+    AutoSpecifier,
 ]
 
 
 @dataclass
 class PQName:
-    """
-    Possibly qualified name of a C++ type.
-    """
+    """Possibly qualified name of a C++ type."""
 
     #: All of the segments of the name. This is always guaranteed to have at
     #: least one element in it. Name is segmented by '::'
@@ -169,9 +161,7 @@ class PQName:
 
 @dataclass
 class Enumerator:
-    """
-    An individual value of an enumeration
-    """
+    """An individual value of an enumeration."""
 
     #: The enumerator key name
     name: str
@@ -185,9 +175,7 @@ class Enumerator:
 
 @dataclass
 class EnumDecl:
-    """
-    An enumeration type
-    """
+    """An enumeration type."""
 
     typename: PQName
 
@@ -204,14 +192,12 @@ class EnumDecl:
 
 @dataclass
 class TemplateArgument:
-    """
-    A single argument for a template specialization
+    """A single argument for a template specialization.
 
     .. code-block:: c++
 
         Foo<int, Bar...>
             ~~~
-
     """
 
     #: If this argument is a type, it is stored here as a DecoratedType,
@@ -223,14 +209,12 @@ class TemplateArgument:
 
 @dataclass
 class TemplateSpecialization:
-    """
-    Contains the arguments of a template specialization
+    """Contains the arguments of a template specialization.
 
     .. code-block:: c++
 
         Foo<int, Bar...>
             ~~~~~~~~~~~
-
     """
 
     args: typing.List[TemplateArgument]
@@ -238,11 +222,10 @@ class TemplateSpecialization:
 
 @dataclass
 class FunctionType:
-    """
-    A function type, currently only used in a function pointer
+    """A function type, currently only used in a function pointer.
 
-    .. note:: There can only be one of FunctionType or Type in a DecoratedType
-              chain
+    .. note:: There can only be one of FunctionType or Type in a
+    DecoratedType           chain
     """
 
     return_type: "DecoratedType"
@@ -261,7 +244,7 @@ class FunctionType:
 
     noexcept: typing.Optional[Value] = None
 
-    #: Only set if an MSVC calling convention (__stdcall, etc) is explictly
+    #: Only set if an MSVC calling convention (__stdcall, etc) is explicitly
     #: specified.
     #:
     #: .. note::  If your code contains things like WINAPI, you will need to
@@ -272,9 +255,7 @@ class FunctionType:
 
 @dataclass
 class Type:
-    """
-    A type with a name associated with it
-    """
+    """A type with a name associated with it."""
 
     typename: PQName
 
@@ -284,9 +265,9 @@ class Type:
 
 @dataclass
 class Array:
-    """
-    Information about an array. Multidimensional arrays are represented as
-    an array of array.
+    """Information about an array.
+
+    Multidimensional arrays are represented as an array of array.
     """
 
     #: The type that this is an array of
@@ -303,9 +284,7 @@ class Array:
 
 @dataclass
 class Pointer:
-    """
-    A pointer
-    """
+    """A pointer."""
 
     #: Thing that this points to
     ptr_to: typing.Union[Array, FunctionType, "Pointer", Type]
@@ -316,18 +295,14 @@ class Pointer:
 
 @dataclass
 class Reference:
-    """
-    A lvalue (``&``) reference
-    """
+    """A lvalue (``&``) reference."""
 
     ref_to: typing.Union[Array, FunctionType, Pointer, Type]
 
 
 @dataclass
 class MoveReference:
-    """
-    An rvalue (``&&``) reference
-    """
+    """An rvalue (``&&``) reference."""
 
     moveref_to: typing.Union[Array, FunctionType, Pointer, Type]
 
@@ -341,18 +316,16 @@ DecoratedType = typing.Union[Array, Pointer, MoveReference, Reference, Type]
 
 @dataclass
 class TemplateNonTypeParam:
-    """
+    """.. code-block:: c++
 
-    .. code-block:: c++
+    template <int T>
+              ~~~~~
 
-       template <int T>
-                 ~~~~~
+    template <class T, typename T::type* U>
+                       ~~~~~~~~~~~~~~~~~~~
 
-       template <class T, typename T::type* U>
-                          ~~~~~~~~~~~~~~~~~~~
-
-       template <auto T>
-                 ~~~~~~
+    template <auto T>
+              ~~~~~~
     """
 
     type: DecoratedType
@@ -365,12 +338,9 @@ class TemplateNonTypeParam:
 
 @dataclass
 class TemplateTypeParam:
-    """
+    """.. code-block:: c++
 
-    .. code-block:: c++
-
-       template <typename T>
-                 ~~~~~~~~~~
+    template <typename T>           ~~~~~~~~~~
     """
 
     #: 'typename' or 'class'
@@ -397,8 +367,7 @@ TemplateParam = typing.Union[TemplateNonTypeParam, TemplateTypeParam]
 
 @dataclass
 class TemplateDecl:
-    """
-    Template declaration for a function or class
+    """Template declaration for a function or class.
 
     .. code-block:: c++
 
@@ -407,7 +376,6 @@ class TemplateDecl:
 
         template <typename T>
         T fn();
-
     """
 
     params: typing.List[TemplateParam] = field(default_factory=list)
@@ -415,8 +383,7 @@ class TemplateDecl:
 
 @dataclass
 class TemplateInst:
-    """
-    Explicit template instantiation
+    """Explicit template instantiation.
 
     .. code-block:: c++
 
@@ -432,9 +399,7 @@ class TemplateInst:
 
 @dataclass
 class ForwardDecl:
-    """
-    Represents a forward declaration of a user defined type
-    """
+    """Represents a forward declaration of a user defined type."""
 
     typename: PQName
     template: typing.Optional[TemplateDecl] = None
@@ -449,9 +414,7 @@ class ForwardDecl:
 
 @dataclass
 class BaseClass:
-    """
-    Base class declarations for a class
-    """
+    """Base class declarations for a class."""
 
     #: access specifier for this base
     access: str
@@ -468,9 +431,7 @@ class BaseClass:
 
 @dataclass
 class ClassDecl:
-    """
-    A class is a user defined type (class/struct/union)
-    """
+    """A class is a user defined type (class/struct/union)"""
 
     typename: PQName
 
@@ -492,9 +453,7 @@ class ClassDecl:
 
 @dataclass
 class Parameter:
-    """
-    A parameter of a function/method
-    """
+    """A parameter of a function/method."""
 
     type: DecoratedType
     name: typing.Optional[str] = None
@@ -504,9 +463,7 @@ class Parameter:
 
 @dataclass
 class Function:
-    """
-    A function declaration, potentially with the function body
-    """
+    """A function declaration, potentially with the function body."""
 
     #: Only constructors and destructors don't have a return type
     return_type: typing.Optional[DecoratedType]
@@ -542,7 +499,7 @@ class Function:
     #: the outer parentheses.
     noexcept: typing.Optional[Value] = None
 
-    #: Only set if an MSVC calling convention (__stdcall, etc) is explictly
+    #: Only set if an MSVC calling convention (__stdcall, etc) is explicitly
     #: specified.
     #:
     #: .. note::  If your code contains things like WINAPI, you will need to
@@ -553,9 +510,7 @@ class Function:
 
 @dataclass
 class Method(Function):
-    """
-    A method declaration, potentially with the method body
-    """
+    """A method declaration, potentially with the method body."""
 
     #: If parsed within a class, the access level for this method
     access: typing.Optional[str] = None
@@ -587,9 +542,7 @@ class Method(Function):
 
 @dataclass
 class Operator(Method):
-    """
-    Represents an operator method
-    """
+    """Represents an operator method."""
 
     #: The operator type (+, +=, etc).
     #:
@@ -600,9 +553,8 @@ class Operator(Method):
 
 @dataclass
 class FriendDecl:
-    """
-    Represents a friend declaration -- friends can only be classes or functions
-    """
+    """Represents a friend declaration -- friends can only be classes or
+    functions."""
 
     cls: typing.Optional[ForwardDecl] = None
 
@@ -611,14 +563,12 @@ class FriendDecl:
 
 @dataclass
 class Typedef:
-    """
-    A typedef specifier. A unique typedef specifier is created for each alias
-    created by the typedef.
+    """A typedef specifier. A unique typedef specifier is created for each
+    alias created by the typedef.
 
     .. code-block:: c++
 
         typedef type name, *pname;
-
     """
 
     #: The aliased type or function type
@@ -643,9 +593,7 @@ class Typedef:
 
 @dataclass
 class Variable:
-    """
-    A variable declaration
-    """
+    """A variable declaration."""
 
     name: PQName
     type: DecoratedType
@@ -665,9 +613,7 @@ class Variable:
 
 @dataclass
 class Field:
-    """
-    A field of a class
-    """
+    """A field of a class."""
 
     #: public/private/protected
     access: str
@@ -687,10 +633,9 @@ class Field:
 
 @dataclass
 class UsingDecl:
-    """
-    .. code-block:: c++
+    """.. code-block:: c++
 
-        using NS::ClassName;
+    using NS::ClassName;
     """
 
     typename: PQName
@@ -701,14 +646,12 @@ class UsingDecl:
 
 @dataclass
 class UsingAlias:
-    """
-    .. code-block:: c++
+    """.. code-block:: c++
 
-        using foo = int;
+    using foo = int;
 
-        template <typename T>
-        using VectorT = std::vector<T>;
-
+    template <typename T>
+    using VectorT = std::vector<T>;
     """
 
     alias: str

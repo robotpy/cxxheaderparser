@@ -3,9 +3,7 @@ from dataclasses import dataclass
 
 @dataclass
 class ParserOptions:
-    """
-    Options that control parsing behaviors
-    """
+    """Options that control parsing behaviors."""
 
     #: If true, prints out
     verbose: bool = False

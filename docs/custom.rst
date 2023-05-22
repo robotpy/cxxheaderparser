@@ -29,7 +29,7 @@ API
    :members:
    :undoc-members:
 
-Parser state 
+Parser state
 ------------
 
 .. automodule:: cxxheaderparser.parserstate

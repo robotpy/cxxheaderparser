@@ -15,7 +15,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - uses: psf/black@stable
-  
+
   check-mypy:
     runs-on: ubuntu-latest
     steps:
@@ -34,7 +34,7 @@ jobs:
 
   check-doc:
     runs-on: ubuntu-22.04
-    
+
     steps:
     - uses: actions/checkout@v3
       with:
@@ -49,7 +49,7 @@ jobs:
         pip --disable-pip-version-check install -e .
         pip --disable-pip-version-check install -r docs/requirements.txt
         cd docs && make clean html SPHINXOPTS="-W --keep-going"
-  
+
   test:
     runs-on: ${{ matrix.os }}
     strategy:
@@ -68,7 +68,7 @@ jobs:
       with:
         submodules: recursive
         fetch-depth: 0
-    
+
     - uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python_version }}
@@ -79,10 +79,10 @@ jobs:
 
     - name: Build wheel
       run: python setup.py bdist_wheel
-    
+
     - name: Install test dependencies
       run: python -m pip --disable-pip-version-check install pytest
-    
+
     - name: Test wheel
       shell: bash
       run: |
@@ -101,7 +101,7 @@ jobs:
       with:
         submodules: recursive
         fetch-depth: 0
-    
+
     - uses: actions/setup-python@v4
       with:
         python-version: 3.8

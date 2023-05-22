@@ -21,7 +21,9 @@ def dumpmain() -> None:
     )
     parser.add_argument("-v", "--verbose", default=False, action="store_true")
     parser.add_argument(
-        "--mode", choices=["json", "pprint", "repr", "brepr"], default="pprint"
+        "--mode",
+        choices=["json", "pprint", "repr", "brepr"],
+        default="pprint",
     )
 
     args = parser.parse_args()
@@ -40,7 +42,8 @@ def dumpmain() -> None:
     elif args.mode == "brepr":
         stmt = repr(data)
         stmt = subprocess.check_output(
-            ["black", "-", "-q"], input=stmt.encode("utf-8")
+            ["black", "-", "-q"],
+            input=stmt.encode("utf-8"),
         ).decode("utf-8")
 
         print(stmt)

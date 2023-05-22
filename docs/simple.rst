@@ -1,6 +1,6 @@
 .. _simple:
 
-Simple API 
+Simple API
 ==========
 
 .. automodule:: cxxheaderparser.simple

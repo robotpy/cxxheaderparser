@@ -1,36 +1,32 @@
 # Note: testcases generated via `python -m cxxheaderparser.gentest`
-
-from cxxheaderparser.errors import CxxParseError
-from cxxheaderparser.types import (
-    ForwardDecl,
-    FundamentalSpecifier,
-    NamespaceAlias,
-    NameSpecifier,
-    PQName,
-    Token,
-    Type,
-    Value,
-    Variable,
-)
-from cxxheaderparser.simple import (
-    NamespaceScope,
-    parse_string,
-    ParsedData,
-)
+import re
 
 import pytest
-import re
+
+from cxxheaderparser.errors import CxxParseError
+from cxxheaderparser.simple import NamespaceScope
+from cxxheaderparser.simple import parse_string
+from cxxheaderparser.simple import ParsedData
+from cxxheaderparser.types import ForwardDecl
+from cxxheaderparser.types import FundamentalSpecifier
+from cxxheaderparser.types import NamespaceAlias
+from cxxheaderparser.types import NameSpecifier
+from cxxheaderparser.types import PQName
+from cxxheaderparser.types import Token
+from cxxheaderparser.types import Type
+from cxxheaderparser.types import Value
+from cxxheaderparser.types import Variable
 
 
 def test_dups_in_different_ns() -> None:
     content = """
-      
+
       namespace {
       int x = 4;
       }
-      
+
       int x = 5;
-      
+
     """
     data = parse_string(content, cleandoc=True)
 
@@ -40,10 +36,10 @@ def test_dups_in_different_ns() -> None:
                 Variable(
                     name=PQName(segments=[NameSpecifier(name="x")]),
                     type=Type(
-                        typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                        typename=PQName(segments=[FundamentalSpecifier(name="int")]),
                     ),
                     value=Value(tokens=[Token(value="5")]),
-                )
+                ),
             ],
             namespaces={
                 "": NamespaceScope(
@@ -52,15 +48,15 @@ def test_dups_in_different_ns() -> None:
                             name=PQName(segments=[NameSpecifier(name="x")]),
                             type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="int")]
-                                )
+                                    segments=[FundamentalSpecifier(name="int")],
+                                ),
                             ),
                             value=Value(tokens=[Token(value="4")]),
-                        )
-                    ]
-                )
+                        ),
+                    ],
+                ),
             },
-        )
+        ),
     )
 
 
@@ -94,36 +90,40 @@ def test_correct_ns() -> None:
                                     variables=[
                                         Variable(
                                             name=PQName(
-                                                segments=[NameSpecifier(name="i1")]
+                                                segments=[NameSpecifier(name="i1")],
                                             ),
                                             type=Type(
                                                 typename=PQName(
                                                     segments=[
-                                                        FundamentalSpecifier(name="int")
-                                                    ]
-                                                )
+                                                        FundamentalSpecifier(
+                                                            name="int",
+                                                        ),
+                                                    ],
+                                                ),
                                             ),
                                         ),
                                         Variable(
                                             name=PQName(
-                                                segments=[NameSpecifier(name="i2")]
+                                                segments=[NameSpecifier(name="i2")],
                                             ),
                                             type=Type(
                                                 typename=PQName(
                                                     segments=[
-                                                        FundamentalSpecifier(name="int")
-                                                    ]
-                                                )
+                                                        FundamentalSpecifier(
+                                                            name="int",
+                                                        ),
+                                                    ],
+                                                ),
                                             ),
                                         ),
                                     ],
-                                )
+                                ),
                             },
-                        )
+                        ),
                     },
-                )
-            }
-        )
+                ),
+            },
+        ),
     )
 
 
@@ -151,14 +151,14 @@ def test_inline_namespace() -> None:
                                     typename=PQName(
                                         segments=[NameSpecifier(name="A")],
                                         classkey="class",
-                                    )
-                                )
+                                    ),
+                                ),
                             ],
-                        )
+                        ),
                     },
-                )
-            }
-        )
+                ),
+            },
+        ),
     )
 
 
@@ -179,8 +179,8 @@ def test_ns_alias() -> None:
 
     assert data == ParsedData(
         namespace=NamespaceScope(
-            ns_alias=[NamespaceAlias(alias="ANS", names=["my", "ns"])]
-        )
+            ns_alias=[NamespaceAlias(alias="ANS", names=["my", "ns"])],
+        ),
     )
 
 
@@ -192,6 +192,6 @@ def test_ns_alias_global() -> None:
 
     assert data == ParsedData(
         namespace=NamespaceScope(
-            ns_alias=[NamespaceAlias(alias="ANS", names=["::", "my", "ns"])]
-        )
+            ns_alias=[NamespaceAlias(alias="ANS", names=["::", "my", "ns"])],
+        ),
     )

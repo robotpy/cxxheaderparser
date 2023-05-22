@@ -20,7 +20,7 @@ jobs:
 
           mkdir build
           cp -r cxxheaderparser build
-          
+
 
       - name: Deploy 🚀
         uses: JamesIves/github-pages-deploy-action@v4.3.3

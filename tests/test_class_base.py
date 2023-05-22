@@ -1,24 +1,18 @@
 # Note: testcases generated via `python -m cxxheaderparser.gentest`
-
-from cxxheaderparser.types import (
-    BaseClass,
-    ClassDecl,
-    Field,
-    FundamentalSpecifier,
-    Method,
-    NameSpecifier,
-    PQName,
-    TemplateArgument,
-    TemplateSpecialization,
-    Token,
-    Type,
-)
-from cxxheaderparser.simple import (
-    ClassScope,
-    NamespaceScope,
-    parse_string,
-    ParsedData,
-)
+from cxxheaderparser.simple import ClassScope
+from cxxheaderparser.simple import NamespaceScope
+from cxxheaderparser.simple import parse_string
+from cxxheaderparser.simple import ParsedData
+from cxxheaderparser.types import BaseClass
+from cxxheaderparser.types import ClassDecl
+from cxxheaderparser.types import Field
+from cxxheaderparser.types import FundamentalSpecifier
+from cxxheaderparser.types import Method
+from cxxheaderparser.types import NameSpecifier
+from cxxheaderparser.types import PQName
+from cxxheaderparser.types import TemplateArgument
+from cxxheaderparser.types import TemplateSpecialization
+from cxxheaderparser.types import Type
 
 
 def test_class_private_base() -> None:
@@ -44,7 +38,8 @@ def test_class_private_base() -> None:
                 ClassScope(
                     class_decl=ClassDecl(
                         typename=PQName(
-                            segments=[NameSpecifier(name="Bananna")], classkey="class"
+                            segments=[NameSpecifier(name="Bananna")],
+                            classkey="class",
                         ),
                         bases=[
                             BaseClass(
@@ -53,11 +48,11 @@ def test_class_private_base() -> None:
                                     segments=[
                                         NameSpecifier(name="Citrus"),
                                         NameSpecifier(name="BloodOrange"),
-                                    ]
+                                    ],
                                 ),
-                            )
+                            ),
                         ],
-                    )
+                    ),
                 ),
                 ClassScope(
                     class_decl=ClassDecl(
@@ -72,7 +67,7 @@ def test_class_private_base() -> None:
                                     segments=[
                                         NameSpecifier(name="Citrus"),
                                         NameSpecifier(name="BloodOrange"),
-                                    ]
+                                    ],
                                 ),
                             ),
                             BaseClass(
@@ -82,11 +77,11 @@ def test_class_private_base() -> None:
                                         NameSpecifier(name="Convoluted"),
                                         NameSpecifier(name="Nested"),
                                         NameSpecifier(name="Mixin"),
-                                    ]
+                                    ],
                                 ),
                             ),
                         ],
-                    )
+                    ),
                 ),
             ],
             namespaces={
@@ -98,13 +93,13 @@ def test_class_private_base() -> None:
                                 typename=PQName(
                                     segments=[NameSpecifier(name="BloodOrange")],
                                     classkey="class",
-                                )
-                            )
-                        )
+                                ),
+                            ),
+                        ),
                     ],
-                )
+                ),
             },
-        )
+        ),
     )
 
 
@@ -123,8 +118,8 @@ def test_class_virtual_base() -> None:
                         typename=PQName(
                             segments=[NameSpecifier(name="BaseMangoClass")],
                             classkey="class",
-                        )
-                    )
+                        ),
+                    ),
                 ),
                 ClassScope(
                     class_decl=ClassDecl(
@@ -136,15 +131,15 @@ def test_class_virtual_base() -> None:
                             BaseClass(
                                 access="public",
                                 typename=PQName(
-                                    segments=[NameSpecifier(name="BaseMangoClass")]
+                                    segments=[NameSpecifier(name="BaseMangoClass")],
                                 ),
                                 virtual=True,
-                            )
+                            ),
                         ],
-                    )
+                    ),
                 ),
-            ]
-        )
+            ],
+        ),
     )
 
 
@@ -163,7 +158,8 @@ def test_class_multiple_base_with_virtual() -> None:
                 ClassScope(
                     class_decl=ClassDecl(
                         typename=PQName(
-                            segments=[NameSpecifier(name="BlueJay")], classkey="class"
+                            segments=[NameSpecifier(name="BlueJay")],
+                            classkey="class",
                         ),
                         bases=[
                             BaseClass(
@@ -185,11 +181,11 @@ def test_class_multiple_base_with_virtual() -> None:
                             has_body=True,
                             access="public",
                             constructor=True,
-                        )
+                        ),
                     ],
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -198,7 +194,7 @@ def test_class_base_specialized() -> None:
       class Pea : public Vegetable<Green> {
         int i;
       };
-      
+
     """
     data = parse_string(content, cleandoc=True)
 
@@ -208,7 +204,8 @@ def test_class_base_specialized() -> None:
                 ClassScope(
                     class_decl=ClassDecl(
                         typename=PQName(
-                            segments=[NameSpecifier(name="Pea")], classkey="class"
+                            segments=[NameSpecifier(name="Pea")],
+                            classkey="class",
                         ),
                         bases=[
                             BaseClass(
@@ -224,18 +221,18 @@ def test_class_base_specialized() -> None:
                                                             typename=PQName(
                                                                 segments=[
                                                                     NameSpecifier(
-                                                                        name="Green"
-                                                                    )
-                                                                ]
-                                                            )
-                                                        )
-                                                    )
-                                                ]
+                                                                        name="Green",
+                                                                    ),
+                                                                ],
+                                                            ),
+                                                        ),
+                                                    ),
+                                                ],
                                             ),
-                                        )
-                                    ]
+                                        ),
+                                    ],
                                 ),
-                            )
+                            ),
                         ],
                     ),
                     fields=[
@@ -243,13 +240,13 @@ def test_class_base_specialized() -> None:
                             access="private",
                             type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="int")]
-                                )
+                                    segments=[FundamentalSpecifier(name="int")],
+                                ),
                             ),
                             name="i",
-                        )
+                        ),
                     ],
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )

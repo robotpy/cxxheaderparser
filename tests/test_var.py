@@ -1,28 +1,29 @@
 # Note: testcases generated via `python -m cxxheaderparser.gentest`
-
-from cxxheaderparser.errors import CxxParseError
-from cxxheaderparser.types import (
-    Array,
-    ClassDecl,
-    EnumDecl,
-    Enumerator,
-    Field,
-    FunctionType,
-    FundamentalSpecifier,
-    NameSpecifier,
-    PQName,
-    Parameter,
-    Pointer,
-    Reference,
-    Token,
-    Type,
-    Value,
-    Variable,
-)
-from cxxheaderparser.simple import ClassScope, NamespaceScope, ParsedData, parse_string
+import re
 
 import pytest
-import re
+
+from cxxheaderparser.errors import CxxParseError
+from cxxheaderparser.simple import ClassScope
+from cxxheaderparser.simple import NamespaceScope
+from cxxheaderparser.simple import parse_string
+from cxxheaderparser.simple import ParsedData
+from cxxheaderparser.types import Array
+from cxxheaderparser.types import ClassDecl
+from cxxheaderparser.types import EnumDecl
+from cxxheaderparser.types import Enumerator
+from cxxheaderparser.types import Field
+from cxxheaderparser.types import FunctionType
+from cxxheaderparser.types import FundamentalSpecifier
+from cxxheaderparser.types import NameSpecifier
+from cxxheaderparser.types import Parameter
+from cxxheaderparser.types import Pointer
+from cxxheaderparser.types import PQName
+from cxxheaderparser.types import Reference
+from cxxheaderparser.types import Token
+from cxxheaderparser.types import Type
+from cxxheaderparser.types import Value
+from cxxheaderparser.types import Variable
 
 
 def test_var_unixwiz_ridiculous() -> None:
@@ -53,26 +54,26 @@ def test_var_unixwiz_ridiculous() -> None:
                                                         typename=PQName(
                                                             segments=[
                                                                 FundamentalSpecifier(
-                                                                    name="char"
-                                                                )
-                                                            ]
-                                                        )
-                                                    )
+                                                                    name="char",
+                                                                ),
+                                                            ],
+                                                        ),
+                                                    ),
                                                 ),
                                                 size=None,
-                                            )
+                                            ),
                                         ),
                                         parameters=[],
-                                    )
-                                )
+                                    ),
+                                ),
                             ),
                             size=Value(tokens=[Token(value="8")]),
                         ),
                         size=None,
                     ),
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -92,16 +93,16 @@ def test_var_ptr_to_array15_of_ptr_to_int() -> None:
                             array_of=Pointer(
                                 ptr_to=Type(
                                     typename=PQName(
-                                        segments=[FundamentalSpecifier(name="int")]
-                                    )
-                                )
+                                        segments=[FundamentalSpecifier(name="int")],
+                                    ),
+                                ),
                             ),
                             size=Value(tokens=[Token(value="15")]),
-                        )
+                        ),
                     ),
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -119,7 +120,9 @@ def test_var_ref_to_array() -> None:
                     name=PQName(segments=[NameSpecifier(name="abase")]),
                     type=Array(
                         array_of=Type(
-                            typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                            typename=PQName(
+                                segments=[FundamentalSpecifier(name="int")],
+                            ),
                         ),
                         size=Value(tokens=[Token(value="3")]),
                     ),
@@ -130,16 +133,16 @@ def test_var_ref_to_array() -> None:
                         ref_to=Array(
                             array_of=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="int")]
-                                )
+                                    segments=[FundamentalSpecifier(name="int")],
+                                ),
                             ),
                             size=Value(tokens=[Token(value="3")]),
-                        )
+                        ),
                     ),
                     value=Value(tokens=[Token(value="abase")]),
                 ),
-            ]
-        )
+            ],
+        ),
     )
 
 
@@ -155,7 +158,7 @@ def test_var_ptr_to_array() -> None:
                 Variable(
                     name=PQName(segments=[NameSpecifier(name="zz")]),
                     type=Type(
-                        typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                        typename=PQName(segments=[FundamentalSpecifier(name="int")]),
                     ),
                 ),
                 Variable(
@@ -164,16 +167,16 @@ def test_var_ptr_to_array() -> None:
                         ptr_to=Array(
                             array_of=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="int")]
-                                )
+                                    segments=[FundamentalSpecifier(name="int")],
+                                ),
                             ),
                             size=Value(tokens=[Token(value="3")]),
-                        )
+                        ),
                     ),
                     value=Value(tokens=[Token(value="&"), Token(value="abase")]),
                 ),
-            ]
-        )
+            ],
+        ),
     )
 
 
@@ -189,7 +192,7 @@ def test_var_multi_1() -> None:
                 Variable(
                     name=PQName(segments=[NameSpecifier(name="zz")]),
                     type=Type(
-                        typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                        typename=PQName(segments=[FundamentalSpecifier(name="int")]),
                     ),
                 ),
                 Variable(
@@ -198,16 +201,16 @@ def test_var_multi_1() -> None:
                         ref_to=Array(
                             array_of=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="int")]
-                                )
+                                    segments=[FundamentalSpecifier(name="int")],
+                                ),
                             ),
                             size=Value(tokens=[Token(value="3")]),
-                        )
+                        ),
                     ),
                     value=Value(tokens=[Token(value="abase")]),
                 ),
-            ]
-        )
+            ],
+        ),
     )
 
 
@@ -227,28 +230,28 @@ def test_var_array_of_fnptr_varargs() -> None:
                             ptr_to=FunctionType(
                                 return_type=Type(
                                     typename=PQName(
-                                        segments=[FundamentalSpecifier(name="void")]
-                                    )
+                                        segments=[FundamentalSpecifier(name="void")],
+                                    ),
                                 ),
                                 parameters=[
                                     Parameter(
                                         type=Type(
                                             typename=PQName(
                                                 segments=[
-                                                    FundamentalSpecifier(name="int")
-                                                ]
-                                            )
-                                        )
-                                    )
+                                                    FundamentalSpecifier(name="int"),
+                                                ],
+                                            ),
+                                        ),
+                                    ),
                                 ],
                                 vararg=True,
-                            )
+                            ),
                         ),
                         size=Value(tokens=[Token(value="3")]),
                     ),
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -268,27 +271,27 @@ def test_var_double_fnptr_varargs() -> None:
                             ptr_to=FunctionType(
                                 return_type=Type(
                                     typename=PQName(
-                                        segments=[FundamentalSpecifier(name="void")]
-                                    )
+                                        segments=[FundamentalSpecifier(name="void")],
+                                    ),
                                 ),
                                 parameters=[
                                     Parameter(
                                         type=Type(
                                             typename=PQName(
                                                 segments=[
-                                                    FundamentalSpecifier(name="int")
-                                                ]
-                                            )
-                                        )
-                                    )
+                                                    FundamentalSpecifier(name="int"),
+                                                ],
+                                            ),
+                                        ),
+                                    ),
                                 ],
                                 vararg=True,
-                            )
-                        )
+                            ),
+                        ),
                     ),
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -308,24 +311,24 @@ def test_var_fnptr_voidstar() -> None:
                             return_type=Pointer(
                                 ptr_to=Type(
                                     typename=PQName(
-                                        segments=[FundamentalSpecifier(name="void")]
-                                    )
-                                )
+                                        segments=[FundamentalSpecifier(name="void")],
+                                    ),
+                                ),
                             ),
                             parameters=[
                                 Parameter(
                                     type=Type(
                                         typename=PQName(
-                                            segments=[FundamentalSpecifier(name="int")]
-                                        )
-                                    )
-                                )
+                                            segments=[FundamentalSpecifier(name="int")],
+                                        ),
+                                    ),
+                                ),
                             ],
-                        )
+                        ),
                     ),
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -344,31 +347,31 @@ def test_var_fnptr_moreparens() -> None:
                         ptr_to=FunctionType(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="void")]
-                                )
+                                    segments=[FundamentalSpecifier(name="void")],
+                                ),
                             ),
                             parameters=[
                                 Parameter(
                                     type=Type(
                                         typename=PQName(
-                                            segments=[FundamentalSpecifier(name="int")]
-                                        )
+                                            segments=[FundamentalSpecifier(name="int")],
+                                        ),
                                     ),
                                     name="p1",
                                 ),
                                 Parameter(
                                     type=Type(
                                         typename=PQName(
-                                            segments=[FundamentalSpecifier(name="int")]
-                                        )
-                                    )
+                                            segments=[FundamentalSpecifier(name="int")],
+                                        ),
+                                    ),
                                 ),
                             ],
-                        )
+                        ),
                     ),
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -402,15 +405,15 @@ def test_var_ptr_to_const_ptr_to_char() -> None:
                         ptr_to=Pointer(
                             ptr_to=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="char")]
-                                )
+                                    segments=[FundamentalSpecifier(name="char")],
+                                ),
                             ),
                             const=True,
-                        )
+                        ),
                     ),
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -429,15 +432,15 @@ def test_var_const_ptr_to_ptr_to_char() -> None:
                         ptr_to=Pointer(
                             ptr_to=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="char")]
-                                )
-                            )
+                                    segments=[FundamentalSpecifier(name="char")],
+                                ),
+                            ),
                         ),
                         const=True,
                     ),
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -454,7 +457,9 @@ def test_var_array_initializer1() -> None:
                     name=PQName(segments=[NameSpecifier(name="x")]),
                     type=Array(
                         array_of=Type(
-                            typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                            typename=PQName(
+                                segments=[FundamentalSpecifier(name="int")],
+                            ),
                         ),
                         size=Value(tokens=[Token(value="3")]),
                     ),
@@ -467,11 +472,11 @@ def test_var_array_initializer1() -> None:
                             Token(value=","),
                             Token(value="3"),
                             Token(value="}"),
-                        ]
+                        ],
                     ),
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -488,7 +493,9 @@ def test_var_array_initializer2() -> None:
                     name=PQName(segments=[NameSpecifier(name="x")]),
                     type=Array(
                         array_of=Type(
-                            typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                            typename=PQName(
+                                segments=[FundamentalSpecifier(name="int")],
+                            ),
                         ),
                         size=Value(tokens=[Token(value="3")]),
                     ),
@@ -501,11 +508,11 @@ def test_var_array_initializer2() -> None:
                             Token(value=","),
                             Token(value="3"),
                             Token(value="}"),
-                        ]
+                        ],
                     ),
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -521,13 +528,13 @@ def test_var_extern_c() -> None:
                 Variable(
                     name=PQName(segments=[NameSpecifier(name="x")]),
                     type=Type(
-                        typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                        typename=PQName(segments=[FundamentalSpecifier(name="int")]),
                     ),
                     # TODO: store linkage
                     extern=True,
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -542,14 +549,14 @@ def test_var_ns_1() -> None:
             variables=[
                 Variable(
                     name=PQName(
-                        segments=[NameSpecifier(name="N"), NameSpecifier(name="x")]
+                        segments=[NameSpecifier(name="N"), NameSpecifier(name="x")],
                     ),
                     type=Type(
-                        typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                        typename=PQName(segments=[FundamentalSpecifier(name="int")]),
                     ),
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -564,15 +571,15 @@ def test_var_ns_2() -> None:
             variables=[
                 Variable(
                     name=PQName(
-                        segments=[NameSpecifier(name="N"), NameSpecifier(name="x")]
+                        segments=[NameSpecifier(name="N"), NameSpecifier(name="x")],
                     ),
                     type=Type(
-                        typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                        typename=PQName(segments=[FundamentalSpecifier(name="int")]),
                     ),
                     value=Value(tokens=[Token(value="4")]),
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -587,17 +594,17 @@ def test_var_ns_3() -> None:
             variables=[
                 Variable(
                     name=PQName(
-                        segments=[NameSpecifier(name="N"), NameSpecifier(name="x")]
+                        segments=[NameSpecifier(name="N"), NameSpecifier(name="x")],
                     ),
                     type=Type(
-                        typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                        typename=PQName(segments=[FundamentalSpecifier(name="int")]),
                     ),
                     value=Value(
-                        tokens=[Token(value="{"), Token(value="4"), Token(value="}")]
+                        tokens=[Token(value="{"), Token(value="4"), Token(value="}")],
                     ),
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -613,24 +620,26 @@ def test_var_static_struct() -> None:
                 ClassScope(
                     class_decl=ClassDecl(
                         typename=PQName(
-                            segments=[NameSpecifier(name="SS")], classkey="struct"
-                        )
-                    )
-                )
+                            segments=[NameSpecifier(name="SS")],
+                            classkey="struct",
+                        ),
+                    ),
+                ),
             ],
             variables=[
                 Variable(
                     name=PQName(segments=[NameSpecifier(name="s")]),
                     type=Type(
                         typename=PQName(
-                            segments=[NameSpecifier(name="SS")], classkey="struct"
-                        )
+                            segments=[NameSpecifier(name="SS")],
+                            classkey="struct",
+                        ),
                     ),
                     constexpr=True,
                     static=True,
-                )
+                ),
             ],
-        )
+        ),
     )
 
 
@@ -645,24 +654,26 @@ def test_var_constexpr_enum() -> None:
             enums=[
                 EnumDecl(
                     typename=PQName(
-                        segments=[NameSpecifier(name="E")], classkey="enum"
+                        segments=[NameSpecifier(name="E")],
+                        classkey="enum",
                     ),
                     values=[Enumerator(name="EE")],
-                )
+                ),
             ],
             variables=[
                 Variable(
                     name=PQName(segments=[NameSpecifier(name="e")]),
                     type=Type(
                         typename=PQName(
-                            segments=[NameSpecifier(name="E")], classkey="enum"
-                        )
+                            segments=[NameSpecifier(name="E")],
+                            classkey="enum",
+                        ),
                     ),
                     value=Value(tokens=[Token(value="EE")]),
                     constexpr=True,
-                )
+                ),
             ],
-        )
+        ),
     )
 
 
@@ -683,7 +694,7 @@ def test_var_fnptr_in_class() -> None:
                         typename=PQName(
                             segments=[NameSpecifier(name="DriverFuncs")],
                             classkey="struct",
-                        )
+                        ),
                     ),
                     fields=[
                         Field(
@@ -694,13 +705,13 @@ def test_var_fnptr_in_class() -> None:
                                         ptr_to=Type(
                                             typename=PQName(
                                                 segments=[
-                                                    FundamentalSpecifier(name="void")
-                                                ]
-                                            )
-                                        )
+                                                    FundamentalSpecifier(name="void"),
+                                                ],
+                                            ),
+                                        ),
                                     ),
                                     parameters=[],
-                                )
+                                ),
                             ),
                             name="init",
                         ),
@@ -710,8 +721,10 @@ def test_var_fnptr_in_class() -> None:
                                 ptr_to=FunctionType(
                                     return_type=Type(
                                         typename=PQName(
-                                            segments=[FundamentalSpecifier(name="void")]
-                                        )
+                                            segments=[
+                                                FundamentalSpecifier(name="void"),
+                                            ],
+                                        ),
                                     ),
                                     parameters=[
                                         Parameter(
@@ -720,11 +733,11 @@ def test_var_fnptr_in_class() -> None:
                                                     typename=PQName(
                                                         segments=[
                                                             FundamentalSpecifier(
-                                                                name="void"
-                                                            )
-                                                        ]
-                                                    )
-                                                )
+                                                                name="void",
+                                                            ),
+                                                        ],
+                                                    ),
+                                                ),
                                             ),
                                             name="buf",
                                         ),
@@ -732,21 +745,23 @@ def test_var_fnptr_in_class() -> None:
                                             type=Type(
                                                 typename=PQName(
                                                     segments=[
-                                                        FundamentalSpecifier(name="int")
-                                                    ]
-                                                )
+                                                        FundamentalSpecifier(
+                                                            name="int",
+                                                        ),
+                                                    ],
+                                                ),
                                             ),
                                             name="buflen",
                                         ),
                                     ],
-                                )
+                                ),
                             ),
                             name="write",
                         ),
                     ],
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -762,17 +777,17 @@ def test_var_extern() -> None:
                 Variable(
                     name=PQName(segments=[NameSpecifier(name="externVar")]),
                     type=Type(
-                        typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                        typename=PQName(segments=[FundamentalSpecifier(name="int")]),
                     ),
                     extern=True,
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
 def test_balanced_with_gt() -> None:
-    """Tests _consume_balanced_tokens handling of mismatched gt tokens"""
+    """Tests _consume_balanced_tokens handling of mismatched gt tokens."""
     content = """
       int x = (1 >> 2);
     """
@@ -784,7 +799,7 @@ def test_balanced_with_gt() -> None:
                 Variable(
                     name=PQName(segments=[NameSpecifier(name="x")]),
                     type=Type(
-                        typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                        typename=PQName(segments=[FundamentalSpecifier(name="int")]),
                     ),
                     value=Value(
                         tokens=[
@@ -794,16 +809,16 @@ def test_balanced_with_gt() -> None:
                             Token(value=">"),
                             Token(value="2"),
                             Token(value=")"),
-                        ]
+                        ],
                     ),
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
 def test_balanced_with_lt() -> None:
-    """Tests _consume_balanced_tokens handling of mismatched lt tokens"""
+    """Tests _consume_balanced_tokens handling of mismatched lt tokens."""
     content = """
       bool z = (i < 4);
     """
@@ -815,7 +830,7 @@ def test_balanced_with_lt() -> None:
                 Variable(
                     name=PQName(segments=[NameSpecifier(name="z")]),
                     type=Type(
-                        typename=PQName(segments=[FundamentalSpecifier(name="bool")])
+                        typename=PQName(segments=[FundamentalSpecifier(name="bool")]),
                     ),
                     value=Value(
                         tokens=[
@@ -824,11 +839,11 @@ def test_balanced_with_lt() -> None:
                             Token(value="<"),
                             Token(value="4"),
                             Token(value=")"),
-                        ]
+                        ],
                     ),
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 

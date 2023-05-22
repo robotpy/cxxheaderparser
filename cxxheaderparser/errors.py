@@ -5,9 +5,7 @@ if typing.TYPE_CHECKING:
 
 
 class CxxParseError(Exception):
-    """
-    Exception raised when a parsing error occurs
-    """
+    """Exception raised when a parsing error occurs."""
 
     def __init__(self, msg: str, tok: typing.Optional["LexToken"] = None) -> None:
         Exception.__init__(self, msg)

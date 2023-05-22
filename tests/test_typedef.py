@@ -1,29 +1,28 @@
 # Note: testcases generated via `python -m cxxheaderparser.gentest`
-
-
-from cxxheaderparser.types import (
-    AnonymousName,
-    Array,
-    BaseClass,
-    ClassDecl,
-    EnumDecl,
-    Enumerator,
-    Field,
-    FunctionType,
-    FundamentalSpecifier,
-    NameSpecifier,
-    PQName,
-    Parameter,
-    Pointer,
-    Reference,
-    TemplateArgument,
-    TemplateSpecialization,
-    Token,
-    Type,
-    Typedef,
-    Value,
-)
-from cxxheaderparser.simple import ClassScope, NamespaceScope, ParsedData, parse_string
+from cxxheaderparser.simple import ClassScope
+from cxxheaderparser.simple import NamespaceScope
+from cxxheaderparser.simple import parse_string
+from cxxheaderparser.simple import ParsedData
+from cxxheaderparser.types import AnonymousName
+from cxxheaderparser.types import Array
+from cxxheaderparser.types import BaseClass
+from cxxheaderparser.types import ClassDecl
+from cxxheaderparser.types import EnumDecl
+from cxxheaderparser.types import Enumerator
+from cxxheaderparser.types import Field
+from cxxheaderparser.types import FunctionType
+from cxxheaderparser.types import FundamentalSpecifier
+from cxxheaderparser.types import NameSpecifier
+from cxxheaderparser.types import Parameter
+from cxxheaderparser.types import Pointer
+from cxxheaderparser.types import PQName
+from cxxheaderparser.types import Reference
+from cxxheaderparser.types import TemplateArgument
+from cxxheaderparser.types import TemplateSpecialization
+from cxxheaderparser.types import Token
+from cxxheaderparser.types import Type
+from cxxheaderparser.types import Typedef
+from cxxheaderparser.types import Value
 
 
 def test_simple_typedef() -> None:
@@ -49,22 +48,22 @@ def test_simple_typedef() -> None:
                                                     typename=PQName(
                                                         segments=[
                                                             FundamentalSpecifier(
-                                                                name="int"
-                                                            )
-                                                        ]
-                                                    )
-                                                )
-                                            )
-                                        ]
+                                                                name="int",
+                                                            ),
+                                                        ],
+                                                    ),
+                                                ),
+                                            ),
+                                        ],
                                     ),
                                 ),
-                            ]
-                        )
+                            ],
+                        ),
                     ),
                     name="IntVector",
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -82,28 +81,30 @@ def test_struct_typedef_1() -> None:
                 ClassScope(
                     class_decl=ClassDecl(
                         typename=PQName(
-                            segments=[AnonymousName(id=1)], classkey="struct"
-                        )
+                            segments=[AnonymousName(id=1)],
+                            classkey="struct",
+                        ),
                     ),
                     fields=[
                         Field(
                             name="m",
                             type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="int")]
-                                )
+                                    segments=[FundamentalSpecifier(name="int")],
+                                ),
                             ),
                             access="public",
-                        )
+                        ),
                     ],
-                )
+                ),
             ],
             typedefs=[
                 Typedef(
                     type=Type(
                         typename=PQName(
-                            segments=[AnonymousName(id=1)], classkey="struct"
-                        )
+                            segments=[AnonymousName(id=1)],
+                            classkey="struct",
+                        ),
                     ),
                     name="unnamed_struct",
                 ),
@@ -111,14 +112,15 @@ def test_struct_typedef_1() -> None:
                     type=Pointer(
                         ptr_to=Type(
                             typename=PQName(
-                                segments=[AnonymousName(id=1)], classkey="struct"
-                            )
-                        )
+                                segments=[AnonymousName(id=1)],
+                                classkey="struct",
+                            ),
+                        ),
                     ),
                     name="punnamed_struct",
                 ),
             ],
-        )
+        ),
     )
 
 
@@ -136,43 +138,46 @@ def test_struct_typedef_2() -> None:
                 ClassScope(
                     class_decl=ClassDecl(
                         typename=PQName(
-                            segments=[AnonymousName(id=1)], classkey="struct"
-                        )
+                            segments=[AnonymousName(id=1)],
+                            classkey="struct",
+                        ),
                     ),
                     fields=[
                         Field(
                             name="m",
                             type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="int")]
-                                )
+                                    segments=[FundamentalSpecifier(name="int")],
+                                ),
                             ),
                             access="public",
-                        )
+                        ),
                     ],
-                )
+                ),
             ],
             typedefs=[
                 Typedef(
                     type=Pointer(
                         ptr_to=Type(
                             typename=PQName(
-                                segments=[AnonymousName(id=1)], classkey="struct"
-                            )
-                        )
+                                segments=[AnonymousName(id=1)],
+                                classkey="struct",
+                            ),
+                        ),
                     ),
                     name="punnamed_struct",
                 ),
                 Typedef(
                     type=Type(
                         typename=PQName(
-                            segments=[AnonymousName(id=1)], classkey="struct"
-                        )
+                            segments=[AnonymousName(id=1)],
+                            classkey="struct",
+                        ),
                     ),
                     name="unnamed_struct",
                 ),
             ],
-        )
+        ),
     )
 
 
@@ -189,15 +194,15 @@ def test_typedef_array() -> None:
                     type=Array(
                         array_of=Type(
                             typename=PQName(
-                                segments=[FundamentalSpecifier(name="char")]
-                            )
+                                segments=[FundamentalSpecifier(name="char")],
+                            ),
                         ),
                         size=Value(tokens=[Token(value="10")]),
                     ),
                     name="TenCharArray",
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -213,18 +218,20 @@ def test_typedef_array_of_struct() -> None:
                 ClassScope(
                     class_decl=ClassDecl(
                         typename=PQName(
-                            segments=[AnonymousName(id=1)], classkey="struct"
-                        )
-                    )
-                )
+                            segments=[AnonymousName(id=1)],
+                            classkey="struct",
+                        ),
+                    ),
+                ),
             ],
             typedefs=[
                 Typedef(
                     type=Array(
                         array_of=Type(
                             typename=PQName(
-                                segments=[AnonymousName(id=1)], classkey="struct"
-                            )
+                                segments=[AnonymousName(id=1)],
+                                classkey="struct",
+                            ),
                         ),
                         size=Value(tokens=[Token(value="3")]),
                     ),
@@ -233,13 +240,14 @@ def test_typedef_array_of_struct() -> None:
                 Typedef(
                     type=Type(
                         typename=PQName(
-                            segments=[AnonymousName(id=1)], classkey="struct"
-                        )
+                            segments=[AnonymousName(id=1)],
+                            classkey="struct",
+                        ),
                     ),
                     name="ty",
                 ),
             ],
-        )
+        ),
     )
 
 
@@ -255,28 +263,30 @@ def test_typedef_class_w_base() -> None:
                 ClassScope(
                     class_decl=ClassDecl(
                         typename=PQName(
-                            segments=[NameSpecifier(name="XX")], classkey="class"
+                            segments=[NameSpecifier(name="XX")],
+                            classkey="class",
                         ),
                         bases=[
                             BaseClass(
                                 access="public",
                                 typename=PQName(segments=[NameSpecifier(name="F")]),
-                            )
+                            ),
                         ],
-                    )
-                )
+                    ),
+                ),
             ],
             typedefs=[
                 Typedef(
                     type=Type(
                         typename=PQName(
-                            segments=[NameSpecifier(name="XX")], classkey="class"
-                        )
+                            segments=[NameSpecifier(name="XX")],
+                            classkey="class",
+                        ),
                     ),
                     name="G",
-                )
+                ),
             ],
-        )
+        ),
     )
 
 
@@ -291,15 +301,17 @@ def test_complicated_typedef() -> None:
             typedefs=[
                 Typedef(
                     type=Type(
-                        typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                        typename=PQName(segments=[FundamentalSpecifier(name="int")]),
                     ),
                     name="int_t",
                 ),
                 Typedef(
                     type=Pointer(
                         ptr_to=Type(
-                            typename=PQName(segments=[FundamentalSpecifier(name="int")])
-                        )
+                            typename=PQName(
+                                segments=[FundamentalSpecifier(name="int")],
+                            ),
+                        ),
                     ),
                     name="intp_t",
                 ),
@@ -308,40 +320,42 @@ def test_complicated_typedef() -> None:
                         ref_to=FunctionType(
                             return_type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="int")]
-                                )
+                                    segments=[FundamentalSpecifier(name="int")],
+                                ),
                             ),
                             parameters=[
                                 Parameter(
                                     type=Type(
                                         typename=PQName(
-                                            segments=[FundamentalSpecifier(name="int")]
-                                        )
-                                    )
+                                            segments=[FundamentalSpecifier(name="int")],
+                                        ),
+                                    ),
                                 ),
                                 Parameter(
                                     type=Type(
                                         typename=PQName(
-                                            segments=[NameSpecifier(name="ulong")]
-                                        )
-                                    )
+                                            segments=[NameSpecifier(name="ulong")],
+                                        ),
+                                    ),
                                 ),
                             ],
-                        )
+                        ),
                     ),
                     name="fp",
                 ),
                 Typedef(
                     type=Array(
                         array_of=Type(
-                            typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                            typename=PQName(
+                                segments=[FundamentalSpecifier(name="int")],
+                            ),
                         ),
                         size=Value(tokens=[Token(value="10")]),
                     ),
                     name="arr_t",
                 ),
-            ]
-        )
+            ],
+        ),
     )
 
 
@@ -358,16 +372,17 @@ def test_typedef_c_struct_idiom() -> None:
                 ClassScope(
                     class_decl=ClassDecl(
                         typename=PQName(
-                            segments=[AnonymousName(id=1)], classkey="struct"
-                        )
+                            segments=[AnonymousName(id=1)],
+                            classkey="struct",
+                        ),
                     ),
                     fields=[
                         Field(
                             name="a",
                             type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="int")]
-                                )
+                                    segments=[FundamentalSpecifier(name="int")],
+                                ),
                             ),
                             access="public",
                         ),
@@ -375,20 +390,21 @@ def test_typedef_c_struct_idiom() -> None:
                             name="b",
                             type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="int")]
-                                )
+                                    segments=[FundamentalSpecifier(name="int")],
+                                ),
                             ),
                             access="public",
                         ),
                     ],
-                )
+                ),
             ],
             typedefs=[
                 Typedef(
                     type=Type(
                         typename=PQName(
-                            segments=[AnonymousName(id=1)], classkey="struct"
-                        )
+                            segments=[AnonymousName(id=1)],
+                            classkey="struct",
+                        ),
                     ),
                     name="S",
                 ),
@@ -396,14 +412,15 @@ def test_typedef_c_struct_idiom() -> None:
                     type=Pointer(
                         ptr_to=Type(
                             typename=PQName(
-                                segments=[AnonymousName(id=1)], classkey="struct"
-                            )
-                        )
+                                segments=[AnonymousName(id=1)],
+                                classkey="struct",
+                            ),
+                        ),
                     ),
                     name="pS",
                 ),
             ],
-        )
+        ),
     )
 
 
@@ -421,33 +438,35 @@ def test_typedef_struct_same_name() -> None:
                 ClassScope(
                     class_decl=ClassDecl(
                         typename=PQName(
-                            segments=[NameSpecifier(name="Fig")], classkey="struct"
-                        )
+                            segments=[NameSpecifier(name="Fig")],
+                            classkey="struct",
+                        ),
                     ),
                     fields=[
                         Field(
                             access="public",
                             type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="int")]
-                                )
+                                    segments=[FundamentalSpecifier(name="int")],
+                                ),
                             ),
                             name="a",
-                        )
+                        ),
                     ],
-                )
+                ),
             ],
             typedefs=[
                 Typedef(
                     type=Type(
                         typename=PQName(
-                            segments=[NameSpecifier(name="Fig")], classkey="struct"
-                        )
+                            segments=[NameSpecifier(name="Fig")],
+                            classkey="struct",
+                        ),
                     ),
                     name="Fig",
-                )
+                ),
             ],
-        )
+        ),
     )
 
 
@@ -465,8 +484,9 @@ def test_typedef_struct_w_enum() -> None:
                 ClassScope(
                     class_decl=ClassDecl(
                         typename=PQName(
-                            segments=[AnonymousName(id=1)], classkey="struct"
-                        )
+                            segments=[AnonymousName(id=1)],
+                            classkey="struct",
+                        ),
                     ),
                     enums=[
                         EnumDecl(
@@ -476,29 +496,32 @@ def test_typedef_struct_w_enum() -> None:
                             ),
                             values=[
                                 Enumerator(
-                                    name="FAIL", value=Value(tokens=[Token(value="0")])
+                                    name="FAIL",
+                                    value=Value(tokens=[Token(value="0")]),
                                 ),
                                 Enumerator(
-                                    name="PASS", value=Value(tokens=[Token(value="1")])
+                                    name="PASS",
+                                    value=Value(tokens=[Token(value="1")]),
                                 ),
                             ],
                             base=PQName(segments=[FundamentalSpecifier(name="int")]),
                             access="public",
-                        )
+                        ),
                     ],
-                )
+                ),
             ],
             typedefs=[
                 Typedef(
                     type=Type(
                         typename=PQName(
-                            segments=[AnonymousName(id=1)], classkey="struct"
-                        )
+                            segments=[AnonymousName(id=1)],
+                            classkey="struct",
+                        ),
                     ),
                     name="BeetStruct",
-                )
+                ),
             ],
-        )
+        ),
     )
 
 
@@ -518,16 +541,17 @@ def test_typedef_union() -> None:
                 ClassScope(
                     class_decl=ClassDecl(
                         typename=PQName(
-                            segments=[NameSpecifier(name="apricot_t")], classkey="union"
-                        )
+                            segments=[NameSpecifier(name="apricot_t")],
+                            classkey="union",
+                        ),
                     ),
                     fields=[
                         Field(
                             access="public",
                             type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="int")]
-                                )
+                                    segments=[FundamentalSpecifier(name="int")],
+                                ),
                             ),
                             name="i",
                         ),
@@ -535,8 +559,8 @@ def test_typedef_union() -> None:
                             access="public",
                             type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="float")]
-                                )
+                                    segments=[FundamentalSpecifier(name="float")],
+                                ),
                             ),
                             name="f",
                         ),
@@ -545,27 +569,28 @@ def test_typedef_union() -> None:
                             type=Array(
                                 array_of=Type(
                                     typename=PQName(
-                                        segments=[FundamentalSpecifier(name="char")]
-                                    )
+                                        segments=[FundamentalSpecifier(name="char")],
+                                    ),
                                 ),
                                 size=Value(tokens=[Token(value="20")]),
                             ),
                             name="s",
                         ),
                     ],
-                )
+                ),
             ],
             typedefs=[
                 Typedef(
                     type=Type(
                         typename=PQName(
-                            segments=[NameSpecifier(name="apricot_t")], classkey="union"
-                        )
+                            segments=[NameSpecifier(name="apricot_t")],
+                            classkey="union",
+                        ),
                     ),
                     name="Apricot",
-                )
+                ),
             ],
-        )
+        ),
     )
 
 
@@ -584,25 +609,25 @@ def test_typedef_fnptr() -> None:
                             return_type=Pointer(
                                 ptr_to=Type(
                                     typename=PQName(
-                                        segments=[FundamentalSpecifier(name="void")]
-                                    )
-                                )
+                                        segments=[FundamentalSpecifier(name="void")],
+                                    ),
+                                ),
                             ),
                             parameters=[
                                 Parameter(
                                     type=Type(
                                         typename=PQName(
-                                            segments=[FundamentalSpecifier(name="int")]
-                                        )
-                                    )
-                                )
+                                            segments=[FundamentalSpecifier(name="int")],
+                                        ),
+                                    ),
+                                ),
                             ],
-                        )
+                        ),
                     ),
                     name="fndef",
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -617,21 +642,23 @@ def test_typedef_const() -> None:
             typedefs=[
                 Typedef(
                     type=Type(
-                        typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                        typename=PQName(segments=[FundamentalSpecifier(name="int")]),
                     ),
                     name="theint",
                 ),
                 Typedef(
                     type=Pointer(
                         ptr_to=Type(
-                            typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                            typename=PQName(
+                                segments=[FundamentalSpecifier(name="int")],
+                            ),
                         ),
                         const=True,
                     ),
                     name="ptheint",
                 ),
-            ]
-        )
+            ],
+        ),
     )
 
 
@@ -647,17 +674,20 @@ def test_enum_typedef_1() -> None:
                 EnumDecl(
                     typename=PQName(segments=[AnonymousName(id=1)], classkey="enum"),
                     values=[],
-                )
+                ),
             ],
             typedefs=[
                 Typedef(
                     type=Type(
-                        typename=PQName(segments=[AnonymousName(id=1)], classkey="enum")
+                        typename=PQName(
+                            segments=[AnonymousName(id=1)],
+                            classkey="enum",
+                        ),
                     ),
                     name="E",
-                )
+                ),
             ],
-        )
+        ),
     )
 
 
@@ -673,17 +703,20 @@ def test_enum_typedef_2() -> None:
                 EnumDecl(
                     typename=PQName(segments=[AnonymousName(id=1)], classkey="enum"),
                     values=[Enumerator(name="E1")],
-                )
+                ),
             ],
             typedefs=[
                 Typedef(
                     type=Type(
-                        typename=PQName(segments=[AnonymousName(id=1)], classkey="enum")
+                        typename=PQName(
+                            segments=[AnonymousName(id=1)],
+                            classkey="enum",
+                        ),
                     ),
                     name="BE",
-                )
+                ),
             ],
-        )
+        ),
     )
 
 
@@ -699,17 +732,20 @@ def test_enum_typedef_3() -> None:
                 EnumDecl(
                     typename=PQName(segments=[AnonymousName(id=1)], classkey="enum"),
                     values=[Enumerator(name="E1"), Enumerator(name="E2")],
-                )
+                ),
             ],
             typedefs=[
                 Typedef(
                     type=Type(
-                        typename=PQName(segments=[AnonymousName(id=1)], classkey="enum")
+                        typename=PQName(
+                            segments=[AnonymousName(id=1)],
+                            classkey="enum",
+                        ),
                     ),
                     name="E",
-                )
+                ),
             ],
-        )
+        ),
     )
 
 
@@ -725,21 +761,22 @@ def test_enum_typedef_3_1() -> None:
                 EnumDecl(
                     typename=PQName(segments=[AnonymousName(id=1)], classkey="enum"),
                     values=[Enumerator(name="E1")],
-                )
+                ),
             ],
             typedefs=[
                 Typedef(
                     type=Pointer(
                         ptr_to=Type(
                             typename=PQName(
-                                segments=[AnonymousName(id=1)], classkey="enum"
-                            )
-                        )
+                                segments=[AnonymousName(id=1)],
+                                classkey="enum",
+                            ),
+                        ),
                     ),
                     name="PBE",
-                )
+                ),
             ],
-        )
+        ),
     )
 
 
@@ -755,27 +792,31 @@ def test_enum_typedef_4() -> None:
                 EnumDecl(
                     typename=PQName(segments=[AnonymousName(id=1)], classkey="enum"),
                     values=[Enumerator(name="E1")],
-                )
+                ),
             ],
             typedefs=[
                 Typedef(
                     type=Pointer(
                         ptr_to=Type(
                             typename=PQName(
-                                segments=[AnonymousName(id=1)], classkey="enum"
-                            )
-                        )
+                                segments=[AnonymousName(id=1)],
+                                classkey="enum",
+                            ),
+                        ),
                     ),
                     name="PBE",
                 ),
                 Typedef(
                     type=Type(
-                        typename=PQName(segments=[AnonymousName(id=1)], classkey="enum")
+                        typename=PQName(
+                            segments=[AnonymousName(id=1)],
+                            classkey="enum",
+                        ),
                     ),
                     name="BE",
                 ),
             ],
-        )
+        ),
     )
 
 
@@ -791,12 +832,15 @@ def test_enum_typedef_5() -> None:
                 EnumDecl(
                     typename=PQName(segments=[AnonymousName(id=1)], classkey="enum"),
                     values=[Enumerator(name="E1")],
-                )
+                ),
             ],
             typedefs=[
                 Typedef(
                     type=Type(
-                        typename=PQName(segments=[AnonymousName(id=1)], classkey="enum")
+                        typename=PQName(
+                            segments=[AnonymousName(id=1)],
+                            classkey="enum",
+                        ),
                     ),
                     name="BE",
                 ),
@@ -804,14 +848,15 @@ def test_enum_typedef_5() -> None:
                     type=Pointer(
                         ptr_to=Type(
                             typename=PQName(
-                                segments=[AnonymousName(id=1)], classkey="enum"
-                            )
-                        )
+                                segments=[AnonymousName(id=1)],
+                                classkey="enum",
+                            ),
+                        ),
                     ),
                     name="PBE",
                 ),
             ],
-        )
+        ),
     )
 
 
@@ -827,13 +872,14 @@ def test_enum_typedef_fwd() -> None:
                 Typedef(
                     type=Type(
                         typename=PQName(
-                            segments=[NameSpecifier(name="BE")], classkey="enum"
-                        )
+                            segments=[NameSpecifier(name="BE")],
+                            classkey="enum",
+                        ),
                     ),
                     name="BET",
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -860,21 +906,24 @@ def test_typedef_enum_expr() -> None:
                                     Token(value=")"),
                                     Token(value="/"),
                                     Token(value="2"),
-                                ]
+                                ],
                             ),
-                        )
+                        ),
                     ],
-                )
+                ),
             ],
             typedefs=[
                 Typedef(
                     type=Type(
-                        typename=PQName(segments=[AnonymousName(id=1)], classkey="enum")
+                        typename=PQName(
+                            segments=[AnonymousName(id=1)],
+                            classkey="enum",
+                        ),
                     ),
                     name="Carambola",
-                )
+                ),
             ],
-        )
+        ),
     )
 
 
@@ -890,14 +939,14 @@ def test_volatile_typedef() -> None:
                 Typedef(
                     type=Type(
                         typename=PQName(
-                            segments=[FundamentalSpecifier(name="signed short")]
+                            segments=[FundamentalSpecifier(name="signed short")],
                         ),
                         volatile=True,
                     ),
                     name="vint16",
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -905,7 +954,7 @@ def test_function_typedef() -> None:
     content = """
       typedef void fn(int);
       typedef auto fntype(int) -> int;
-      
+
       struct X {
           typedef void fn(int);
       };
@@ -918,51 +967,52 @@ def test_function_typedef() -> None:
                 ClassScope(
                     class_decl=ClassDecl(
                         typename=PQName(
-                            segments=[NameSpecifier(name="X")], classkey="struct"
-                        )
+                            segments=[NameSpecifier(name="X")],
+                            classkey="struct",
+                        ),
                     ),
                     typedefs=[
                         Typedef(
                             type=FunctionType(
                                 return_type=Type(
                                     typename=PQName(
-                                        segments=[FundamentalSpecifier(name="void")]
-                                    )
+                                        segments=[FundamentalSpecifier(name="void")],
+                                    ),
                                 ),
                                 parameters=[
                                     Parameter(
                                         type=Type(
                                             typename=PQName(
                                                 segments=[
-                                                    FundamentalSpecifier(name="int")
-                                                ]
-                                            )
-                                        )
-                                    )
+                                                    FundamentalSpecifier(name="int"),
+                                                ],
+                                            ),
+                                        ),
+                                    ),
                                 ],
                             ),
                             name="fn",
                             access="public",
-                        )
+                        ),
                     ],
-                )
+                ),
             ],
             typedefs=[
                 Typedef(
                     type=FunctionType(
                         return_type=Type(
                             typename=PQName(
-                                segments=[FundamentalSpecifier(name="void")]
-                            )
+                                segments=[FundamentalSpecifier(name="void")],
+                            ),
                         ),
                         parameters=[
                             Parameter(
                                 type=Type(
                                     typename=PQName(
-                                        segments=[FundamentalSpecifier(name="int")]
-                                    )
-                                )
-                            )
+                                        segments=[FundamentalSpecifier(name="int")],
+                                    ),
+                                ),
+                            ),
                         ],
                     ),
                     name="fn",
@@ -970,21 +1020,23 @@ def test_function_typedef() -> None:
                 Typedef(
                     type=FunctionType(
                         return_type=Type(
-                            typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                            typename=PQName(
+                                segments=[FundamentalSpecifier(name="int")],
+                            ),
                         ),
                         parameters=[
                             Parameter(
                                 type=Type(
                                     typename=PQName(
-                                        segments=[FundamentalSpecifier(name="int")]
-                                    )
-                                )
-                            )
+                                        segments=[FundamentalSpecifier(name="int")],
+                                    ),
+                                ),
+                            ),
                         ],
                         has_trailing_return=True,
                     ),
                     name="fntype",
                 ),
             ],
-        )
+        ),
     )

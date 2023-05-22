@@ -1,12 +1,8 @@
-import contextlib
-from collections import deque
 import re
 import typing
-import sys
 
 from ._ply import lex
 from ._ply.lex import TOKEN
-
 from .errors import CxxParseError
 
 
@@ -14,28 +10,22 @@ class LexError(CxxParseError):
     pass
 
 
-if sys.version_info >= (3, 8):
-    from typing import Protocol
-else:
-    Protocol = object
+from typing import Protocol
 
 _line_re = re.compile(r'^#line (\d+) "(.*)"')
 _multicomment_re = re.compile("\n[\\s]+\\*")
 
 
 class Location(typing.NamedTuple):
-    """
-    Location that something was found at, takes #line directives into account
-    """
+    """Location that something was found at, takes #line directives into
+    account."""
 
     filename: str
     lineno: int
 
 
 class LexToken(Protocol):
-    """
-    Token as emitted by PLY and modified by our lexer
-    """
+    """Token as emitted by PLY and modified by our lexer."""
 
     #: Lexer type for this token
     type: str
@@ -61,12 +51,11 @@ PhonyEnding.lexpos = 0
 
 
 class PlyLexer:
-    """
-    This lexer is a combination of pieces from the PLY lexers that CppHeaderParser
-    and pycparser have.
+    """This lexer is a combination of pieces from the PLY lexers that
+    CppHeaderParser and pycparser have.
 
-    This tokenizes the input into tokens. The other lexer classes do more complex
-    things with the tokens.
+    This tokenizes the input into tokens. The other lexer classes do
+    more complex things with the tokens.
     """
 
     keywords = {
@@ -226,12 +215,8 @@ class PlyLexer:
     bin_digits = "[01]+"
 
     # integer constants (K&R2: A.2.5.1)
-    integer_suffix_opt = (
-        r"(([uU]ll)|([uU]LL)|(ll[uU]?)|(LL[uU]?)|([uU][lL])|([lL][uU]?)|[uU])?"
-    )
-    decimal_constant = (
-        "(0" + integer_suffix_opt + ")|([1-9][0-9]*" + integer_suffix_opt + ")"
-    )
+    integer_suffix_opt = r"(([uU]ll)|([uU]LL)|(ll[uU]?)|(LL[uU]?)|([uU][lL])|([lL][uU]?)|[uU])?"
+    decimal_constant = "(0" + integer_suffix_opt + ")|([1-9][0-9]*" + integer_suffix_opt + ")"
     octal_constant = "0[0-7]*" + integer_suffix_opt
     hex_constant = hex_prefix + hex_digits + integer_suffix_opt
     bin_constant = bin_prefix + bin_digits + integer_suffix_opt
@@ -248,10 +233,6 @@ class PlyLexer:
     # The original regexes were taken verbatim from the C syntax definition,
     # and were later modified to avoid worst-case exponential running time.
     #
-    #   simple_escape = r"""([a-zA-Z._~!=&\^\-\\?'"])"""
-    #   decimal_escape = r"""(\d+)"""
-    #   hex_escape = r"""(x[0-9a-fA-F]+)"""
-    #   bad_escape = r"""([\\][^a-zA-Z._~^!=&\^\-\\?'"x0-7])"""
     #
     # The following modifications were made to avoid the ambiguity that allowed backtracking:
     # (https://github.com/eliben/pycparser/issues/61)
@@ -269,9 +250,7 @@ class PlyLexer:
     hex_escape = r"""(x[0-9a-fA-F]+)(?![0-9a-fA-F])"""
     bad_escape = r"""([\\][^a-zA-Z._~^!=&\^\-\\?'"x0-9])"""
 
-    escape_sequence = (
-        r"""(\\(""" + simple_escape + "|" + decimal_escape + "|" + hex_escape + "))"
-    )
+    escape_sequence = r"""(\\(""" + simple_escape + "|" + decimal_escape + "|" + hex_escape + "))"
 
     # This complicated regex with lookahead might be slow for strings, so because all of the valid escapes (including \x) allowed
     # 0 or more non-escaped characters after the first character, simple_escape+decimal_escape+hex_escape got simplified to
@@ -287,11 +266,7 @@ class PlyLexer:
     multicharacter_constant = "'" + cconst_char + "{2,4}'"
     unmatched_quote = "('" + cconst_char + "*\\n)|('" + cconst_char + "*$)"
     bad_char_const = (
-        r"""('"""
-        + cconst_char
-        + """[^'\n]+')|('')|('"""
-        + bad_escape
-        + r"""[^'\n]*')"""
+        r"""('""" + cconst_char + """[^'\n]+')|('')|('""" + bad_escape + r"""[^'\n]*')"""
     )
 
     # string literals (K&R2: A.2.6)
@@ -506,16 +481,14 @@ class PlyLexer:
 
 
 class TokenStream:
-    """
-    Provides access to a stream of tokens
-    """
+    """Provides access to a stream of tokens."""
 
     tokbuf: typing.Deque[LexToken]
 
     def _fill_tokbuf(self, tokbuf: typing.Deque[LexToken]) -> bool:
-        """
-        Fills tokbuf with tokens from the next line. Return True if at least
-        one token was added to the buffer
+        """Fills tokbuf with tokens from the next line.
+
+        Return True if at least one token was added to the buffer
         """
         raise NotImplementedError
 
@@ -523,15 +496,11 @@ class TokenStream:
         raise NotImplementedError
 
     def get_doxygen(self) -> typing.Optional[str]:
-        """
-        This is called at the point that you want doxygen information
-        """
+        """This is called at the point that you want doxygen information."""
         raise NotImplementedError
 
     def get_doxygen_after(self) -> typing.Optional[str]:
-        """
-        This is called to retrieve doxygen information after a statement
-        """
+        """This is called to retrieve doxygen information after a statement."""
         raise NotImplementedError
 
     _discard_types = {
@@ -614,9 +583,7 @@ class TokenStream:
 
 
 class LexerTokenStream(TokenStream):
-    """
-    Provides tokens from using PlyLexer on the given input text
-    """
+    """Provides tokens from using PlyLexer on the given input text."""
 
     _user_defined_literal_start = {
         "FLOAT_CONST",
@@ -761,10 +728,10 @@ class LexerTokenStream(TokenStream):
         for c in comments:
             text = c.value
             if c.type == "COMMENT_SINGLELINE":
-                if text.startswith("///") or text.startswith("//!"):
+                if text.startswith(("///", "//!")):
                     comment_lines.append(text.rstrip("\n"))
             else:
-                if text.startswith("/**") or text.startswith("/*!"):
+                if text.startswith(("/**", "/*!")):
                     # not sure why, but get double new lines
                     text = text.replace("\n\n", "\n")
                     # strip prefixing whitespace
@@ -779,12 +746,10 @@ class LexerTokenStream(TokenStream):
 
 
 class BoundedTokenStream(TokenStream):
-    """
-    Provides tokens from a fixed list of tokens.
+    """Provides tokens from a fixed list of tokens.
 
-    Intended for use when you have a group of tokens that you know
-    must be consumed, such as a paren grouping or some type of
-    lookahead case
+    Intended for use when you have a group of tokens that you know must
+    be consumed, such as a paren grouping or some type of lookahead case
     """
 
     def __init__(self, toks: typing.List[LexToken]) -> None:

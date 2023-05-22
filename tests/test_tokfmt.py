@@ -1,6 +1,7 @@
 import pytest
 
-from cxxheaderparser.lexer import PlyLexer, LexerTokenStream
+from cxxheaderparser.lexer import LexerTokenStream
+from cxxheaderparser.lexer import PlyLexer
 from cxxheaderparser.tokfmt import tokfmt
 from cxxheaderparser.types import Token
 
@@ -36,9 +37,7 @@ from cxxheaderparser.types import Token
     ],
 )
 def test_tokfmt(instr: str) -> None:
-    """
-    Each input string is exactly what the output of tokfmt should be
-    """
+    """Each input string is exactly what the output of tokfmt should be."""
     toks = []
     lexer = PlyLexer("")
     lexer.input(instr)

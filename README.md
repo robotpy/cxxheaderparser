@@ -35,7 +35,7 @@ Non-goals:
 
 There are two APIs available:
 
-* A visitor-style interface to build up your own custom data structures 
+* A visitor-style interface to build up your own custom data structures
 * A simple visitor that stores everything in a giant data structure
 
 Live Demo
@@ -103,7 +103,7 @@ Credit
   grammar mostly derived from the [Hyperlinked C++ BNF Grammar](https://www.nongnu.org/hcb/)
 * cppreference.com has been invaluable for understanding many of the weird
   quirks of C++, and some of the unit tests use examples from there
-* [Compiler Explorer](godbolt.org) has been invaluable for validating my 
+* [Compiler Explorer](godbolt.org) has been invaluable for validating my
   understanding of C++ by allowing me to quickly type in quirky C++
   constructs to see if they actually compile
 

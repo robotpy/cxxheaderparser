@@ -12,7 +12,7 @@ There's a helper script in cxxheaderparser explicitly for generating many of the
 unit tests in this directory. To run it:
 
 * Create a file with your C++ content in it
-* Run `python -m cxxheaderparser.gentest FILENAME.h some_name` 
+* Run `python -m cxxheaderparser.gentest FILENAME.h some_name`
 * Copy the stdout to one of these `test_*.py` files
 
 Content origin

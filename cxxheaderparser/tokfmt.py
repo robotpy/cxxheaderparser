@@ -1,6 +1,7 @@
 import typing
 
-from .lexer import LexToken, PlyLexer, LexerTokenStream
+from .lexer import LexerTokenStream
+from .lexer import PlyLexer
 from .types import Token
 
 # key: token type, value: (left spacing, right spacing)
@@ -36,9 +37,8 @@ _want_spacing.update(dict.fromkeys(PlyLexer.keywords, (2, 2)))
 
 
 def tokfmt(toks: typing.List[Token]) -> str:
-    """
-    Helper function that takes a list of tokens and converts them to a string
-    """
+    """Helper function that takes a list of tokens and converts them to a
+    string."""
     last = 0
     vals = []
     default = (0, 0)

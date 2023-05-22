@@ -1,28 +1,24 @@
-from cxxheaderparser.types import (
-    AnonymousName,
-    ClassDecl,
-    EnumDecl,
-    Enumerator,
-    Field,
-    ForwardDecl,
-    Function,
-    FundamentalSpecifier,
-    NameSpecifier,
-    PQName,
-    Parameter,
-    Pointer,
-    Token,
-    Type,
-    Typedef,
-    Value,
-    Variable,
-)
-from cxxheaderparser.simple import (
-    ClassScope,
-    NamespaceScope,
-    parse_string,
-    ParsedData,
-)
+from cxxheaderparser.simple import ClassScope
+from cxxheaderparser.simple import NamespaceScope
+from cxxheaderparser.simple import parse_string
+from cxxheaderparser.simple import ParsedData
+from cxxheaderparser.types import AnonymousName
+from cxxheaderparser.types import ClassDecl
+from cxxheaderparser.types import EnumDecl
+from cxxheaderparser.types import Enumerator
+from cxxheaderparser.types import Field
+from cxxheaderparser.types import ForwardDecl
+from cxxheaderparser.types import Function
+from cxxheaderparser.types import FundamentalSpecifier
+from cxxheaderparser.types import NameSpecifier
+from cxxheaderparser.types import Parameter
+from cxxheaderparser.types import Pointer
+from cxxheaderparser.types import PQName
+from cxxheaderparser.types import Token
+from cxxheaderparser.types import Type
+from cxxheaderparser.types import Typedef
+from cxxheaderparser.types import Value
+from cxxheaderparser.types import Variable
 
 
 def test_basic_enum() -> None:
@@ -39,12 +35,13 @@ def test_basic_enum() -> None:
             enums=[
                 EnumDecl(
                     typename=PQName(
-                        segments=[NameSpecifier(name="Foo")], classkey="enum"
+                        segments=[NameSpecifier(name="Foo")],
+                        classkey="enum",
                     ),
                     values=[Enumerator(name="A"), Enumerator(name="B")],
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -62,7 +59,8 @@ def test_enum_w_expr() -> None:
             enums=[
                 EnumDecl(
                     typename=PQName(
-                        segments=[NameSpecifier(name="Foo")], classkey="enum"
+                        segments=[NameSpecifier(name="Foo")],
+                        classkey="enum",
                     ),
                     values=[
                         Enumerator(
@@ -74,14 +72,14 @@ def test_enum_w_expr() -> None:
                                     Token(value="/"),
                                     Token(value="2"),
                                     Token(value=")"),
-                                ]
+                                ],
                             ),
                         ),
                         Enumerator(name="B", value=Value(tokens=[Token(value="3")])),
                     ],
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -95,7 +93,7 @@ def test_enum_w_multiline_expr() -> None:
           'S' << 8 | \
           'H'),
       };
-      
+
     """
     data = parse_string(content, cleandoc=True)
 
@@ -104,7 +102,8 @@ def test_enum_w_multiline_expr() -> None:
             enums=[
                 EnumDecl(
                     typename=PQName(
-                        segments=[NameSpecifier(name="Author")], classkey="enum"
+                        segments=[NameSpecifier(name="Author")],
+                        classkey="enum",
                     ),
                     values=[
                         Enumerator(
@@ -129,13 +128,13 @@ def test_enum_w_multiline_expr() -> None:
                                     Token(value="\\"),
                                     Token(value="'H'"),
                                     Token(value=")"),
-                                ]
+                                ],
                             ),
-                        )
+                        ),
                     ],
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -150,12 +149,13 @@ def test_basic_enum_class() -> None:
             enums=[
                 EnumDecl(
                     typename=PQName(
-                        segments=[NameSpecifier(name="BE")], classkey="enum class"
+                        segments=[NameSpecifier(name="BE")],
+                        classkey="enum class",
                     ),
                     values=[Enumerator(name="BEX")],
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -170,12 +170,13 @@ def test_basic_enum_struct() -> None:
             enums=[
                 EnumDecl(
                     typename=PQName(
-                        segments=[NameSpecifier(name="BE")], classkey="enum struct"
+                        segments=[NameSpecifier(name="BE")],
+                        classkey="enum struct",
                     ),
                     values=[Enumerator(name="BEX")],
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -190,13 +191,14 @@ def test_enum_base() -> None:
             enums=[
                 EnumDecl(
                     typename=PQName(
-                        segments=[NameSpecifier(name="E")], classkey="enum class"
+                        segments=[NameSpecifier(name="E")],
+                        classkey="enum class",
                     ),
                     values=[],
                     base=PQName(segments=[FundamentalSpecifier(name="int")]),
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -214,22 +216,24 @@ def test_enum_instance_1() -> None:
             enums=[
                 EnumDecl(
                     typename=PQName(
-                        segments=[NameSpecifier(name="BE")], classkey="enum class"
+                        segments=[NameSpecifier(name="BE")],
+                        classkey="enum class",
                     ),
                     values=[Enumerator(name="BEX")],
-                )
+                ),
             ],
             variables=[
                 Variable(
                     name=PQName(segments=[NameSpecifier(name="be1")]),
                     type=Type(
                         typename=PQName(
-                            segments=[NameSpecifier(name="BE")], classkey="enum class"
-                        )
+                            segments=[NameSpecifier(name="BE")],
+                            classkey="enum class",
+                        ),
                     ),
-                )
+                ),
             ],
-        )
+        ),
     )
 
 
@@ -244,18 +248,20 @@ def test_enum_instance_2() -> None:
             enums=[
                 EnumDecl(
                     typename=PQName(
-                        segments=[NameSpecifier(name="BE")], classkey="enum class"
+                        segments=[NameSpecifier(name="BE")],
+                        classkey="enum class",
                     ),
                     values=[Enumerator(name="BEX")],
-                )
+                ),
             ],
             variables=[
                 Variable(
                     name=PQName(segments=[NameSpecifier(name="be1")]),
                     type=Type(
                         typename=PQName(
-                            segments=[NameSpecifier(name="BE")], classkey="enum class"
-                        )
+                            segments=[NameSpecifier(name="BE")],
+                            classkey="enum class",
+                        ),
                     ),
                 ),
                 Variable(
@@ -265,12 +271,12 @@ def test_enum_instance_2() -> None:
                             typename=PQName(
                                 segments=[NameSpecifier(name="BE")],
                                 classkey="enum class",
-                            )
-                        )
+                            ),
+                        ),
                     ),
                 ),
             ],
-        )
+        ),
     )
 
 
@@ -282,7 +288,7 @@ def test_enum_base_in_ns() -> None:
       namespace EN {
       typedef int EINT;
       };
-      
+
       enum class BE : EN::EINT { BEX };
     """
     data = parse_string(content, cleandoc=True)
@@ -292,13 +298,14 @@ def test_enum_base_in_ns() -> None:
             enums=[
                 EnumDecl(
                     typename=PQName(
-                        segments=[NameSpecifier(name="BE")], classkey="enum class"
+                        segments=[NameSpecifier(name="BE")],
+                        classkey="enum class",
                     ),
                     values=[Enumerator(name="BEX")],
                     base=PQName(
-                        segments=[NameSpecifier(name="EN"), NameSpecifier(name="EINT")]
+                        segments=[NameSpecifier(name="EN"), NameSpecifier(name="EINT")],
                     ),
-                )
+                ),
             ],
             namespaces={
                 "EN": NamespaceScope(
@@ -307,15 +314,15 @@ def test_enum_base_in_ns() -> None:
                         Typedef(
                             type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="int")]
-                                )
+                                    segments=[FundamentalSpecifier(name="int")],
+                                ),
                             ),
                             name="EINT",
-                        )
+                        ),
                     ],
-                )
+                ),
             },
-        )
+        ),
     )
 
 
@@ -334,25 +341,27 @@ def test_enum_fwd() -> None:
             forward_decls=[
                 ForwardDecl(
                     typename=PQName(
-                        segments=[NameSpecifier(name="BE1")], classkey="enum class"
-                    )
+                        segments=[NameSpecifier(name="BE1")],
+                        classkey="enum class",
+                    ),
                 ),
                 ForwardDecl(
                     typename=PQName(
-                        segments=[NameSpecifier(name="BE2")], classkey="enum class"
+                        segments=[NameSpecifier(name="BE2")],
+                        classkey="enum class",
                     ),
                     enum_base=PQName(
-                        segments=[NameSpecifier(name="EN"), NameSpecifier(name="EINT")]
+                        segments=[NameSpecifier(name="EN"), NameSpecifier(name="EINT")],
                     ),
                 ),
-            ]
-        )
+            ],
+        ),
     )
 
 
 def test_enum_private_in_class() -> None:
     content = """
-      
+
       class C {
         enum E { E1 };
       };
@@ -365,27 +374,29 @@ def test_enum_private_in_class() -> None:
                 ClassScope(
                     class_decl=ClassDecl(
                         typename=PQName(
-                            segments=[NameSpecifier(name="C")], classkey="class"
-                        )
+                            segments=[NameSpecifier(name="C")],
+                            classkey="class",
+                        ),
                     ),
                     enums=[
                         EnumDecl(
                             typename=PQName(
-                                segments=[NameSpecifier(name="E")], classkey="enum"
+                                segments=[NameSpecifier(name="E")],
+                                classkey="enum",
                             ),
                             values=[Enumerator(name="E1")],
                             access="private",
-                        )
+                        ),
                     ],
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
 def test_enum_public_in_class() -> None:
     content = """
-      
+
       class C {
       public:
         enum E { E1 };
@@ -399,21 +410,23 @@ def test_enum_public_in_class() -> None:
                 ClassScope(
                     class_decl=ClassDecl(
                         typename=PQName(
-                            segments=[NameSpecifier(name="C")], classkey="class"
-                        )
+                            segments=[NameSpecifier(name="C")],
+                            classkey="class",
+                        ),
                     ),
                     enums=[
                         EnumDecl(
                             typename=PQName(
-                                segments=[NameSpecifier(name="E")], classkey="enum"
+                                segments=[NameSpecifier(name="E")],
+                                classkey="enum",
                             ),
                             values=[Enumerator(name="E1")],
                             access="public",
-                        )
+                        ),
                     ],
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -424,7 +437,7 @@ def test_default_enum() -> None:
           v1,
           v2,
         } m_v1 = v1;
-      
+
         enum { vv1, vv2, vv3 } m_v2 = vv2, m_v3 = vv3;
       };
     """
@@ -436,20 +449,23 @@ def test_default_enum() -> None:
                 ClassScope(
                     class_decl=ClassDecl(
                         typename=PQName(
-                            segments=[NameSpecifier(name="A")], classkey="class"
-                        )
+                            segments=[NameSpecifier(name="A")],
+                            classkey="class",
+                        ),
                     ),
                     enums=[
                         EnumDecl(
                             typename=PQName(
-                                segments=[AnonymousName(id=1)], classkey="enum"
+                                segments=[AnonymousName(id=1)],
+                                classkey="enum",
                             ),
                             values=[Enumerator(name="v1"), Enumerator(name="v2")],
                             access="private",
                         ),
                         EnumDecl(
                             typename=PQName(
-                                segments=[AnonymousName(id=2)], classkey="enum"
+                                segments=[AnonymousName(id=2)],
+                                classkey="enum",
                             ),
                             values=[
                                 Enumerator(name="vv1"),
@@ -464,8 +480,9 @@ def test_default_enum() -> None:
                             access="private",
                             type=Type(
                                 typename=PQName(
-                                    segments=[AnonymousName(id=1)], classkey="enum"
-                                )
+                                    segments=[AnonymousName(id=1)],
+                                    classkey="enum",
+                                ),
                             ),
                             name="m_v1",
                             value=Value(tokens=[Token(value="v1")]),
@@ -474,8 +491,9 @@ def test_default_enum() -> None:
                             access="private",
                             type=Type(
                                 typename=PQName(
-                                    segments=[AnonymousName(id=2)], classkey="enum"
-                                )
+                                    segments=[AnonymousName(id=2)],
+                                    classkey="enum",
+                                ),
                             ),
                             name="m_v2",
                             value=Value(tokens=[Token(value="vv2")]),
@@ -484,16 +502,17 @@ def test_default_enum() -> None:
                             access="private",
                             type=Type(
                                 typename=PQName(
-                                    segments=[AnonymousName(id=2)], classkey="enum"
-                                )
+                                    segments=[AnonymousName(id=2)],
+                                    classkey="enum",
+                                ),
                             ),
                             name="m_v3",
                             value=Value(tokens=[Token(value="vv3")]),
                         ),
                     ],
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -530,7 +549,7 @@ def test_enum_template_vals() -> None:
                                     Token(value=">"),
                                     Token(value="::"),
                                     Token(value="value"),
-                                ]
+                                ],
                             ),
                         ),
                         Enumerator(
@@ -549,13 +568,13 @@ def test_enum_template_vals() -> None:
                                     Token(value=">"),
                                     Token(value="::"),
                                     Token(value="value"),
-                                ]
+                                ],
                             ),
                         ),
                     ],
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -564,15 +583,15 @@ def test_enum_fn() -> None:
       enum E {
         VALUE,
       };
-      
+
       void fn_with_enum_param1(const enum E e);
-      
+
       void fn_with_enum_param2(const enum E e) {
         // code here
       }
-      
+
       enum E fn_with_enum_retval1(void);
-      
+
       enum E fn_with_enum_retval2(void) {
         // code here
       }
@@ -584,52 +603,56 @@ def test_enum_fn() -> None:
             enums=[
                 EnumDecl(
                     typename=PQName(
-                        segments=[NameSpecifier(name="E")], classkey="enum"
+                        segments=[NameSpecifier(name="E")],
+                        classkey="enum",
                     ),
                     values=[Enumerator(name="VALUE")],
-                )
+                ),
             ],
             functions=[
                 Function(
                     return_type=Type(
-                        typename=PQName(segments=[FundamentalSpecifier(name="void")])
+                        typename=PQName(segments=[FundamentalSpecifier(name="void")]),
                     ),
                     name=PQName(segments=[NameSpecifier(name="fn_with_enum_param1")]),
                     parameters=[
                         Parameter(
                             type=Type(
                                 typename=PQName(
-                                    segments=[NameSpecifier(name="E")], classkey="enum"
+                                    segments=[NameSpecifier(name="E")],
+                                    classkey="enum",
                                 ),
                                 const=True,
                             ),
                             name="e",
-                        )
+                        ),
                     ],
                 ),
                 Function(
                     return_type=Type(
-                        typename=PQName(segments=[FundamentalSpecifier(name="void")])
+                        typename=PQName(segments=[FundamentalSpecifier(name="void")]),
                     ),
                     name=PQName(segments=[NameSpecifier(name="fn_with_enum_param2")]),
                     parameters=[
                         Parameter(
                             type=Type(
                                 typename=PQName(
-                                    segments=[NameSpecifier(name="E")], classkey="enum"
+                                    segments=[NameSpecifier(name="E")],
+                                    classkey="enum",
                                 ),
                                 const=True,
                             ),
                             name="e",
-                        )
+                        ),
                     ],
                     has_body=True,
                 ),
                 Function(
                     return_type=Type(
                         typename=PQName(
-                            segments=[NameSpecifier(name="E")], classkey="enum"
-                        )
+                            segments=[NameSpecifier(name="E")],
+                            classkey="enum",
+                        ),
                     ),
                     name=PQName(segments=[NameSpecifier(name="fn_with_enum_retval1")]),
                     parameters=[],
@@ -637,13 +660,14 @@ def test_enum_fn() -> None:
                 Function(
                     return_type=Type(
                         typename=PQName(
-                            segments=[NameSpecifier(name="E")], classkey="enum"
-                        )
+                            segments=[NameSpecifier(name="E")],
+                            classkey="enum",
+                        ),
                     ),
                     name=PQName(segments=[NameSpecifier(name="fn_with_enum_retval2")]),
                     parameters=[],
                     has_body=True,
                 ),
             ],
-        )
+        ),
     )

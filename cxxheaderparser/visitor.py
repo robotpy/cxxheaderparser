@@ -1,40 +1,27 @@
-import sys
 import typing
+from typing import Protocol  # pragma: no cover
 
-if sys.version_info >= (3, 8):
-    from typing import Protocol
-else:
-    Protocol = object  # pragma: no cover
-
-
-from .types import (
-    EnumDecl,
-    Field,
-    ForwardDecl,
-    FriendDecl,
-    Function,
-    Method,
-    NamespaceAlias,
-    TemplateInst,
-    Typedef,
-    UsingAlias,
-    UsingDecl,
-    Variable,
-)
-
-from .parserstate import (
-    State,
-    EmptyBlockState,
-    ClassBlockState,
-    ExternBlockState,
-    NamespaceBlockState,
-)
+from .parserstate import ClassBlockState
+from .parserstate import EmptyBlockState
+from .parserstate import ExternBlockState
+from .parserstate import NamespaceBlockState
+from .parserstate import State
+from .types import EnumDecl
+from .types import Field
+from .types import ForwardDecl
+from .types import FriendDecl
+from .types import Function
+from .types import Method
+from .types import NamespaceAlias
+from .types import TemplateInst
+from .types import Typedef
+from .types import UsingAlias
+from .types import UsingDecl
+from .types import Variable
 
 
 class CxxVisitor(Protocol):
-    """
-    Defines the interface used by the parser to emit events
-    """
+    """Defines the interface used by the parser to emit events."""
 
     def on_define(self, state: State, content: str) -> None:
         """
@@ -44,18 +31,13 @@ class CxxVisitor(Protocol):
         """
 
     def on_pragma(self, state: State, content: str) -> None:
-        """
-        Called once for each ``#pragma`` directive encountered
-        """
+        """Called once for each ``#pragma`` directive encountered."""
 
     def on_include(self, state: State, filename: str) -> None:
-        """
-        Called once for each ``#include`` directive encountered
-        """
+        """Called once for each ``#include`` directive encountered."""
 
     def on_empty_block_start(self, state: EmptyBlockState) -> None:
-        """
-        Called when a ``{`` is encountered that isn't associated with or
+        """Called when a ``{`` is encountered that isn't associated with or
         consumed by other declarations.
 
         .. code-block:: c++
@@ -66,64 +48,43 @@ class CxxVisitor(Protocol):
         """
 
     def on_empty_block_end(self, state: EmptyBlockState) -> None:
-        """
-        Called when an empty block ends
-        """
+        """Called when an empty block ends."""
 
     def on_extern_block_start(self, state: ExternBlockState) -> None:
-        """
-        .. code-block:: c++
+        """.. code-block:: c++
 
-            extern "C" {
+        extern "C" {
 
-            }
-
+        }
         """
 
     def on_extern_block_end(self, state: ExternBlockState) -> None:
-        """
-        Called when an extern block ends
-        """
+        """Called when an extern block ends."""
 
     def on_namespace_start(self, state: NamespaceBlockState) -> None:
-        """
-        Called when a ``namespace`` directive is encountered
-        """
+        """Called when a ``namespace`` directive is encountered."""
 
     def on_namespace_end(self, state: NamespaceBlockState) -> None:
-        """
-        Called at the end of a ``namespace`` block
-        """
+        """Called at the end of a ``namespace`` block."""
 
     def on_namespace_alias(self, state: State, alias: NamespaceAlias) -> None:
-        """
-        Called when a ``namespace`` alias is encountered
-        """
+        """Called when a ``namespace`` alias is encountered."""
 
     def on_forward_decl(self, state: State, fdecl: ForwardDecl) -> None:
-        """
-        Called when a forward declaration is encountered
-        """
+        """Called when a forward declaration is encountered."""
 
     def on_template_inst(self, state: State, inst: TemplateInst) -> None:
-        """
-        Called when an explicit template instantiation is encountered
-        """
+        """Called when an explicit template instantiation is encountered."""
 
     def on_variable(self, state: State, v: Variable) -> None:
-        """
-        Called when a global variable is encountered
-        """
+        """Called when a global variable is encountered."""
 
     def on_function(self, state: State, fn: Function) -> None:
-        """
-        Called when a function is encountered that isn't part of a class
-        """
+        """Called when a function is encountered that isn't part of a class."""
 
     def on_method_impl(self, state: State, method: Method) -> None:
-        """
-        Called when a method implementation is encountered outside of a class
-        declaration. For example:
+        """Called when a method implementation is encountered outside of a
+        class declaration. For example:
 
         .. code-block:: c++
 
@@ -137,8 +98,7 @@ class CxxVisitor(Protocol):
         """
 
     def on_typedef(self, state: State, typedef: Typedef) -> None:
-        """
-        Called for each typedef instance encountered. For example:
+        """Called for each typedef instance encountered. For example:
 
         .. code-block:: c++
 
@@ -149,29 +109,24 @@ class CxxVisitor(Protocol):
         """
 
     def on_using_namespace(self, state: State, namespace: typing.List[str]) -> None:
-        """
-        .. code-block:: c++
+        """.. code-block:: c++
 
-            using namespace std;
+        using namespace std;
         """
 
     def on_using_alias(self, state: State, using: UsingAlias) -> None:
-        """
-        .. code-block:: c++
+        """.. code-block:: c++
 
-            using foo = int;
+        using foo = int;
 
-            template <typename T>
-            using VectorT = std::vector<T>;
-
+        template <typename T>
+        using VectorT = std::vector<T>;
         """
 
     def on_using_declaration(self, state: State, using: UsingDecl) -> None:
-        """
-        .. code-block:: c++
+        """.. code-block:: c++
 
-            using NS::ClassName;
-
+        using NS::ClassName;
         """
 
     #
@@ -179,17 +134,14 @@ class CxxVisitor(Protocol):
     #
 
     def on_enum(self, state: State, enum: EnumDecl) -> None:
-        """
-        Called after an enum is encountered
-        """
+        """Called after an enum is encountered."""
 
     #
     # Class/union/struct
     #
 
     def on_class_start(self, state: ClassBlockState) -> None:
-        """
-        Called when a class/struct/union is encountered
+        """Called when a class/struct/union is encountered.
 
         When part of a typedef:
 
@@ -203,23 +155,16 @@ class CxxVisitor(Protocol):
         """
 
     def on_class_field(self, state: ClassBlockState, f: Field) -> None:
-        """
-        Called when a field of a class is encountered
-        """
+        """Called when a field of a class is encountered."""
 
     def on_class_friend(self, state: ClassBlockState, friend: FriendDecl) -> None:
-        """
-        Called when a friend declaration is encountered
-        """
+        """Called when a friend declaration is encountered."""
 
     def on_class_method(self, state: ClassBlockState, method: Method) -> None:
-        """
-        Called when a method of a class is encountered inside of a class
-        """
+        """Called when a method of a class is encountered inside of a class."""
 
     def on_class_end(self, state: ClassBlockState) -> None:
-        """
-        Called when the end of a class/struct/union is encountered.
+        """Called when the end of a class/struct/union is encountered.
 
         When a variable like this is declared:
 

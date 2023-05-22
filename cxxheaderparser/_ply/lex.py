@@ -1,6 +1,5 @@
 # fmt: off
 # -----------------------------------------------------------------------------
-# ply: lex.py
 #
 # Copyright (C) 2001-2022
 # David M. Beazley (Dabeaz LLC)
@@ -33,19 +32,17 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # -----------------------------------------------------------------------------
-
+import copy
+import inspect
 import re
 import sys
 import types
-import copy
-import os
-import inspect
 
 # This tuple contains acceptable string types
 StringTypes = (str, bytes)
 
 # This regular expression is used to match valid token names
-_is_identifier = re.compile(r'^[a-zA-Z0-9_]+$')
+_is_identifier = re.compile(r"^[a-zA-Z0-9_]+$")
 
 # Exception thrown when invalid token encountered and no default error
 # handler is defined.
@@ -55,25 +52,25 @@ class LexError(Exception):
         self.text = s
 
 # Token class.  This class is used to represent the tokens produced.
-class LexToken(object):
+class LexToken:
     def __repr__(self):
-        return f'LexToken({self.type},{self.value!r},{self.lineno},{self.lexpos})'
+        return f"LexToken({self.type},{self.value!r},{self.lineno},{self.lexpos})"
 
 # This object is a stand-in for a logging object created by the
 # logging module.
 
-class PlyLogger(object):
+class PlyLogger:
     def __init__(self, f):
         self.f = f
 
     def critical(self, msg, *args, **kwargs):
-        self.f.write((msg % args) + '\n')
+        self.f.write((msg % args) + "\n")
 
     def warning(self, msg, *args, **kwargs):
-        self.f.write('WARNING: ' + (msg % args) + '\n')
+        self.f.write("WARNING: " + (msg % args) + "\n")
 
     def error(self, msg, *args, **kwargs):
-        self.f.write('ERROR: ' + (msg % args) + '\n')
+        self.f.write("ERROR: " + (msg % args) + "\n")
 
     info = critical
     debug = critical
@@ -102,7 +99,7 @@ class Lexer:
         self.lexstatere = {}          # Dictionary mapping lexer states to master regexs
         self.lexstateretext = {}      # Dictionary mapping lexer states to regex strings
         self.lexstaterenames = {}     # Dictionary mapping lexer states to symbol names
-        self.lexstate = 'INITIAL'     # Current lexer state
+        self.lexstate = "INITIAL"     # Current lexer state
         self.lexstatestack = []       # Stack of lexer states
         self.lexstateinfo = None      # State information
         self.lexstateignore = {}      # Dictionary of ignored characters for each state
@@ -115,8 +112,8 @@ class Lexer:
         self.lexerrorf = None         # Error rule (if any)
         self.lexeoff = None           # EOF rule (if any)
         self.lextokens = None         # List of valid tokens
-        self.lexignore = ''           # Ignored characters
-        self.lexliterals = ''         # Literal characters that can be passed through
+        self.lexignore = ""           # Ignored characters
+        self.lexliterals = ""         # Literal characters that can be passed through
         self.lexmodule = None         # Module
         self.lineno = 1               # Current line number
 
@@ -160,10 +157,10 @@ class Lexer:
     # ------------------------------------------------------------
     def begin(self, state):
         if state not in self.lexstatere:
-            raise ValueError(f'Undefined state {state!r}')
+            raise ValueError(f"Undefined state {state!r}")
         self.lexre = self.lexstatere[state]
         self.lexretext = self.lexstateretext[state]
-        self.lexignore = self.lexstateignore.get(state, '')
+        self.lexignore = self.lexstateignore.get(state, "")
         self.lexerrorf = self.lexstateerrorf.get(state, None)
         self.lexeoff = self.lexstateeoff.get(state, None)
         self.lexstate = state
@@ -270,28 +267,32 @@ class Lexer:
                     tok = LexToken()
                     tok.value = self.lexdata[lexpos:]
                     tok.lineno = self.lineno
-                    tok.type = 'error'
+                    tok.type = "error"
                     tok.lexer = self
                     tok.lexpos = lexpos
                     self.lexpos = lexpos
                     newtok = self.lexerrorf(tok)
                     if lexpos == self.lexpos:
                         # Error method didn't change text position at all. This is an error.
-                        raise LexError(f"Scanning error. Illegal character {lexdata[lexpos]!r}",
-                                       lexdata[lexpos:])
+                        raise LexError(
+                            f"Scanning error. Illegal character {lexdata[lexpos]!r}",
+                            lexdata[lexpos:],
+                        )
                     lexpos = self.lexpos
                     if not newtok:
                         continue
                     return newtok
 
                 self.lexpos = lexpos
-                raise LexError(f"Illegal character {lexdata[lexpos]!r} at index {lexpos}",
-                               lexdata[lexpos:])
+                raise LexError(
+                    f"Illegal character {lexdata[lexpos]!r} at index {lexpos}",
+                    lexdata[lexpos:],
+                )
 
         if self.lexeoff:
             tok = LexToken()
-            tok.type = 'eof'
-            tok.value = ''
+            tok.type = "eof"
+            tok.value = ""
             tok.lineno = self.lineno
             tok.lexpos = lexpos
             tok.lexer = self
@@ -301,7 +302,7 @@ class Lexer:
 
         self.lexpos = lexpos + 1
         if self.lexdata is None:
-            raise RuntimeError('No input string given with input()')
+            raise RuntimeError("No input string given with input()")
         return None
 
     # Iterator interface
@@ -322,16 +323,14 @@ class Lexer:
 # -----------------------------------------------------------------------------
 
 # -----------------------------------------------------------------------------
-# _get_regex(func)
 #
 # Returns the regular expression assigned to a function either as a doc string
 # or as a .regex attribute attached by the @TOKEN decorator.
 # -----------------------------------------------------------------------------
 def _get_regex(func):
-    return getattr(func, 'regex', func.__doc__)
+    return getattr(func, "regex", func.__doc__)
 
 # -----------------------------------------------------------------------------
-# get_caller_module_dict()
 #
 # This function returns a dictionary containing all of the symbols defined within
 # a caller further down the call stack.  This is used to get the environment
@@ -339,10 +338,9 @@ def _get_regex(func):
 # -----------------------------------------------------------------------------
 def get_caller_module_dict(levels):
     f = sys._getframe(levels)
-    return { **f.f_globals, **f.f_locals }
+    return { **f.f_globals, **f.f_locals}
 
 # -----------------------------------------------------------------------------
-# _form_master_re()
 #
 # This function takes a list of all of the regex components and attempts to
 # form the master regular expression.  Given limitations in the Python re
@@ -351,7 +349,7 @@ def get_caller_module_dict(levels):
 def _form_master_re(relist, reflags, ldict, toknames):
     if not relist:
         return [], [], []
-    regex = '|'.join(relist)
+    regex = "|".join(relist)
     try:
         lexre = re.compile(regex, reflags)
 
@@ -366,7 +364,7 @@ def _form_master_re(relist, reflags, ldict, toknames):
                 lexindexnames[i] = f
             elif handle is not None:
                 lexindexnames[i] = f
-                if f.find('ignore_') > 0:
+                if f.find("ignore_") > 0:
                     lexindexfunc[i] = (None, None)
                 else:
                     lexindexfunc[i] = (None, toknames[f])
@@ -387,36 +385,32 @@ def _form_master_re(relist, reflags, ldict, toknames):
 # calling this with s = "t_foo_bar_SPAM" might return (('foo','bar'),'SPAM')
 # -----------------------------------------------------------------------------
 def _statetoken(s, names):
-    parts = s.split('_')
+    parts = s.split("_")
     for i, part in enumerate(parts[1:], 1):
-        if part not in names and part != 'ANY':
+        if part not in names and part != "ANY":
             break
 
-    if i > 1:
-        states = tuple(parts[1:i])
-    else:
-        states = ('INITIAL',)
+    states = tuple(parts[1:i]) if i > 1 else ("INITIAL",)
 
-    if 'ANY' in states:
+    if "ANY" in states:
         states = tuple(names)
 
-    tokenname = '_'.join(parts[i:])
+    tokenname = "_".join(parts[i:])
     return (states, tokenname)
 
 
 # -----------------------------------------------------------------------------
-# LexerReflect()
 #
 # This class represents information needed to build a lexer as extracted from a
 # user's input file.
 # -----------------------------------------------------------------------------
-class LexerReflect(object):
+class LexerReflect:
     def __init__(self, ldict, log=None, reflags=0):
         self.ldict      = ldict
         self.error_func = None
         self.tokens     = []
         self.reflags    = reflags
-        self.stateinfo  = {'INITIAL': 'inclusive'}
+        self.stateinfo  = {"INITIAL": "inclusive"}
         self.modules    = set()
         self.error      = False
         self.log        = PlyLogger(sys.stderr) if log is None else log
@@ -437,19 +431,19 @@ class LexerReflect(object):
 
     # Get the tokens map
     def get_tokens(self):
-        tokens = self.ldict.get('tokens', None)
+        tokens = self.ldict.get("tokens", None)
         if not tokens:
-            self.log.error('No token list is defined')
+            self.log.error("No token list is defined")
             self.error = True
             return
 
         if not isinstance(tokens, (list, tuple)):
-            self.log.error('tokens must be a list or tuple')
+            self.log.error("tokens must be a list or tuple")
             self.error = True
             return
 
         if not tokens:
-            self.log.error('tokens is empty')
+            self.log.error("tokens is empty")
             self.error = True
             return
 
@@ -468,28 +462,28 @@ class LexerReflect(object):
 
     # Get the literals specifier
     def get_literals(self):
-        self.literals = self.ldict.get('literals', '')
+        self.literals = self.ldict.get("literals", "")
         if not self.literals:
-            self.literals = ''
+            self.literals = ""
 
     # Validate literals
     def validate_literals(self):
         try:
             for c in self.literals:
                 if not isinstance(c, StringTypes) or len(c) > 1:
-                    self.log.error(f'Invalid literal {c!r}. Must be a single character')
+                    self.log.error(f"Invalid literal {c!r}. Must be a single character")
                     self.error = True
 
         except TypeError:
-            self.log.error('Invalid literals specification. literals must be a sequence of characters')
+            self.log.error("Invalid literals specification. literals must be a sequence of characters")
             self.error = True
 
     def get_states(self):
-        self.states = self.ldict.get('states', None)
+        self.states = self.ldict.get("states", None)
         # Build statemap
         if self.states:
             if not isinstance(self.states, (tuple, list)):
-                self.log.error('states must be defined as a tuple or list')
+                self.log.error("states must be defined as a tuple or list")
                 self.error = True
             else:
                 for s in self.states:
@@ -499,10 +493,10 @@ class LexerReflect(object):
                         continue
                     name, statetype = s
                     if not isinstance(name, StringTypes):
-                        self.log.error('State name %r must be a string', name)
+                        self.log.error("State name %r must be a string", name)
                         self.error = True
                         continue
-                    if not (statetype == 'inclusive' or statetype == 'exclusive'):
+                    if not (statetype == "inclusive" or statetype == "exclusive"):
                         self.log.error("State type for state %r must be 'inclusive' or 'exclusive'", name)
                         self.error = True
                         continue
@@ -516,7 +510,7 @@ class LexerReflect(object):
     # categories (functions, strings, error functions, and ignore characters)
 
     def get_rules(self):
-        tsymbols = [f for f in self.ldict if f[:2] == 't_']
+        tsymbols = [f for f in self.ldict if f[:2] == "t_"]
 
         # Now build up a list of functions and a list of strings
         self.toknames = {}        # Mapping of symbols to token names
@@ -531,7 +525,7 @@ class LexerReflect(object):
             self.strsym[s] = []
 
         if len(tsymbols) == 0:
-            self.log.error('No rules of the form t_rulename are defined')
+            self.log.error("No rules of the form t_rulename are defined")
             self.error = True
             return
 
@@ -540,14 +534,14 @@ class LexerReflect(object):
             states, tokname = _statetoken(f, self.stateinfo)
             self.toknames[f] = tokname
 
-            if hasattr(t, '__call__'):
-                if tokname == 'error':
+            if hasattr(t, "__call__"):
+                if tokname == "error":
                     for s in states:
                         self.errorf[s] = t
-                elif tokname == 'eof':
+                elif tokname == "eof":
                     for s in states:
                         self.eoff[s] = t
-                elif tokname == 'ignore':
+                elif tokname == "ignore":
                     line = t.__code__.co_firstlineno
                     file = t.__code__.co_filename
                     self.log.error("%s:%d: Rule %r must be defined as a string", file, line, t.__name__)
@@ -556,20 +550,20 @@ class LexerReflect(object):
                     for s in states:
                         self.funcsym[s].append((f, t))
             elif isinstance(t, StringTypes):
-                if tokname == 'ignore':
+                if tokname == "ignore":
                     for s in states:
                         self.ignore[s] = t
-                    if '\\' in t:
+                    if "\\" in t:
                         self.log.warning("%s contains a literal backslash '\\'", f)
 
-                elif tokname == 'error':
+                elif tokname == "error":
                     self.log.error("Rule %r must be defined as a function", f)
                     self.error = True
                 else:
                     for s in states:
                         self.strsym[s].append((f, t))
             else:
-                self.log.error('%s not defined as a function or string', f)
+                self.log.error("%s not defined as a function or string", f)
                 self.error = True
 
         # Sort the functions by line number
@@ -592,10 +586,7 @@ class LexerReflect(object):
                 self.modules.add(module)
 
                 tokname = self.toknames[fname]
-                if isinstance(f, types.MethodType):
-                    reqargs = 2
-                else:
-                    reqargs = 1
+                reqargs = 2 if isinstance(f, types.MethodType) else 1
                 nargs = f.__code__.co_argcount
                 if nargs > reqargs:
                     self.log.error("%s:%d: Rule %r has too many arguments", file, line, f.__name__)
@@ -613,37 +604,37 @@ class LexerReflect(object):
                     continue
 
                 try:
-                    c = re.compile('(?P<%s>%s)' % (fname, _get_regex(f)), self.reflags)
-                    if c.match(''):
+                    c = re.compile(f"(?P<{fname}>{_get_regex(f)})", self.reflags)
+                    if c.match(""):
                         self.log.error("%s:%d: Regular expression for rule %r matches empty string", file, line, f.__name__)
                         self.error = True
                 except re.error as e:
                     self.log.error("%s:%d: Invalid regular expression for rule '%s'. %s", file, line, f.__name__, e)
-                    if '#' in _get_regex(f):
+                    if "#" in _get_regex(f):
                         self.log.error("%s:%d. Make sure '#' in rule %r is escaped with '\\#'", file, line, f.__name__)
                     self.error = True
 
             # Validate all rules defined by strings
             for name, r in self.strsym[state]:
                 tokname = self.toknames[name]
-                if tokname == 'error':
+                if tokname == "error":
                     self.log.error("Rule %r must be defined as a function", name)
                     self.error = True
                     continue
 
-                if tokname not in self.tokens and tokname.find('ignore_') < 0:
+                if tokname not in self.tokens and tokname.find("ignore_") < 0:
                     self.log.error("Rule %r defined for an unspecified token %s", name, tokname)
                     self.error = True
                     continue
 
                 try:
-                    c = re.compile('(?P<%s>%s)' % (name, r), self.reflags)
-                    if (c.match('')):
+                    c = re.compile(f"(?P<{name}>{r})", self.reflags)
+                    if (c.match("")):
                         self.log.error("Regular expression for rule %r matches empty string", name)
                         self.error = True
                 except re.error as e:
                     self.log.error("Invalid regular expression for rule %r. %s", name, e)
-                    if '#' in r:
+                    if "#" in r:
                         self.log.error("Make sure '#' in rule %r is escaped with '\\#'", name)
                     self.error = True
 
@@ -660,10 +651,7 @@ class LexerReflect(object):
                 module = inspect.getmodule(f)
                 self.modules.add(module)
 
-                if isinstance(f, types.MethodType):
-                    reqargs = 2
-                else:
-                    reqargs = 1
+                reqargs = 2 if isinstance(f, types.MethodType) else 1
                 nargs = f.__code__.co_argcount
                 if nargs > reqargs:
                     self.log.error("%s:%d: Rule %r has too many arguments", file, line, f.__name__)
@@ -677,7 +665,6 @@ class LexerReflect(object):
             self.validate_module(module)
 
     # -----------------------------------------------------------------------------
-    # validate_module()
     #
     # This checks to see if there are duplicated t_rulename() functions or strings
     # in the parser input file.  This is done using a simple regular expression
@@ -687,11 +674,11 @@ class LexerReflect(object):
     def validate_module(self, module):
         try:
             lines, linen = inspect.getsourcelines(module)
-        except IOError:
+        except OSError:
             return
 
-        fre = re.compile(r'\s*def\s+(t_[a-zA-Z_0-9]*)\(')
-        sre = re.compile(r'\s*(t_[a-zA-Z_0-9]*)\s*=')
+        fre = re.compile(r"\s*def\s+(t_[a-zA-Z_0-9]*)\(")
+        sre = re.compile(r"\s*(t_[a-zA-Z_0-9]*)\s*=")
 
         counthash = {}
         linen += 1
@@ -706,22 +693,23 @@ class LexerReflect(object):
                     counthash[name] = linen
                 else:
                     filename = inspect.getsourcefile(module)
-                    self.log.error('%s:%d: Rule %s redefined. Previously defined on line %d', filename, linen, name, prev)
+                    self.log.error("%s:%d: Rule %s redefined. Previously defined on line %d", filename, linen, name, prev)
                     self.error = True
             linen += 1
 
 # -----------------------------------------------------------------------------
-# lex(module)
 #
 # Build all of the regular expression rules from definitions in the supplied module
 # -----------------------------------------------------------------------------
-def lex(*, module=None, object=None, debug=False, 
-        reflags=int(re.VERBOSE), debuglog=None, errorlog=None):
+def lex(
+    *, module=None, object=None, debug=False,
+    reflags=int(re.VERBOSE), debuglog=None, errorlog=None
+):
 
     global lexer
 
     ldict = None
-    stateinfo  = {'INITIAL': 'inclusive'}
+    stateinfo  = {"INITIAL": "inclusive"}
     lexobj = Lexer()
     global token, input
 
@@ -741,8 +729,8 @@ def lex(*, module=None, object=None, debug=False,
         _items = [(k, getattr(module, k)) for k in dir(module)]
         ldict = dict(_items)
         # If no __file__ attribute is available, try to obtain it from the __module__ instead
-        if '__file__' not in ldict:
-            ldict['__file__'] = sys.modules[ldict['__module__']].__file__
+        if "__file__" not in ldict:
+            ldict["__file__"] = sys.modules[ldict["__module__"]].__file__
     else:
         ldict = get_caller_module_dict(2)
 
@@ -754,9 +742,9 @@ def lex(*, module=None, object=None, debug=False,
 
     # Dump some basic debugging information
     if debug:
-        debuglog.info('lex: tokens   = %r', linfo.tokens)
-        debuglog.info('lex: literals = %r', linfo.literals)
-        debuglog.info('lex: states   = %r', linfo.stateinfo)
+        debuglog.info("lex: tokens   = %r", linfo.tokens)
+        debuglog.info("lex: literals = %r", linfo.literals)
+        debuglog.info("lex: states   = %r", linfo.stateinfo)
 
     # Build a dictionary of valid token names
     lexobj.lextokens = set()
@@ -781,13 +769,13 @@ def lex(*, module=None, object=None, debug=False,
 
         # Add rules defined by functions first
         for fname, f in linfo.funcsym[state]:
-            regex_list.append('(?P<%s>%s)' % (fname, _get_regex(f)))
+            regex_list.append(f"(?P<{fname}>{_get_regex(f)})")
             if debug:
                 debuglog.info("lex: Adding rule %s -> '%s' (state '%s')", fname, _get_regex(f), state)
 
         # Now add all of the simple rules
         for name, r in linfo.strsym[state]:
-            regex_list.append('(?P<%s>%s)' % (name, r))
+            regex_list.append(f"(?P<{name}>{r})")
             if debug:
                 debuglog.info("lex: Adding rule %s -> '%s' (state '%s')", name, r, state)
 
@@ -796,7 +784,7 @@ def lex(*, module=None, object=None, debug=False,
     # Build the master regular expressions
 
     if debug:
-        debuglog.info('lex: ==== MASTER REGEXS FOLLOW ====')
+        debuglog.info("lex: ==== MASTER REGEXS FOLLOW ====")
 
     for state in regexs:
         lexre, re_text, re_names = _form_master_re(regexs[state], reflags, ldict, linfo.toknames)
@@ -809,42 +797,42 @@ def lex(*, module=None, object=None, debug=False,
 
     # For inclusive states, we need to add the regular expressions from the INITIAL state
     for state, stype in stateinfo.items():
-        if state != 'INITIAL' and stype == 'inclusive':
-            lexobj.lexstatere[state].extend(lexobj.lexstatere['INITIAL'])
-            lexobj.lexstateretext[state].extend(lexobj.lexstateretext['INITIAL'])
-            lexobj.lexstaterenames[state].extend(lexobj.lexstaterenames['INITIAL'])
+        if state != "INITIAL" and stype == "inclusive":
+            lexobj.lexstatere[state].extend(lexobj.lexstatere["INITIAL"])
+            lexobj.lexstateretext[state].extend(lexobj.lexstateretext["INITIAL"])
+            lexobj.lexstaterenames[state].extend(lexobj.lexstaterenames["INITIAL"])
 
     lexobj.lexstateinfo = stateinfo
-    lexobj.lexre = lexobj.lexstatere['INITIAL']
-    lexobj.lexretext = lexobj.lexstateretext['INITIAL']
+    lexobj.lexre = lexobj.lexstatere["INITIAL"]
+    lexobj.lexretext = lexobj.lexstateretext["INITIAL"]
     lexobj.lexreflags = reflags
 
     # Set up ignore variables
     lexobj.lexstateignore = linfo.ignore
-    lexobj.lexignore = lexobj.lexstateignore.get('INITIAL', '')
+    lexobj.lexignore = lexobj.lexstateignore.get("INITIAL", "")
 
     # Set up error functions
     lexobj.lexstateerrorf = linfo.errorf
-    lexobj.lexerrorf = linfo.errorf.get('INITIAL', None)
+    lexobj.lexerrorf = linfo.errorf.get("INITIAL", None)
     if not lexobj.lexerrorf:
-        errorlog.warning('No t_error rule is defined')
+        errorlog.warning("No t_error rule is defined")
 
     # Set up eof functions
     lexobj.lexstateeoff = linfo.eoff
-    lexobj.lexeoff = linfo.eoff.get('INITIAL', None)
+    lexobj.lexeoff = linfo.eoff.get("INITIAL", None)
 
     # Check state information for ignore and error rules
     for s, stype in stateinfo.items():
-        if stype == 'exclusive':
+        if stype == "exclusive":
             if s not in linfo.errorf:
                 errorlog.warning("No error rule is defined for exclusive state %r", s)
             if s not in linfo.ignore and lexobj.lexignore:
                 errorlog.warning("No ignore rule is defined for exclusive state %r", s)
-        elif stype == 'inclusive':
+        elif stype == "inclusive":
             if s not in linfo.errorf:
-                linfo.errorf[s] = linfo.errorf.get('INITIAL', None)
+                linfo.errorf[s] = linfo.errorf.get("INITIAL", None)
             if s not in linfo.ignore:
-                linfo.ignore[s] = linfo.ignore.get('INITIAL', '')
+                linfo.ignore[s] = linfo.ignore.get("INITIAL", "")
 
     # Create global versions of the token() and input() functions
     token = lexobj.token
@@ -854,7 +842,6 @@ def lex(*, module=None, object=None, debug=False,
     return lexobj
 
 # -----------------------------------------------------------------------------
-# runmain()
 #
 # This runs the lexer as a main program
 # -----------------------------------------------------------------------------
@@ -866,24 +853,18 @@ def runmain(lexer=None, data=None):
             with open(filename) as f:
                 data = f.read()
         except IndexError:
-            sys.stdout.write('Reading from standard input (type EOF to end):\n')
+            sys.stdout.write("Reading from standard input (type EOF to end):\n")
             data = sys.stdin.read()
 
-    if lexer:
-        _input = lexer.input
-    else:
-        _input = input
+    _input = lexer.input if lexer else input
     _input(data)
-    if lexer:
-        _token = lexer.token
-    else:
-        _token = token
+    _token = lexer.token if lexer else token
 
     while True:
         tok = _token()
         if not tok:
             break
-        sys.stdout.write(f'({tok.type},{tok.value!r},{tok.lineno},{tok.lexpos})\n')
+        sys.stdout.write(f"({tok.type},{tok.value!r},{tok.lineno},{tok.lexpos})\n")
 
 # -----------------------------------------------------------------------------
 # @TOKEN(regex)
@@ -894,7 +875,7 @@ def runmain(lexer=None, data=None):
 
 def TOKEN(r):
     def set_regex(f):
-        if hasattr(r, '__call__'):
+        if hasattr(r, "__call__"):
             f.regex = _get_regex(r)
         else:
             f.regex = r

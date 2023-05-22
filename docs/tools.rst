@@ -23,8 +23,8 @@ Dump data from a header to stdout
     # dataclasses repr format (formatted with black)
     python -m cxxheaderparser --mode=brepr myheader.h
 
-Anything more than that and you should use the python API, start with the 
-:ref:`simple API <simple>` first. 
+Anything more than that and you should use the python API, start with the
+:ref:`simple API <simple>` first.
 
 test generator
 --------------

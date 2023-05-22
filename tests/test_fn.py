@@ -1,34 +1,29 @@
 # Note: testcases generated via `python -m cxxheaderparser.gentest`
-
-from cxxheaderparser.types import (
-    Array,
-    AutoSpecifier,
-    ClassDecl,
-    Function,
-    FunctionType,
-    FundamentalSpecifier,
-    MoveReference,
-    NameSpecifier,
-    Operator,
-    PQName,
-    Parameter,
-    Pointer,
-    Reference,
-    TemplateArgument,
-    TemplateDecl,
-    TemplateSpecialization,
-    TemplateTypeParam,
-    Token,
-    Type,
-    Typedef,
-    Value,
-)
-from cxxheaderparser.simple import (
-    ClassScope,
-    NamespaceScope,
-    parse_string,
-    ParsedData,
-)
+from cxxheaderparser.simple import ClassScope
+from cxxheaderparser.simple import NamespaceScope
+from cxxheaderparser.simple import parse_string
+from cxxheaderparser.simple import ParsedData
+from cxxheaderparser.types import Array
+from cxxheaderparser.types import AutoSpecifier
+from cxxheaderparser.types import ClassDecl
+from cxxheaderparser.types import Function
+from cxxheaderparser.types import FunctionType
+from cxxheaderparser.types import FundamentalSpecifier
+from cxxheaderparser.types import MoveReference
+from cxxheaderparser.types import NameSpecifier
+from cxxheaderparser.types import Operator
+from cxxheaderparser.types import Parameter
+from cxxheaderparser.types import Pointer
+from cxxheaderparser.types import PQName
+from cxxheaderparser.types import Reference
+from cxxheaderparser.types import TemplateArgument
+from cxxheaderparser.types import TemplateDecl
+from cxxheaderparser.types import TemplateSpecialization
+from cxxheaderparser.types import TemplateTypeParam
+from cxxheaderparser.types import Token
+from cxxheaderparser.types import Type
+from cxxheaderparser.types import Typedef
+from cxxheaderparser.types import Value
 
 
 def test_fn_returns_class() -> None:
@@ -36,7 +31,7 @@ def test_fn_returns_class() -> None:
       class X *fn1();
       struct Y fn2();
       enum E fn3();
-      
+
     """
     data = parse_string(content, cleandoc=True)
 
@@ -47,9 +42,10 @@ def test_fn_returns_class() -> None:
                     return_type=Pointer(
                         ptr_to=Type(
                             typename=PQName(
-                                segments=[NameSpecifier(name="X")], classkey="class"
-                            )
-                        )
+                                segments=[NameSpecifier(name="X")],
+                                classkey="class",
+                            ),
+                        ),
                     ),
                     name=PQName(segments=[NameSpecifier(name="fn1")]),
                     parameters=[],
@@ -57,8 +53,9 @@ def test_fn_returns_class() -> None:
                 Function(
                     return_type=Type(
                         typename=PQName(
-                            segments=[NameSpecifier(name="Y")], classkey="struct"
-                        )
+                            segments=[NameSpecifier(name="Y")],
+                            classkey="struct",
+                        ),
                     ),
                     name=PQName(segments=[NameSpecifier(name="fn2")]),
                     parameters=[],
@@ -66,14 +63,15 @@ def test_fn_returns_class() -> None:
                 Function(
                     return_type=Type(
                         typename=PQName(
-                            segments=[NameSpecifier(name="E")], classkey="enum"
-                        )
+                            segments=[NameSpecifier(name="E")],
+                            classkey="enum",
+                        ),
                     ),
                     name=PQName(segments=[NameSpecifier(name="fn3")]),
                     parameters=[],
                 ),
-            ]
-        )
+            ],
+        ),
     )
 
 
@@ -94,13 +92,13 @@ def test_fn_returns_typename() -> None:
                                 NameSpecifier(name="X"),
                             ],
                             has_typename=True,
-                        )
+                        ),
                     ),
                     name=PQName(segments=[NameSpecifier(name="fn")]),
                     parameters=[],
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -126,9 +124,9 @@ def test_fn_returns_typename_const() -> None:
                     ),
                     name=PQName(segments=[NameSpecifier(name="fn")]),
                     parameters=[],
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -145,7 +143,7 @@ def test_fn_pointer_params() -> None:
             functions=[
                 Function(
                     return_type=Type(
-                        typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                        typename=PQName(segments=[FundamentalSpecifier(name="int")]),
                     ),
                     name=PQName(segments=[NameSpecifier(name="fn1")]),
                     parameters=[
@@ -153,16 +151,16 @@ def test_fn_pointer_params() -> None:
                             type=Pointer(
                                 ptr_to=Type(
                                     typename=PQName(
-                                        segments=[FundamentalSpecifier(name="int")]
-                                    )
-                                )
+                                        segments=[FundamentalSpecifier(name="int")],
+                                    ),
+                                ),
                             ),
-                        )
+                        ),
                     ],
                 ),
                 Function(
                     return_type=Type(
-                        typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                        typename=PQName(segments=[FundamentalSpecifier(name="int")]),
                     ),
                     name=PQName(segments=[NameSpecifier(name="fn2")]),
                     parameters=[
@@ -171,16 +169,16 @@ def test_fn_pointer_params() -> None:
                             type=Pointer(
                                 ptr_to=Type(
                                     typename=PQName(
-                                        segments=[FundamentalSpecifier(name="int")]
-                                    )
-                                )
+                                        segments=[FundamentalSpecifier(name="int")],
+                                    ),
+                                ),
                             ),
-                        )
+                        ),
                     ],
                 ),
                 Function(
                     return_type=Type(
-                        typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                        typename=PQName(segments=[FundamentalSpecifier(name="int")]),
                     ),
                     name=PQName(segments=[NameSpecifier(name="fn3")]),
                     parameters=[
@@ -189,15 +187,15 @@ def test_fn_pointer_params() -> None:
                             type=Pointer(
                                 ptr_to=Type(
                                     typename=PQName(
-                                        segments=[FundamentalSpecifier(name="int")]
-                                    )
-                                )
+                                        segments=[FundamentalSpecifier(name="int")],
+                                    ),
+                                ),
                             ),
-                        )
+                        ),
                     ],
                 ),
-            ]
-        )
+            ],
+        ),
     )
 
 
@@ -212,13 +210,13 @@ def test_fn_void_is_no_params() -> None:
             functions=[
                 Function(
                     return_type=Type(
-                        typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                        typename=PQName(segments=[FundamentalSpecifier(name="int")]),
                     ),
                     name=PQName(segments=[NameSpecifier(name="fn")]),
                     parameters=[],
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -233,7 +231,7 @@ def test_fn_array_param() -> None:
             functions=[
                 Function(
                     return_type=Type(
-                        typename=PQName(segments=[FundamentalSpecifier(name="void")])
+                        typename=PQName(segments=[FundamentalSpecifier(name="void")]),
                     ),
                     name=PQName(segments=[NameSpecifier(name="fn")]),
                     parameters=[
@@ -242,16 +240,16 @@ def test_fn_array_param() -> None:
                             type=Array(
                                 array_of=Type(
                                     typename=PQName(
-                                        segments=[FundamentalSpecifier(name="int")]
-                                    )
+                                        segments=[FundamentalSpecifier(name="int")],
+                                    ),
                                 ),
                                 size=None,
                             ),
-                        )
+                        ),
                     ],
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -259,7 +257,7 @@ def test_fn_typename_param() -> None:
     content = """
       void MethodA(const mynamespace::SomeObject &x,
                    typename mynamespace::SomeObject * = 0);
-      
+
     """
     data = parse_string(content, cleandoc=True)
 
@@ -268,7 +266,7 @@ def test_fn_typename_param() -> None:
             functions=[
                 Function(
                     return_type=Type(
-                        typename=PQName(segments=[FundamentalSpecifier(name="void")])
+                        typename=PQName(segments=[FundamentalSpecifier(name="void")]),
                     ),
                     name=PQName(segments=[NameSpecifier(name="MethodA")]),
                     parameters=[
@@ -279,10 +277,10 @@ def test_fn_typename_param() -> None:
                                         segments=[
                                             NameSpecifier(name="mynamespace"),
                                             NameSpecifier(name="SomeObject"),
-                                        ]
+                                        ],
                                     ),
                                     const=True,
-                                )
+                                ),
                             ),
                             name="x",
                         ),
@@ -295,15 +293,15 @@ def test_fn_typename_param() -> None:
                                             NameSpecifier(name="SomeObject"),
                                         ],
                                         has_typename=True,
-                                    )
-                                )
+                                    ),
+                                ),
                             ),
                             default=Value(tokens=[Token(value="0")]),
                         ),
                     ],
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -320,7 +318,7 @@ def test_fn_weird_refs() -> None:
             functions=[
                 Function(
                     return_type=Type(
-                        typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                        typename=PQName(segments=[FundamentalSpecifier(name="int")]),
                     ),
                     name=PQName(segments=[NameSpecifier(name="aref")]),
                     parameters=[
@@ -329,16 +327,16 @@ def test_fn_weird_refs() -> None:
                             type=Reference(
                                 ref_to=Type(
                                     typename=PQName(
-                                        segments=[FundamentalSpecifier(name="int")]
-                                    )
-                                )
+                                        segments=[FundamentalSpecifier(name="int")],
+                                    ),
+                                ),
                             ),
-                        )
+                        ),
                     ],
                 ),
                 Function(
                     return_type=Type(
-                        typename=PQName(segments=[FundamentalSpecifier(name="void")])
+                        typename=PQName(segments=[FundamentalSpecifier(name="void")]),
                     ),
                     name=PQName(segments=[NameSpecifier(name="ptr_ref")]),
                     parameters=[
@@ -348,17 +346,17 @@ def test_fn_weird_refs() -> None:
                                 ref_to=Pointer(
                                     ptr_to=Type(
                                         typename=PQName(
-                                            segments=[FundamentalSpecifier(name="int")]
-                                        )
-                                    )
-                                )
+                                            segments=[FundamentalSpecifier(name="int")],
+                                        ),
+                                    ),
+                                ),
                             ),
-                        )
+                        ),
                     ],
                 ),
                 Function(
                     return_type=Type(
-                        typename=PQName(segments=[FundamentalSpecifier(name="void")])
+                        typename=PQName(segments=[FundamentalSpecifier(name="void")]),
                     ),
                     name=PQName(segments=[NameSpecifier(name="ref_to_array")]),
                     parameters=[
@@ -368,17 +366,17 @@ def test_fn_weird_refs() -> None:
                                 ref_to=Array(
                                     array_of=Type(
                                         typename=PQName(
-                                            segments=[FundamentalSpecifier(name="int")]
-                                        )
+                                            segments=[FundamentalSpecifier(name="int")],
+                                        ),
                                     ),
                                     size=None,
-                                )
+                                ),
                             ),
-                        )
+                        ),
                     ],
                 ),
-            ]
-        )
+            ],
+        ),
     )
 
 
@@ -394,7 +392,7 @@ def test_fn_too_many_parens() -> None:
             functions=[
                 Function(
                     return_type=Type(
-                        typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                        typename=PQName(segments=[FundamentalSpecifier(name="int")]),
                     ),
                     name=PQName(segments=[NameSpecifier(name="fn1")]),
                     parameters=[
@@ -402,15 +400,15 @@ def test_fn_too_many_parens() -> None:
                             name="x",
                             type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="int")]
-                                )
+                                    segments=[FundamentalSpecifier(name="int")],
+                                ),
                             ),
-                        )
+                        ),
                     ],
                 ),
                 Function(
                     return_type=Type(
-                        typename=PQName(segments=[FundamentalSpecifier(name="void")])
+                        typename=PQName(segments=[FundamentalSpecifier(name="void")]),
                     ),
                     name=PQName(segments=[NameSpecifier(name="fn2")]),
                     parameters=[
@@ -419,16 +417,16 @@ def test_fn_too_many_parens() -> None:
                             type=Pointer(
                                 ptr_to=Type(
                                     typename=PQName(
-                                        segments=[FundamentalSpecifier(name="int")]
-                                    )
+                                        segments=[FundamentalSpecifier(name="int")],
+                                    ),
                                 ),
                                 const=True,
                             ),
-                        )
+                        ),
                     ],
                 ),
-            ]
-        )
+            ],
+        ),
     )
 
 
@@ -452,14 +450,14 @@ def test_fn_same_line() -> None:
             functions=[
                 Function(
                     return_type=Type(
-                        typename=PQName(segments=[FundamentalSpecifier(name="void")])
+                        typename=PQName(segments=[FundamentalSpecifier(name="void")]),
                     ),
                     name=PQName(segments=[NameSpecifier(name="fn1")]),
                     parameters=[],
                 ),
                 Function(
                     return_type=Type(
-                        typename=PQName(segments=[FundamentalSpecifier(name="void")])
+                        typename=PQName(segments=[FundamentalSpecifier(name="void")]),
                     ),
                     name=PQName(segments=[NameSpecifier(name="fn2")]),
                     parameters=[],
@@ -468,22 +466,22 @@ def test_fn_same_line() -> None:
                     return_type=Pointer(
                         ptr_to=Type(
                             typename=PQName(
-                                segments=[FundamentalSpecifier(name="void")]
-                            )
-                        )
+                                segments=[FundamentalSpecifier(name="void")],
+                            ),
+                        ),
                     ),
                     name=PQName(segments=[NameSpecifier(name="fn3")]),
                     parameters=[],
                 ),
                 Function(
                     return_type=Type(
-                        typename=PQName(segments=[FundamentalSpecifier(name="void")])
+                        typename=PQName(segments=[FundamentalSpecifier(name="void")]),
                     ),
                     name=PQName(segments=[NameSpecifier(name="fn4")]),
                     parameters=[],
                 ),
-            ]
-        )
+            ],
+        ),
     )
 
 
@@ -503,13 +501,13 @@ def test_fn_auto_template() -> None:
                     parameters=[
                         Parameter(
                             type=Type(
-                                typename=PQName(segments=[NameSpecifier(name="T")])
+                                typename=PQName(segments=[NameSpecifier(name="T")]),
                             ),
                             name="t",
                         ),
                         Parameter(
                             type=Type(
-                                typename=PQName(segments=[NameSpecifier(name="U")])
+                                typename=PQName(segments=[NameSpecifier(name="U")]),
                             ),
                             name="u",
                         ),
@@ -519,11 +517,11 @@ def test_fn_auto_template() -> None:
                         params=[
                             TemplateTypeParam(typekey="class", name="T"),
                             TemplateTypeParam(typekey="class", name="U"),
-                        ]
+                        ],
                     ),
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -552,19 +550,19 @@ def test_fn_template_ptr() -> None:
                                                             typename=PQName(
                                                                 segments=[
                                                                     NameSpecifier(
-                                                                        name="Pointer"
-                                                                    )
-                                                                ]
-                                                            )
-                                                        )
-                                                    )
-                                                )
-                                            ]
+                                                                        name="Pointer",
+                                                                    ),
+                                                                ],
+                                                            ),
+                                                        ),
+                                                    ),
+                                                ),
+                                            ],
                                         ),
                                     ),
-                                ]
-                            )
-                        )
+                                ],
+                            ),
+                        ),
                     ),
                     name=PQName(segments=[NameSpecifier(name="fn")]),
                     parameters=[
@@ -584,26 +582,26 @@ def test_fn_template_ptr() -> None:
                                                                     typename=PQName(
                                                                         segments=[
                                                                             NameSpecifier(
-                                                                                name="Pointer"
-                                                                            )
-                                                                        ]
-                                                                    )
-                                                                )
-                                                            )
-                                                        )
-                                                    ]
+                                                                                name="Pointer",
+                                                                            ),
+                                                                        ],
+                                                                    ),
+                                                                ),
+                                                            ),
+                                                        ),
+                                                    ],
                                                 ),
                                             ),
-                                        ]
-                                    )
-                                )
+                                        ],
+                                    ),
+                                ),
                             ),
                             name="ps",
-                        )
+                        ),
                     ],
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -614,7 +612,7 @@ def test_fn_with_impl() -> None:
       {
           return ((structA*) (Func())->element);
       }
-      
+
     """
     data = parse_string(content, cleandoc=True)
 
@@ -623,14 +621,14 @@ def test_fn_with_impl() -> None:
             functions=[
                 Function(
                     return_type=Type(
-                        typename=PQName(segments=[FundamentalSpecifier(name="void")])
+                        typename=PQName(segments=[FundamentalSpecifier(name="void")]),
                     ),
                     name=PQName(segments=[NameSpecifier(name="termite")]),
                     parameters=[],
                     has_body=True,
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -663,10 +661,10 @@ def test_fn_return_std_function() -> None:
                                                         typename=PQName(
                                                             segments=[
                                                                 FundamentalSpecifier(
-                                                                    name="void"
-                                                                )
-                                                            ]
-                                                        )
+                                                                    name="void",
+                                                                ),
+                                                            ],
+                                                        ),
                                                     ),
                                                     parameters=[
                                                         Parameter(
@@ -674,26 +672,26 @@ def test_fn_return_std_function() -> None:
                                                                 typename=PQName(
                                                                     segments=[
                                                                         FundamentalSpecifier(
-                                                                            name="int"
-                                                                        )
-                                                                    ]
-                                                                )
-                                                            )
-                                                        )
+                                                                            name="int",
+                                                                        ),
+                                                                    ],
+                                                                ),
+                                                            ),
+                                                        ),
                                                     ],
-                                                )
-                                            )
-                                        ]
+                                                ),
+                                            ),
+                                        ],
                                     ),
                                 ),
-                            ]
-                        )
+                            ],
+                        ),
                     ),
                     name=PQName(segments=[NameSpecifier(name="fn")]),
                     parameters=[],
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
     assert data1 == expected
@@ -724,10 +722,10 @@ def test_fn_return_std_function_trailing() -> None:
                                                         typename=PQName(
                                                             segments=[
                                                                 FundamentalSpecifier(
-                                                                    name="int"
-                                                                )
-                                                            ]
-                                                        )
+                                                                    name="int",
+                                                                ),
+                                                            ],
+                                                        ),
                                                     ),
                                                     parameters=[
                                                         Parameter(
@@ -735,27 +733,27 @@ def test_fn_return_std_function_trailing() -> None:
                                                                 typename=PQName(
                                                                     segments=[
                                                                         FundamentalSpecifier(
-                                                                            name="int"
-                                                                        )
-                                                                    ]
-                                                                )
-                                                            )
-                                                        )
+                                                                            name="int",
+                                                                        ),
+                                                                    ],
+                                                                ),
+                                                            ),
+                                                        ),
                                                     ],
                                                     has_trailing_return=True,
-                                                )
-                                            )
-                                        ]
+                                                ),
+                                            ),
+                                        ],
                                     ),
                                 ),
-                            ]
-                        )
+                            ],
+                        ),
                     ),
                     name=PQName(segments=[NameSpecifier(name="fn")]),
                     parameters=[],
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -770,14 +768,14 @@ def test_fn_trailing_return_simple() -> None:
             functions=[
                 Function(
                     return_type=Type(
-                        typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                        typename=PQName(segments=[FundamentalSpecifier(name="int")]),
                     ),
                     name=PQName(segments=[NameSpecifier(name="fn")]),
                     parameters=[],
                     has_trailing_return=True,
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -805,26 +803,26 @@ def test_fn_trailing_return_std_function() -> None:
                                                         typename=PQName(
                                                             segments=[
                                                                 FundamentalSpecifier(
-                                                                    name="int"
-                                                                )
-                                                            ]
-                                                        )
+                                                                    name="int",
+                                                                ),
+                                                            ],
+                                                        ),
                                                     ),
                                                     parameters=[],
-                                                )
-                                            )
-                                        ]
+                                                ),
+                                            ),
+                                        ],
                                     ),
                                 ),
-                            ]
-                        )
+                            ],
+                        ),
                     ),
                     name=PQName(segments=[NameSpecifier(name="fn")]),
                     parameters=[],
                     has_trailing_return=True,
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -839,28 +837,28 @@ def test_inline_volatile_fn() -> None:
             functions=[
                 Function(
                     return_type=Type(
-                        typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                        typename=PQName(segments=[FundamentalSpecifier(name="int")]),
                     ),
                     name=PQName(
-                        segments=[NameSpecifier(name="Standard_Atomic_Increment")]
+                        segments=[NameSpecifier(name="Standard_Atomic_Increment")],
                     ),
                     parameters=[
                         Parameter(
                             type=Pointer(
                                 ptr_to=Type(
                                     typename=PQName(
-                                        segments=[FundamentalSpecifier(name="int")]
+                                        segments=[FundamentalSpecifier(name="int")],
                                     ),
                                     volatile=True,
-                                )
+                                ),
                             ),
                             name="theValue",
-                        )
+                        ),
                     ],
                     inline=True,
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -873,7 +871,7 @@ def test_method_w_reference() -> None:
               return *this;
           }
       };
-      
+
     """
     data = parse_string(content, cleandoc=True)
 
@@ -885,16 +883,16 @@ def test_method_w_reference() -> None:
                         typename=PQName(
                             segments=[NameSpecifier(name="StreamBuffer")],
                             classkey="struct",
-                        )
+                        ),
                     ),
                     methods=[
                         Operator(
                             return_type=Reference(
                                 ref_to=Type(
                                     typename=PQName(
-                                        segments=[NameSpecifier(name="StreamBuffer")]
-                                    )
-                                )
+                                        segments=[NameSpecifier(name="StreamBuffer")],
+                                    ),
+                                ),
                             ),
                             name=PQName(segments=[NameSpecifier(name="operator<<")]),
                             parameters=[
@@ -907,11 +905,11 @@ def test_method_w_reference() -> None:
                                                         segments=[
                                                             NameSpecifier(name="std"),
                                                             NameSpecifier(
-                                                                name="ostream"
+                                                                name="ostream",
                                                             ),
-                                                        ]
-                                                    )
-                                                )
+                                                        ],
+                                                    ),
+                                                ),
                                             ),
                                             parameters=[
                                                 Parameter(
@@ -920,37 +918,37 @@ def test_method_w_reference() -> None:
                                                             typename=PQName(
                                                                 segments=[
                                                                     NameSpecifier(
-                                                                        name="std"
+                                                                        name="std",
                                                                     ),
                                                                     NameSpecifier(
-                                                                        name="ostream"
+                                                                        name="ostream",
                                                                     ),
-                                                                ]
-                                                            )
-                                                        )
-                                                    )
-                                                )
+                                                                ],
+                                                            ),
+                                                        ),
+                                                    ),
+                                                ),
                                             ],
-                                        )
+                                        ),
                                     ),
                                     name="fn",
-                                )
+                                ),
                             ],
                             has_body=True,
                             access="public",
                             operator="<<",
-                        )
+                        ),
                     ],
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
 def test_fn_w_mvreference() -> None:
     content = """
       void fn1(int && (*)(int));
-      
+
     """
     data = parse_string(content, cleandoc=True)
 
@@ -959,7 +957,7 @@ def test_fn_w_mvreference() -> None:
             functions=[
                 Function(
                     return_type=Type(
-                        typename=PQName(segments=[FundamentalSpecifier(name="void")])
+                        typename=PQName(segments=[FundamentalSpecifier(name="void")]),
                     ),
                     name=PQName(segments=[NameSpecifier(name="fn1")]),
                     parameters=[
@@ -970,29 +968,31 @@ def test_fn_w_mvreference() -> None:
                                         moveref_to=Type(
                                             typename=PQName(
                                                 segments=[
-                                                    FundamentalSpecifier(name="int")
-                                                ]
-                                            )
-                                        )
+                                                    FundamentalSpecifier(name="int"),
+                                                ],
+                                            ),
+                                        ),
                                     ),
                                     parameters=[
                                         Parameter(
                                             type=Type(
                                                 typename=PQName(
                                                     segments=[
-                                                        FundamentalSpecifier(name="int")
-                                                    ]
-                                                )
-                                            )
-                                        )
+                                                        FundamentalSpecifier(
+                                                            name="int",
+                                                        ),
+                                                    ],
+                                                ),
+                                            ),
+                                        ),
                                     ],
-                                )
-                            )
-                        )
+                                ),
+                            ),
+                        ),
                     ],
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -1008,12 +1008,12 @@ def test_msvc_conventions() -> None:
             functions=[
                 Function(
                     return_type=Type(
-                        typename=PQName(segments=[FundamentalSpecifier(name="void")])
+                        typename=PQName(segments=[FundamentalSpecifier(name="void")]),
                     ),
                     name=PQName(segments=[NameSpecifier(name="fn")]),
                     parameters=[],
                     msvc_convention="__cdecl",
-                )
+                ),
             ],
             typedefs=[
                 Typedef(
@@ -1022,28 +1022,28 @@ def test_msvc_conventions() -> None:
                             return_type=Pointer(
                                 ptr_to=Type(
                                     typename=PQName(
-                                        segments=[FundamentalSpecifier(name="char")]
+                                        segments=[FundamentalSpecifier(name="char")],
                                     ),
                                     const=True,
-                                )
+                                ),
                             ),
                             parameters=[
                                 Parameter(
                                     type=Type(
                                         typename=PQName(
-                                            segments=[NameSpecifier(name="HDC")]
-                                        )
+                                            segments=[NameSpecifier(name="HDC")],
+                                        ),
                                     ),
                                     name="theDeviceContext",
-                                )
+                                ),
                             ],
                             msvc_convention="__stdcall",
-                        )
+                        ),
                     ),
                     name="wglGetExtensionsStringARB_t",
-                )
+                ),
             ],
-        )
+        ),
     )
 
 
@@ -1058,15 +1058,15 @@ def test_throw_empty() -> None:
             functions=[
                 Function(
                     return_type=Type(
-                        typename=PQName(segments=[FundamentalSpecifier(name="void")])
+                        typename=PQName(segments=[FundamentalSpecifier(name="void")]),
                     ),
                     name=PQName(segments=[NameSpecifier(name="foo")]),
                     parameters=[],
                     has_body=True,
                     throw=Value(tokens=[]),
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -1081,7 +1081,7 @@ def test_throw_dynamic() -> None:
             functions=[
                 Function(
                     return_type=Type(
-                        typename=PQName(segments=[FundamentalSpecifier(name="void")])
+                        typename=PQName(segments=[FundamentalSpecifier(name="void")]),
                     ),
                     name=PQName(segments=[NameSpecifier(name="foo")]),
                     parameters=[],
@@ -1091,11 +1091,11 @@ def test_throw_dynamic() -> None:
                             Token(value="std"),
                             Token(value="::"),
                             Token(value="exception"),
-                        ]
+                        ],
                     ),
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -1110,14 +1110,14 @@ def test_noexcept_empty() -> None:
             functions=[
                 Function(
                     return_type=Type(
-                        typename=PQName(segments=[FundamentalSpecifier(name="void")])
+                        typename=PQName(segments=[FundamentalSpecifier(name="void")]),
                     ),
                     name=PQName(segments=[NameSpecifier(name="foo")]),
                     parameters=[],
                     noexcept=Value(tokens=[]),
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -1132,12 +1132,12 @@ def test_noexcept_contents() -> None:
             functions=[
                 Function(
                     return_type=Type(
-                        typename=PQName(segments=[FundamentalSpecifier(name="void")])
+                        typename=PQName(segments=[FundamentalSpecifier(name="void")]),
                     ),
                     name=PQName(segments=[NameSpecifier(name="foo")]),
                     parameters=[],
                     noexcept=Value(tokens=[Token(value="false")]),
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )

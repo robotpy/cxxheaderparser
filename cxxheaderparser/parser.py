@@ -1,63 +1,60 @@
-from collections import deque
-
 import inspect
 import re
 import typing
+from collections import deque
 
 from . import lexer
 from .errors import CxxParseError
-from .lexer import LexToken, Location, PhonyEnding
+from .lexer import LexToken
+from .lexer import Location
+from .lexer import PhonyEnding
 from .options import ParserOptions
-from .parserstate import (
-    ClassBlockState,
-    EmptyBlockState,
-    ExternBlockState,
-    NamespaceBlockState,
-    ParsedTypeModifiers,
-    State,
-)
-from .types import (
-    AnonymousName,
-    Array,
-    AutoSpecifier,
-    BaseClass,
-    ClassDecl,
-    DecltypeSpecifier,
-    DecoratedType,
-    EnumDecl,
-    Enumerator,
-    Field,
-    ForwardDecl,
-    FriendDecl,
-    Function,
-    FunctionType,
-    FundamentalSpecifier,
-    Method,
-    MoveReference,
-    NameSpecifier,
-    NamespaceAlias,
-    NamespaceDecl,
-    Operator,
-    PQNameSegment,
-    Parameter,
-    PQName,
-    Pointer,
-    Reference,
-    TemplateArgument,
-    TemplateDecl,
-    TemplateInst,
-    TemplateNonTypeParam,
-    TemplateParam,
-    TemplateSpecialization,
-    TemplateTypeParam,
-    Token,
-    Type,
-    Typedef,
-    UsingAlias,
-    UsingDecl,
-    Value,
-    Variable,
-)
+from .parserstate import ClassBlockState
+from .parserstate import EmptyBlockState
+from .parserstate import ExternBlockState
+from .parserstate import NamespaceBlockState
+from .parserstate import ParsedTypeModifiers
+from .parserstate import State
+from .types import AnonymousName
+from .types import Array
+from .types import AutoSpecifier
+from .types import BaseClass
+from .types import ClassDecl
+from .types import DecltypeSpecifier
+from .types import DecoratedType
+from .types import EnumDecl
+from .types import Enumerator
+from .types import Field
+from .types import ForwardDecl
+from .types import FriendDecl
+from .types import Function
+from .types import FunctionType
+from .types import FundamentalSpecifier
+from .types import Method
+from .types import MoveReference
+from .types import NamespaceAlias
+from .types import NamespaceDecl
+from .types import NameSpecifier
+from .types import Operator
+from .types import Parameter
+from .types import Pointer
+from .types import PQName
+from .types import PQNameSegment
+from .types import Reference
+from .types import TemplateArgument
+from .types import TemplateDecl
+from .types import TemplateInst
+from .types import TemplateNonTypeParam
+from .types import TemplateParam
+from .types import TemplateSpecialization
+from .types import TemplateTypeParam
+from .types import Token
+from .types import Type
+from .types import Typedef
+from .types import UsingAlias
+from .types import UsingDecl
+from .types import Value
+from .types import Variable
 from .visitor import CxxVisitor
 
 LexTokenList = typing.List[LexToken]
@@ -68,9 +65,7 @@ PT = typing.TypeVar("PT", Parameter, TemplateNonTypeParam)
 
 
 class CxxParser:
-    """
-    Single-use parser object
-    """
+    """Single-use parser object."""
 
     def __init__(
         self,
@@ -92,7 +87,7 @@ class CxxParser:
 
         self.options = options if options else ParserOptions()
 
-        self.verbose = True if self.options.verbose else False
+        self.verbose = bool(self.options.verbose)
         if self.verbose:
 
             def debug_print(fmt: str, *args: typing.Any) -> None:
@@ -137,7 +132,9 @@ class CxxParser:
     #
 
     def _parse_error(
-        self, tok: typing.Optional[LexToken], expected: str = ""
+        self,
+        tok: typing.Optional[LexToken],
+        expected: str = "",
     ) -> CxxParseError:
         if not tok:
             # common case after a failed token_if
@@ -158,20 +155,12 @@ class CxxParser:
         return tok
 
     # def _next_token_in_set(self, tokenTypes: typing.Set[str]) -> LexToken:
-    #     tok = self.lex.token()
     #     if tok.type not in tokenTypes:
-    #         raise self._parse_error(tok, "' or '".join(sorted(tokenTypes)))
-    #     return tok
 
     # def _consume_up_to(self, rtoks: LexTokenList, *token_types: str) -> LexTokenList:
     #     # includes the last token
-    #     get_token = self.lex.token
     #     while True:
-    #         tok = get_token()
-    #         rtoks.append(tok)
     #         if tok.type in token_types:
-    #             break
-    #     return rtoks
 
     def _consume_until(self, rtoks: LexTokenList, *token_types: str) -> LexTokenList:
         # does not include the found token
@@ -183,9 +172,7 @@ class CxxParser:
             rtoks.append(tok)
         return rtoks
 
-    def _consume_value_until(
-        self, rtoks: LexTokenList, *token_types: str
-    ) -> LexTokenList:
+    def _consume_value_until(self, rtoks: LexTokenList, *token_types: str) -> LexTokenList:
         # does not include the found token
         token_if_not = self.lex.token_if_not
         while True:
@@ -218,7 +205,7 @@ class CxxParser:
             token_map = self._balanced_token_map
 
         consumed = list(init_tokens)
-        match_stack = deque((token_map[tok.type] for tok in consumed))
+        match_stack = deque(token_map[tok.type] for tok in consumed)
         get_token = self.lex.token
 
         tok: typing.Optional[LexToken]
@@ -279,13 +266,12 @@ class CxxParser:
     #
 
     def parse(self) -> None:
-        """
-        Parse the header contents
-        """
+        """Parse the header contents."""
 
         # non-ambiguous parsing functions for each token type
         _translation_unit_tokens: typing.Dict[
-            str, typing.Callable[[LexToken, typing.Optional[str]], typing.Any]
+            str,
+            typing.Callable[[LexToken, typing.Optional[str]], typing.Any],
         ] = {
             "__attribute__": self._consume_gcc_attribute,
             "__declspec": self._consume_declspec,
@@ -362,7 +348,9 @@ class CxxParser:
     _preprocessor_split_re = re.compile(r"[\t ]+")
 
     def _process_preprocessor_token(
-        self, tok: LexToken, doxygen: typing.Optional[str]
+        self,
+        tok: LexToken,
+        doxygen: typing.Optional[str],
     ) -> None:
         value = self._preprocessor_compress_re.sub("#", tok.value)
         svalue = self._preprocessor_split_re.split(value, 1)
@@ -390,7 +378,10 @@ class CxxParser:
     }
 
     def _parse_namespace(
-        self, tok: LexToken, doxygen: typing.Optional[str], inline: bool = False
+        self,
+        tok: LexToken,
+        doxygen: typing.Optional[str],
+        inline: bool = False,
     ) -> None:
         """
         namespace_definition: named_namespace_definition
@@ -485,13 +476,17 @@ class CxxParser:
         self._parse_declarations(tok, doxygen, is_typedef=True)
 
     def _consume_static_assert(
-        self, tok: LexToken, doxygen: typing.Optional[str]
+        self,
+        tok: LexToken,
+        doxygen: typing.Optional[str],
     ) -> None:
         self._next_token_must_be("(")
         self._discard_contents("(", ")")
 
     def _on_empty_block_start(
-        self, tok: LexToken, doxygen: typing.Optional[str]
+        self,
+        tok: LexToken,
+        doxygen: typing.Optional[str],
     ) -> None:
         self._push_state(EmptyBlockState)
 
@@ -505,7 +500,9 @@ class CxxParser:
     #
 
     def _parse_template_type_parameter(
-        self, tok: LexToken, template: typing.Optional[TemplateDecl]
+        self,
+        tok: LexToken,
+        template: typing.Optional[TemplateDecl],
     ) -> TemplateTypeParam:
         """
         type_parameter: "class" ["..."] [IDENTIFIER]
@@ -517,7 +514,7 @@ class CxxParser:
         """
         # entry: token is either class or typename
         typekey = tok.type
-        param_pack = True if self.lex.token_if("ELLIPSIS") else False
+        param_pack = bool(self.lex.token_if("ELLIPSIS"))
         name = None
         default = None
 
@@ -669,7 +666,9 @@ class CxxParser:
         return TemplateSpecialization(args)
 
     def _parse_template_instantiation(
-        self, doxygen: typing.Optional[str], extern: bool
+        self,
+        doxygen: typing.Optional[str],
+        extern: bool,
     ):
         """
         explicit-instantiation: [extern] template declaration
@@ -689,18 +688,17 @@ class CxxParser:
 
         # the last segment must have a specialization
         last_segment = typename.segments[-1]
-        if (
-            not isinstance(last_segment, NameSpecifier)
-            or not last_segment.specialization
-        ):
+        if not isinstance(last_segment, NameSpecifier) or not last_segment.specialization:
             raise self._parse_error(
-                None, "expected extern template to have specialization"
+                None,
+                "expected extern template to have specialization",
             )
 
         self._next_token_must_be(";")
 
         self.visitor.on_template_inst(
-            self.state, TemplateInst(typename, extern, doxygen)
+            self.state,
+            TemplateInst(typename, extern, doxygen),
         )
 
     #
@@ -725,20 +723,26 @@ class CxxParser:
             raise CxxParseError("internal error")
 
     def _consume_gcc_attribute(
-        self, tok: LexToken, doxygen: typing.Optional[str] = None
+        self,
+        tok: LexToken,
+        doxygen: typing.Optional[str] = None,
     ) -> None:
         tok1 = self._next_token_must_be("(")
         tok2 = self._next_token_must_be("(")
         self._consume_balanced_tokens(tok1, tok2)
 
     def _consume_declspec(
-        self, tok: LexToken, doxygen: typing.Optional[str] = None
+        self,
+        tok: LexToken,
+        doxygen: typing.Optional[str] = None,
     ) -> None:
         tok = self._next_token_must_be("(")
         self._consume_balanced_tokens(tok)
 
     def _consume_attribute_specifier_seq(
-        self, tok: LexToken, doxygen: typing.Optional[str] = None
+        self,
+        tok: LexToken,
+        doxygen: typing.Optional[str] = None,
     ) -> None:
         """
         attribute_specifier_seq: attribute_specifier
@@ -776,16 +780,13 @@ class CxxParser:
         """
 
         # TODO: retain the attributes and do something with them
-        # attrs = []
 
         while True:
             if tok.type == "DBL_LBRACKET":
                 tokens = self._consume_balanced_tokens(tok)
-                # attrs.append(Attribute(tokens))
             elif tok.type == "alignas":
                 next_tok = self._next_token_must_be("(")
                 tokens = self._consume_balanced_tokens(next_tok)
-                # attrs.append(AlignasAttribute(tokens))
             else:
                 self.lex.return_token(tok)
                 break
@@ -834,14 +835,19 @@ class CxxParser:
             tok = self.lex.token()
 
         typename, _ = self._parse_pqname(
-            tok, fn_ok=True, compound_ok=True, fund_ok=True
+            tok,
+            fn_ok=True,
+            compound_ok=True,
+            fund_ok=True,
         )
         decl = UsingDecl(typename, self._current_access)
 
         self.visitor.on_using_declaration(self.state, decl)
 
     def _parse_using_typealias(
-        self, id_tok: LexToken, template: typing.Optional[TemplateDecl]
+        self,
+        id_tok: LexToken,
+        template: typing.Optional[TemplateDecl],
     ) -> None:
         """
         alias_declaration: "using" IDENTIFIER "=" type_id ";"
@@ -872,7 +878,8 @@ class CxxParser:
         if tok.type == "namespace":
             if template:
                 raise CxxParseError(
-                    "unexpected using-directive when parsing alias-declaration", tok
+                    "unexpected using-directive when parsing alias-declaration",
+                    tok,
                 )
             if isinstance(self.state, ClassBlockState):
                 raise self._parse_error(tok)
@@ -881,7 +888,8 @@ class CxxParser:
         elif tok.type in ("DBL_COLON", "typename") or not self.lex.token_if("="):
             if template:
                 raise CxxParseError(
-                    "unexpected using-declaration when parsing alias-declaration", tok
+                    "unexpected using-declaration when parsing alias-declaration",
+                    tok,
                 )
             self._parse_using_declaration(tok)
         else:
@@ -941,7 +949,11 @@ class CxxParser:
 
                 # enum forward declaration with base
                 fdecl = ForwardDecl(
-                    typename, None, doxygen, base, access=self._current_access
+                    typename,
+                    None,
+                    doxygen,
+                    base,
+                    access=self._current_access,
                 )
                 self.visitor.on_forward_decl(self.state, fdecl)
                 return
@@ -1003,7 +1015,8 @@ class CxxParser:
     _base_access_virtual = {"public", "private", "protected", "virtual"}
 
     def _parse_class_decl_base_clause(
-        self, default_access: str
+        self,
+        default_access: str,
     ) -> typing.List[BaseClass]:
         """
         base_clause: ":" base_specifier_list
@@ -1122,10 +1135,20 @@ class CxxParser:
             raise self._parse_error(tok, "{")
 
         clsdecl = ClassDecl(
-            typename, bases, template, explicit, final, doxygen, self._current_access
+            typename,
+            bases,
+            template,
+            explicit,
+            final,
+            doxygen,
+            self._current_access,
         )
         state = self._push_state(
-            ClassBlockState, clsdecl, default_access, typedef, mods
+            ClassBlockState,
+            clsdecl,
+            default_access,
+            typedef,
+            mods,
         )
         state.location = location
         self.visitor.on_class_start(state)
@@ -1134,7 +1157,9 @@ class CxxParser:
         self._finish_class_or_enum(state.class_decl.typename, state.typedef, state.mods)
 
     def _process_access_specifier(
-        self, tok: LexToken, doxygen: typing.Optional[str]
+        self,
+        tok: LexToken,
+        doxygen: typing.Optional[str],
     ) -> None:
         state = self.state
         if not isinstance(state, ClassBlockState):
@@ -1156,7 +1181,7 @@ class CxxParser:
         mem_initializer_id: class_or_decltype
                           | IDENTIFIER
         """
-        self.debug_print("discarding ctor intializer")
+        self.debug_print("discarding ctor initializer")
         # all of this is discarded.. the challenge is to determine
         # when the initializer ends and the function starts
         get_token = self.lex.token
@@ -1302,9 +1327,7 @@ class CxxParser:
                 self.visitor.on_class_field(class_state, f)
             else:
                 assert pqname is not None
-                v = Variable(
-                    pqname, dtype, default, doxygen=doxygen, template=template, **props
-                )
+                v = Variable(pqname, dtype, default, doxygen=doxygen, template=template, **props)
                 self.visitor.on_variable(state, v)
 
     #
@@ -1388,7 +1411,8 @@ class CxxParser:
     )
 
     def _parse_pqname_name(
-        self, tok_value: str
+        self,
+        tok_value: str,
     ) -> typing.Tuple[NameSpecifier, typing.Optional[str]]:
         name = ""
         specialization = None
@@ -1417,9 +1441,8 @@ class CxxParser:
         compound_ok: bool = False,
         fund_ok: bool = False,
     ) -> typing.Tuple[PQName, typing.Optional[str]]:
-        """
-        Parses a possibly qualified function name or a type name, returns when
-        unexpected item encountered (but does not consume it)
+        """Parses a possibly qualified function name or a type name, returns
+        when unexpected item encountered (but does not consume it)
 
         :param fn_ok: Operator functions ok
         :param compound_ok: Compound types ok
@@ -1453,7 +1476,6 @@ class CxxParser:
 
         type_name: IDENTIFIER
                  | simple_template_id
-
         """
 
         classkey = None
@@ -1560,11 +1582,14 @@ class CxxParser:
     #
 
     def _parse_parameter(
-        self, tok: typing.Optional[LexToken], cls: typing.Type[PT], end: str = ")"
+        self,
+        tok: typing.Optional[LexToken],
+        cls: typing.Type[PT],
+        end: str = ")",
     ) -> PT:
-        """
-        Parses a single parameter (excluding vararg parameters). Also used
-        to parse template non-type parameters
+        """Parses a single parameter (excluding vararg parameters).
+
+        Also used to parse template non-type parameters
         """
 
         param_name = None
@@ -1609,9 +1634,8 @@ class CxxParser:
         return param
 
     def _parse_parameters(self) -> typing.Tuple[typing.List[Parameter], bool]:
-        """
-        Consumes function parameters and returns them, and vararg if found
-        """
+        """Consumes function parameters and returns them, and vararg if
+        found."""
 
         # starting at a (
 
@@ -1649,7 +1673,8 @@ class CxxParser:
     _auto_return_typename = PQName([AutoSpecifier()])
 
     def _parse_trailing_return_type(
-        self, fn: typing.Union[Function, FunctionType]
+        self,
+        fn: typing.Union[Function, FunctionType],
     ) -> None:
         # entry is "->"
         return_type = fn.return_type
@@ -1660,7 +1685,7 @@ class CxxParser:
             and return_type.typename == self._auto_return_typename
         ):
             raise CxxParseError(
-                f"function with trailing return type must specify return type of 'auto', not {return_type}"
+                f"function with trailing return type must specify return type of 'auto', not {return_type}",
             )
 
         parsed_type, mods = self._parse_type(None)
@@ -1675,10 +1700,8 @@ class CxxParser:
         fn.return_type = dtype
 
     def _parse_fn_end(self, fn: Function) -> None:
-        """
-        Consumes the various keywords after the parameters in a function
-        declaration, and definition if present.
-        """
+        """Consumes the various keywords after the parameters in a function
+        declaration, and definition if present."""
 
         if self.lex.token_if("throw"):
             tok = self._next_token_must_be("(")
@@ -1698,10 +1721,8 @@ class CxxParser:
             self._parse_trailing_return_type(fn)
 
     def _parse_method_end(self, method: Method) -> None:
-        """
-        Consumes the various keywords after the parameters in a method
-        declaration, and definition if present.
-        """
+        """Consumes the various keywords after the parameters in a method
+        declaration, and definition if present."""
 
         # various keywords at the end of a method
         get_token = self.lex.token
@@ -1769,9 +1790,9 @@ class CxxParser:
         is_typedef: bool,
         msvc_convention: typing.Optional[LexToken],
     ) -> bool:
-        """
-        Assumes the caller has already consumed the return type and name, this consumes the
-        rest of the function including the definition if present
+        """Assumes the caller has already consumed the return type and name,
+        this consumes the rest of the function including the definition if
+        present.
 
         Returns True if function has a body and it was consumed
         """
@@ -1864,7 +1885,7 @@ class CxxParser:
             if is_typedef:
                 if len(pqname.segments) != 1:
                     raise CxxParseError(
-                        "typedef name may not be a nested-name-specifier"
+                        "typedef name may not be a nested-name-specifier",
                     )
                 name: typing.Optional[str] = getattr(pqname.segments[0], "name", None)
                 if not name:
@@ -1939,7 +1960,12 @@ class CxxParser:
     def _parse_cv_ptr_or_fn(
         self,
         dtype: typing.Union[
-            Array, Pointer, MoveReference, Reference, Type, FunctionType
+            Array,
+            Pointer,
+            MoveReference,
+            Reference,
+            Type,
+            FunctionType,
         ],
         nonptr_fn: bool = False,
     ) -> typing.Union[Array, Pointer, MoveReference, Reference, Type, FunctionType]:
@@ -2006,7 +2032,10 @@ class CxxParser:
                         assert not isinstance(dtype, FunctionType)
 
                         dtype = FunctionType(
-                            dtype, fn_params, vararg, msvc_convention=msvc_convention
+                            dtype,
+                            fn_params,
+                            vararg,
+                            msvc_convention=msvc_convention,
                         )
 
                         # the inner tokens must either be a * or a pqname that ends
@@ -2024,10 +2053,7 @@ class CxxParser:
         if tok:
             assert not isinstance(dtype, (Reference, MoveReference))
 
-            if tok.type == "&":
-                dtype = Reference(dtype)
-            else:
-                dtype = MoveReference(dtype)
+            dtype = Reference(dtype) if tok.type == "&" else MoveReference(dtype)
 
             # peek at the next token and see if it's a paren. If so, it might
             # be a nasty function pointer
@@ -2049,10 +2075,9 @@ class CxxParser:
         tok: typing.Optional[LexToken],
         operator_ok: bool = False,
     ) -> typing.Tuple[typing.Optional[Type], ParsedTypeModifiers]:
-        """
-        This parses a typename and stops parsing when it hits something
-        that it doesn't understand. The caller uses the results to figure
-        out what got parsed
+        """This parses a typename and stops parsing when it hits something that
+        it doesn't understand. The caller uses the results to figure out what
+        got parsed.
 
         This only parses the base type, does not parse pointers, references,
         or additional const/volatile qualifiers
@@ -2095,7 +2120,10 @@ class CxxParser:
                     pqname_optional = True
                     break
                 pqname, _ = self._parse_pqname(
-                    tok, compound_ok=True, fn_ok=False, fund_ok=True
+                    tok,
+                    compound_ok=True,
+                    fn_ok=False,
+                    fund_ok=True,
                 )
             elif tok_type in self._parse_type_ptr_ref_paren:
                 if pqname is None:
@@ -2180,7 +2208,9 @@ class CxxParser:
 
                     # class name to match against is this class
                     cls_name = getattr(
-                        state.class_decl.typename.segments[-1], "name", None
+                        state.class_decl.typename.segments[-1],
+                        "name",
+                        None,
                     )
                 else:
                     # class name to match against is the other class
@@ -2330,9 +2360,7 @@ class CxxParser:
         is_typedef: bool = False,
         is_friend: bool = False,
     ) -> None:
-        """
-        Parses a sequence of declarations
-        """
+        """Parses a sequence of declarations."""
 
         # On entry to this function, we don't have enough context to know
         # what we're going to find, so keep trying to deduce it
@@ -2347,7 +2375,13 @@ class CxxParser:
             parsed_type is not None
             and parsed_type.typename.classkey
             and self._maybe_parse_class_enum_decl(
-                parsed_type, mods, doxygen, template, is_typedef, is_friend, location
+                parsed_type,
+                mods,
+                doxygen,
+                template,
+                is_typedef,
+                is_friend,
+                location,
             )
         ):
             return
@@ -2370,14 +2404,25 @@ class CxxParser:
         if parsed_type is None:
             # this means an operator was encountered, deal with the special case
             self._parse_operator_conversion(
-                mods, location, doxygen, template, is_typedef, is_friend
+                mods,
+                location,
+                doxygen,
+                template,
+                is_typedef,
+                is_friend,
             )
             return
 
         # Ok, dealing with a variable or function/method
         while True:
             if self._parse_decl(
-                parsed_type, mods, location, doxygen, template, is_typedef, is_friend
+                parsed_type,
+                mods,
+                location,
+                doxygen,
+                template,
+                is_typedef,
+                is_friend,
             ):
                 # if it returns True then it handled the end of the statement
                 break
@@ -2424,7 +2469,10 @@ class CxxParser:
                 raise self._parse_error(None)
 
             fdecl = ForwardDecl(
-                parsed_type.typename, template, doxygen, access=self._current_access
+                parsed_type.typename,
+                template,
+                doxygen,
+                access=self._current_access,
             )
             state = self.state
             state.location = location
@@ -2453,14 +2501,25 @@ class CxxParser:
 
             if typename.classkey in ("class", "struct", "union"):
                 self._parse_class_decl(
-                    typename, tok, doxygen, template, is_typedef, location, mods
+                    typename,
+                    tok,
+                    doxygen,
+                    template,
+                    is_typedef,
+                    location,
+                    mods,
                 )
             else:
                 if template:
                     # enum cannot have a template
                     raise self._parse_error(tok)
                 self._parse_enum_decl(
-                    typename, tok, doxygen, is_typedef, location, mods
+                    typename,
+                    tok,
+                    doxygen,
+                    is_typedef,
+                    location,
+                    mods,
                 )
 
             return True
@@ -2486,7 +2545,13 @@ class CxxParser:
         while True:
             location = self.lex.current_location()
             if self._parse_decl(
-                parsed_type, mods, location, None, None, is_typedef, False
+                parsed_type,
+                mods,
+                location,
+                None,
+                None,
+                is_typedef,
+                False,
             ):
                 # if it returns True then it handled the end of the statement
                 break

@@ -1,27 +1,22 @@
 # Note: testcases generated via `python -m cxxheaderparser.gentest`
-
-from cxxheaderparser.types import (
-    BaseClass,
-    ClassDecl,
-    Function,
-    FundamentalSpecifier,
-    NameSpecifier,
-    PQName,
-    Parameter,
-    Token,
-    Type,
-    Value,
-    Variable,
-)
-from cxxheaderparser.simple import (
-    ClassScope,
-    Include,
-    NamespaceScope,
-    Pragma,
-    parse_string,
-    ParsedData,
-    Define,
-)
+from cxxheaderparser.simple import ClassScope
+from cxxheaderparser.simple import Define
+from cxxheaderparser.simple import Include
+from cxxheaderparser.simple import NamespaceScope
+from cxxheaderparser.simple import parse_string
+from cxxheaderparser.simple import ParsedData
+from cxxheaderparser.simple import Pragma
+from cxxheaderparser.types import BaseClass
+from cxxheaderparser.types import ClassDecl
+from cxxheaderparser.types import Function
+from cxxheaderparser.types import FundamentalSpecifier
+from cxxheaderparser.types import NameSpecifier
+from cxxheaderparser.types import Parameter
+from cxxheaderparser.types import PQName
+from cxxheaderparser.types import Token
+from cxxheaderparser.types import Type
+from cxxheaderparser.types import Value
+from cxxheaderparser.types import Variable
 
 #
 # minimal preprocessor support
@@ -76,7 +71,7 @@ def test_extern_c() -> None:
       extern "C" {
       int x;
       };
-      
+
       int y;
     """
     data = parse_string(content, cleandoc=True)
@@ -87,17 +82,17 @@ def test_extern_c() -> None:
                 Variable(
                     name=PQName(segments=[NameSpecifier(name="x")]),
                     type=Type(
-                        typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                        typename=PQName(segments=[FundamentalSpecifier(name="int")]),
                     ),
                 ),
                 Variable(
                     name=PQName(segments=[NameSpecifier(name="y")]),
                     type=Type(
-                        typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                        typename=PQName(segments=[FundamentalSpecifier(name="int")]),
                     ),
                 ),
-            ]
-        )
+            ],
+        ),
     )
 
 
@@ -117,24 +112,24 @@ def test_misc_extern_inline() -> None:
             functions=[
                 Function(
                     return_type=Type(
-                        typename=PQName(segments=[NameSpecifier(name="HAL_Value")])
+                        typename=PQName(segments=[NameSpecifier(name="HAL_Value")]),
                     ),
                     name=PQName(segments=[NameSpecifier(name="HAL_GetSimValue")]),
                     parameters=[
                         Parameter(
                             type=Type(
                                 typename=PQName(
-                                    segments=[NameSpecifier(name="HAL_SimValueHandle")]
-                                )
+                                    segments=[NameSpecifier(name="HAL_SimValueHandle")],
+                                ),
                             ),
                             name="handle",
-                        )
+                        ),
                     ],
                     inline=True,
                     has_body=True,
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
 
 
@@ -156,7 +151,7 @@ def test_static_assert_1() -> None:
 def test_static_assert_2() -> None:
     # static_assert should be ignored
     content = """
-        static_assert(sizeof(int) == 4, 
+        static_assert(sizeof(int) == 4,
                       "integer size is wrong"
                       "for some reason");
     """
@@ -171,7 +166,7 @@ def test_comment_eof() -> None:
     data = parse_string(content, cleandoc=True)
 
     assert data == ParsedData(
-        namespace=NamespaceScope(namespaces={"a": NamespaceScope(name="a")})
+        namespace=NamespaceScope(namespaces={"a": NamespaceScope(name="a")}),
     )
 
 
@@ -179,10 +174,10 @@ def test_final() -> None:
     content = """
       // ok here
       int fn(const int final);
-      
+
       // ok here
       int final = 2;
-      
+
       // but it's a keyword here
       struct B final : A {};
     """
@@ -194,47 +189,48 @@ def test_final() -> None:
                 ClassScope(
                     class_decl=ClassDecl(
                         typename=PQName(
-                            segments=[NameSpecifier(name="B")], classkey="struct"
+                            segments=[NameSpecifier(name="B")],
+                            classkey="struct",
                         ),
                         bases=[
                             BaseClass(
                                 access="public",
                                 typename=PQName(segments=[NameSpecifier(name="A")]),
-                            )
+                            ),
                         ],
                         final=True,
-                    )
-                )
+                    ),
+                ),
             ],
             functions=[
                 Function(
                     return_type=Type(
-                        typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                        typename=PQName(segments=[FundamentalSpecifier(name="int")]),
                     ),
                     name=PQName(segments=[NameSpecifier(name="fn")]),
                     parameters=[
                         Parameter(
                             type=Type(
                                 typename=PQName(
-                                    segments=[FundamentalSpecifier(name="int")]
+                                    segments=[FundamentalSpecifier(name="int")],
                                 ),
                                 const=True,
                             ),
                             name="final",
-                        )
+                        ),
                     ],
-                )
+                ),
             ],
             variables=[
                 Variable(
                     name=PQName(segments=[NameSpecifier(name="final")]),
                     type=Type(
-                        typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                        typename=PQName(segments=[FundamentalSpecifier(name="int")]),
                     ),
                     value=Value(tokens=[Token(value="2")]),
-                )
+                ),
             ],
-        )
+        ),
     )
 
 
@@ -259,11 +255,11 @@ def test_user_defined_literal() -> None:
                             segments=[
                                 NameSpecifier(name="units"),
                                 NameSpecifier(name="volt_t"),
-                            ]
-                        )
+                            ],
+                        ),
                     ),
                     value=Value(tokens=[Token(value="1_V")]),
-                )
-            ]
-        )
+                ),
+            ],
+        ),
     )
