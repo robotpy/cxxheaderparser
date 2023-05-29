@@ -1,0 +1,22 @@
+name: C++ parsing error
+description: cxxheaderparser fails to parse valid C/C++ code
+title: "[PARSE BUG]: "
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Problem description
+      placeholder: >-
+        Provide a short description
+    validations:
+      required: true
+
+  - type: textarea
+    id: code
+    attributes:
+      label: C++ code that can't be parsed correctly (please double-check that https://robotpy.github.io/cxxheaderparser/ has the same error)
+      placeholder: >-
+        Paste header here
+      render: text
+      validations:
+        required: true
