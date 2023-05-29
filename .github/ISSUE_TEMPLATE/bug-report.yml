@@ -1,0 +1,21 @@
+name: Other bug Report
+description: File an issue about the Python API or other non-parsing issues
+title: "[BUG]: "
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Problem description
+      placeholder: >-
+        Provide a short description, state the expected behavior and what
+        actually happens.
+    validations:
+      required: true
+
+  - type: textarea
+    id: code
+    attributes:
+      label: Reproducible example code
+      placeholder: >-
+        Minimal code to reproduce this issue
+      render: text

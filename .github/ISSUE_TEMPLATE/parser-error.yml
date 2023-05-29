@@ -18,5 +18,5 @@ body:
       placeholder: >-
         Paste header here
       render: text
-      validations:
-        required: true
+    validations:
+      required: true
