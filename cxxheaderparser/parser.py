@@ -2488,14 +2488,17 @@ class CxxParser:
 
         if not is_typedef and self.lex.token_if(";"):
             # if parent scope is a class, add the anonymous
-            # union to the parent fields
+            # union or struct to the parent fields
             if isinstance(self.state, ClassBlockState):
                 class_state = self.state
 
                 access = self._current_access
                 assert access is not None
-
-                if classkey is not None and (classkey == "union"):
+                if (
+                    classkey is not None
+                    and classkey in ["union", "struct"]
+                    and isinstance(name.segments[-1], AnonymousName)
+                ):
                     f = Field(
                         type=Type(name),
                         access=access,

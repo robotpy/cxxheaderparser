@@ -1632,6 +1632,81 @@ def test_class_anon_struct_as_classvar() -> None:
         )
     )
 
+def test_class_anon_struct_as_unnamed_classvar() -> None:
+    content = """
+      struct AnonHolderClass {
+        struct {
+          int x;
+          int y;
+        };
+        int z;
+      };
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            classes=[
+                ClassScope(
+                    class_decl=ClassDecl(
+                        typename=PQName(
+                            segments=[NameSpecifier(name="AnonHolderClass")],
+                            classkey="struct",
+                        )
+                    ),
+                    classes=[
+                        ClassScope(
+                            class_decl=ClassDecl(
+                                typename=PQName(
+                                    segments=[AnonymousName(id=1)], classkey="struct"
+                                ),
+                                access="public",
+                            ),
+                            fields=[
+                                Field(
+                                    access="public",
+                                    type=Type(
+                                        typename=PQName(
+                                            segments=[FundamentalSpecifier(name="int")]
+                                        )
+                                    ),
+                                    name="x",
+                                ),
+                                Field(
+                                    access="public",
+                                    type=Type(
+                                        typename=PQName(
+                                            segments=[FundamentalSpecifier(name="int")]
+                                        )
+                                    ),
+                                    name="y",
+                                )
+                            ],
+                        )
+                    ],
+                    fields=[
+                        Field(
+                            access="public",
+                            type=Type(
+                                typename=PQName(
+                                    segments=[AnonymousName(id=1)], classkey="struct"
+                                )
+                            ),
+                        ),
+                        Field(
+                            access="public",
+                            type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="int")]
+                                )
+                            ),
+                            name="z",
+                        )
+                    ],
+                )
+            ]
+        )
+    )
 
 def test_initializer_with_initializer_list_1() -> None:
     content = """
