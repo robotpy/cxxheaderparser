@@ -1632,6 +1632,7 @@ def test_class_anon_struct_as_classvar() -> None:
         )
     )
 
+
 def test_class_anon_struct_as_unnamed_classvar() -> None:
     content = """
       struct AnonHolderClass {
@@ -1680,7 +1681,7 @@ def test_class_anon_struct_as_unnamed_classvar() -> None:
                                         )
                                     ),
                                     name="y",
-                                )
+                                ),
                             ],
                         )
                     ],
@@ -1701,12 +1702,13 @@ def test_class_anon_struct_as_unnamed_classvar() -> None:
                                 )
                             ),
                             name="z",
-                        )
+                        ),
                     ],
                 )
             ]
         )
     )
+
 
 def test_initializer_with_initializer_list_1() -> None:
     content = """
