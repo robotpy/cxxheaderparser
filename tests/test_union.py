@@ -142,11 +142,19 @@ def test_union_anon_in_struct() -> None:
                             access="public",
                             type=Type(
                                 typename=PQName(
+                                    segments=[AnonymousName(id=1)], classkey="union"
+                                )
+                            ),
+                        ),
+                        Field(
+                            access="public",
+                            type=Type(
+                                typename=PQName(
                                     segments=[FundamentalSpecifier(name="int")]
                                 )
                             ),
                             name="z",
-                        )
+                        ),
                     ],
                 )
             ]
