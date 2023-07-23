@@ -20,7 +20,6 @@ from cxxheaderparser.simple import (
     Pragma,
     parse_string,
     ParsedData,
-    Define,
 )
 
 #
@@ -28,31 +27,17 @@ from cxxheaderparser.simple import (
 #
 
 
-def test_define() -> None:
-    content = """
-        #define simple
-        #define complex(thing) stuff(thing)
-        #  define spaced
-    """
-    data = parse_string(content, cleandoc=True)
-
-    assert data == ParsedData(
-        defines=[
-            Define(content="simple"),
-            Define(content="complex(thing) stuff(thing)"),
-            Define(content="spaced"),
-        ],
-    )
-
-
 def test_includes() -> None:
     content = """
         #include <global.h>
         #include "local.h"
+        # include  "space.h"
     """
     data = parse_string(content, cleandoc=True)
 
-    assert data == ParsedData(includes=[Include("<global.h>"), Include('"local.h"')])
+    assert data == ParsedData(
+        includes=[Include("<global.h>"), Include('"local.h"'), Include('"space.h"')]
+    )
 
 
 def test_pragma() -> None:
@@ -63,7 +48,49 @@ def test_pragma() -> None:
     """
     data = parse_string(content, cleandoc=True)
 
-    assert data == ParsedData(pragmas=[Pragma(content="once")])
+    assert data == ParsedData(
+        pragmas=[Pragma(content=Value(tokens=[Token(value="once")]))]
+    )
+
+
+def test_pragma_more() -> None:
+    content = """
+
+        #pragma (some content here)
+        #pragma (even \
+            more \
+            content here)
+
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        pragmas=[
+            Pragma(
+                content=Value(
+                    tokens=[
+                        Token(value="("),
+                        Token(value="some"),
+                        Token(value="content"),
+                        Token(value="here"),
+                        Token(value=")"),
+                    ]
+                )
+            ),
+            Pragma(
+                content=Value(
+                    tokens=[
+                        Token(value="("),
+                        Token(value="even"),
+                        Token(value="more"),
+                        Token(value="content"),
+                        Token(value="here"),
+                        Token(value=")"),
+                    ]
+                )
+            ),
+        ]
+    )
 
 
 #
@@ -294,3 +321,17 @@ def test_line_continuation() -> None:
             ]
         )
     )
+
+
+#
+# #warning (C++23)
+#
+
+
+def test_warning_directive() -> None:
+    content = """
+        #warning "this is a warning"
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData()

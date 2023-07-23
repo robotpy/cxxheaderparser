@@ -45,6 +45,7 @@ from .types import (
     UsingAlias,
     UsingDecl,
     Variable,
+    Value,
 )
 
 from .parserstate import (
@@ -124,13 +125,8 @@ Block = typing.Union[ClassScope, NamespaceScope]
 
 
 @dataclass
-class Define:
-    content: str
-
-
-@dataclass
 class Pragma:
-    content: str
+    content: Value
 
 
 @dataclass
@@ -171,9 +167,6 @@ class ParsedData:
     #: Global namespace
     namespace: NamespaceScope = field(default_factory=lambda: NamespaceScope())
 
-    #: Any ``#define`` preprocessor directives encountered
-    defines: typing.List[Define] = field(default_factory=list)
-
     #: Any ``#pragma`` directives encountered
     pragmas: typing.List[Pragma] = field(default_factory=list)
 
@@ -208,10 +201,7 @@ class SimpleCxxVisitor:
 
         self.data = ParsedData(self.namespace)
 
-    def on_define(self, state: State, content: str) -> None:
-        self.data.defines.append(Define(content))
-
-    def on_pragma(self, state: State, content: str) -> None:
+    def on_pragma(self, state: State, content: Value) -> None:
         self.data.pragmas.append(Pragma(content))
 
     def on_include(self, state: State, filename: str) -> None:

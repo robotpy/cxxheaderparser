@@ -304,7 +304,8 @@ class CxxParser:
             "{": self._on_empty_block_start,
             "}": self._on_block_end,
             "DBL_LBRACKET": self._consume_attribute_specifier_seq,
-            "PRECOMP_MACRO": self._process_preprocessor_token,
+            "INCLUDE_DIRECTIVE": self._process_include_directive,
+            "PRAGMA_DIRECTIVE": self._process_pragma_directive,
             ";": lambda _1, _2: None,
         }
 
@@ -361,20 +362,29 @@ class CxxParser:
     _preprocessor_compress_re = re.compile(r"^#[\t ]+")
     _preprocessor_split_re = re.compile(r"[\t ]+")
 
-    def _process_preprocessor_token(
-        self, tok: LexToken, doxygen: typing.Optional[str]
-    ) -> None:
+    def _process_include_directive(self, tok: LexToken, doxygen: typing.Optional[str]):
         value = self._preprocessor_compress_re.sub("#", tok.value)
         svalue = self._preprocessor_split_re.split(value, 1)
         if len(svalue) == 2:
             self.state.location = tok.location
-            macro = svalue[0].lower().replace(" ", "")
-            if macro.startswith("#include"):
-                self.visitor.on_include(self.state, svalue[1])
-            elif macro.startswith("#define"):
-                self.visitor.on_define(self.state, svalue[1])
-            elif macro.startswith("#pragma"):
-                self.visitor.on_pragma(self.state, svalue[1])
+            self.visitor.on_include(self.state, svalue[1])
+        else:
+            raise CxxParseError("incomplete #include directive", tok)
+
+    def _process_pragma_directive(self, _: LexToken, doxygen: typing.Optional[str]):
+        # consume all tokens until the end of the line
+        # -- but if we find a paren, get the group
+        tokens: LexTokenList = []
+        while True:
+            tok = self.lex.token_newline_eof_ok()
+            if not tok or tok.type == "NEWLINE":
+                break
+            if tok.type in self._balanced_token_map:
+                tokens.extend(self._consume_balanced_tokens(tok))
+            else:
+                tokens.append(tok)
+
+        self.visitor.on_pragma(self.state, self._create_value(tokens))
 
     #
     # Various
