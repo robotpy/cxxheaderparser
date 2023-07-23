@@ -267,3 +267,30 @@ def test_user_defined_literal() -> None:
             ]
         )
     )
+
+
+#
+# Line continuation
+#
+
+
+def test_line_continuation() -> None:
+    content = """
+      static int \
+                         variable;
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            variables=[
+                Variable(
+                    name=PQName(segments=[NameSpecifier(name="variable")]),
+                    type=Type(
+                        typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                    ),
+                    static=True,
+                )
+            ]
+        )
+    )

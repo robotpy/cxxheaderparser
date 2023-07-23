@@ -659,7 +659,12 @@ class LexerTokenStream(TokenStream):
             tokbuf.append(tok)
 
             if tok.type == "NEWLINE":
-                break
+                # detect/remove line continuations
+                if len(tokbuf) > 2 and tokbuf[-2].type == "\\":
+                    tokbuf.pop()
+                    tokbuf.pop()
+                else:
+                    break
 
             # detect/combine user defined literals
             if tok.type in udl_start:
