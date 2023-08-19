@@ -20,6 +20,7 @@ from .types import (
     UsingAlias,
     UsingDecl,
     Variable,
+    Value,
 )
 
 from .parserstate import (
@@ -36,14 +37,7 @@ class CxxVisitor(Protocol):
     Defines the interface used by the parser to emit events
     """
 
-    def on_define(self, state: State, content: str) -> None:
-        """
-        .. warning:: cxxheaderparser intentionally does not have a C preprocessor
-                     implementation. If you are parsing code with macros in it,
-                     use a conforming preprocessor like ``pcpp``
-        """
-
-    def on_pragma(self, state: State, content: str) -> None:
+    def on_pragma(self, state: State, content: Value) -> None:
         """
         Called once for each ``#pragma`` directive encountered
         """
