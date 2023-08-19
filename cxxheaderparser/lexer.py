@@ -51,6 +51,7 @@ class LexToken(Protocol):
 
     #: private
     lexer: lex.Lexer
+    lexmatch: "re.Match"
 
 
 PhonyEnding: LexToken = lex.LexToken()  # type: ignore
@@ -175,7 +176,10 @@ class PlyLexer:
         # Comments
         "COMMENT_SINGLELINE",
         "COMMENT_MULTILINE",
-        "PRECOMP_MACRO",
+        "LINE_DIRECTIVE",
+        "PRAGMA_DIRECTIVE",
+        "INCLUDE_DIRECTIVE",
+        "PP_DIRECTIVE",
         # misc
         "DIVIDE",
         "NEWLINE",
@@ -434,16 +438,35 @@ class PlyLexer:
             t.type = t.value
         return t
 
-    @TOKEN(r"\#.*")
-    def t_PRECOMP_MACRO(self, t: LexToken) -> typing.Optional[LexToken]:
-        m = _line_re.match(t.value)
-        if m:
-            self.filename = m.group(2)
+    @TOKEN(r'\#[\t ]*line (\d+) "(.*)"')
+    def t_LINE_DIRECTIVE(self, t: LexToken) -> None:
+        m = t.lexmatch
+        self.filename = m.group(2)
+        self.line_offset = 1 + self.lex.lineno - int(m.group(1))
 
-            self.line_offset = 1 + self.lex.lineno - int(m.group(1))
-            return None
+    @TOKEN(r"\#[\t ]*pragma")
+    def t_PRAGMA_DIRECTIVE(self, t: LexToken) -> LexToken:
+        return t
+
+    @TOKEN(r"\#[\t ]*include (.*)")
+    def t_INCLUDE_DIRECTIVE(self, t: LexToken) -> LexToken:
+        return t
+
+    @TOKEN(r"\#(.*)")
+    def t_PP_DIRECTIVE(self, t: LexToken):
+        # ignore C++23 warning directive
+        if t.value.startswith("#warning"):
+            return
+        if "define" in t.value:
+            msgtype = "#define"
         else:
-            return t
+            msgtype = "preprocessor"
+        self._error(
+            "cxxheaderparser does not support "
+            + msgtype
+            + " directives, please use a C++ preprocessor first",
+            t,
+        )
 
     t_DIVIDE = r"/(?!/)"
     t_ELLIPSIS = r"\.\.\."
@@ -541,6 +564,12 @@ class TokenStream:
         "WHITESPACE",
     }
 
+    _discard_types_except_newline = {
+        "COMMENT_SINGLELINE",
+        "COMMENT_MULTILINE",
+        "WHITESPACE",
+    }
+
     def token(self) -> LexToken:
         tokbuf = self.tokbuf
         while True:
@@ -558,6 +587,17 @@ class TokenStream:
             while tokbuf:
                 tok = tokbuf.popleft()
                 if tok.type not in self._discard_types:
+                    return tok
+
+            if not self._fill_tokbuf(tokbuf):
+                return None
+
+    def token_newline_eof_ok(self) -> typing.Optional[LexToken]:
+        tokbuf = self.tokbuf
+        while True:
+            while tokbuf:
+                tok = tokbuf.popleft()
+                if tok.type not in self._discard_types_except_newline:
                     return tok
 
             if not self._fill_tokbuf(tokbuf):
@@ -659,7 +699,12 @@ class LexerTokenStream(TokenStream):
             tokbuf.append(tok)
 
             if tok.type == "NEWLINE":
-                break
+                # detect/remove line continuations
+                if len(tokbuf) > 2 and tokbuf[-2].type == "\\":
+                    tokbuf.pop()
+                    tokbuf.pop()
+                else:
+                    break
 
             # detect/combine user defined literals
             if tok.type in udl_start:
