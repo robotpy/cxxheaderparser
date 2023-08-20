@@ -2307,6 +2307,9 @@ class CxxParser:
 
         cmods.validate(var_ok=False, meth_ok=False, msg="parsing conversion operator")
 
+        # Check for any cv decorations for the type
+        rtype = self._parse_cv_ptr(ctype)
+
         # then this must be a method
         self._next_token_must_be("(")
 
@@ -2317,7 +2320,7 @@ class CxxParser:
 
         if self._parse_function(
             mods,
-            ctype,
+            rtype,
             pqname,
             op,
             template,

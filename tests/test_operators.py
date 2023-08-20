@@ -3,8 +3,10 @@
 from cxxheaderparser.types import (
     ClassDecl,
     FundamentalSpecifier,
+    MoveReference,
     NameSpecifier,
     Operator,
+    Pointer,
     PQName,
     Parameter,
     Reference,
@@ -610,6 +612,78 @@ def test_conversion_operators() -> None:
                             access="public",
                             const=True,
                             virtual=True,
+                            operator="conversion",
+                        ),
+                    ],
+                )
+            ]
+        )
+    )
+
+
+def test_conversion_operators_decorated() -> None:
+    content = """
+      struct S {
+        operator const native_handle_t*() const;
+        operator const native_handle_t&() const;
+        operator const native_handle_t&&() const;
+      };
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            classes=[
+                ClassScope(
+                    class_decl=ClassDecl(
+                        typename=PQName(
+                            segments=[NameSpecifier(name="S")], classkey="struct"
+                        )
+                    ),
+                    methods=[
+                        Operator(
+                            return_type=Pointer(
+                                ptr_to=Type(
+                                    typename=PQName(
+                                        segments=[NameSpecifier(name="native_handle_t")]
+                                    ),
+                                    const=True,
+                                )
+                            ),
+                            name=PQName(segments=[NameSpecifier(name="operator")]),
+                            parameters=[],
+                            access="public",
+                            const=True,
+                            operator="conversion",
+                        ),
+                        Operator(
+                            return_type=Reference(
+                                ref_to=Type(
+                                    typename=PQName(
+                                        segments=[NameSpecifier(name="native_handle_t")]
+                                    ),
+                                    const=True,
+                                )
+                            ),
+                            name=PQName(segments=[NameSpecifier(name="operator")]),
+                            parameters=[],
+                            access="public",
+                            const=True,
+                            operator="conversion",
+                        ),
+                        Operator(
+                            return_type=MoveReference(
+                                moveref_to=Type(
+                                    typename=PQName(
+                                        segments=[NameSpecifier(name="native_handle_t")]
+                                    ),
+                                    const=True,
+                                )
+                            ),
+                            name=PQName(segments=[NameSpecifier(name="operator")]),
+                            parameters=[],
+                            access="public",
+                            const=True,
                             operator="conversion",
                         ),
                     ],
