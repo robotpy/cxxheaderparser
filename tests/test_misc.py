@@ -1,5 +1,6 @@
 # Note: testcases generated via `python -m cxxheaderparser.gentest`
 
+from cxxheaderparser.errors import CxxParseError
 from cxxheaderparser.types import (
     BaseClass,
     ClassDecl,
@@ -21,6 +22,8 @@ from cxxheaderparser.simple import (
     parse_string,
     ParsedData,
 )
+
+import pytest
 
 #
 # minimal preprocessor support
@@ -91,6 +94,19 @@ def test_pragma_more() -> None:
             ),
         ]
     )
+
+
+def test_line_and_define() -> None:
+    content = """
+        // this should work + change line number of error
+        #line 40 "filename.h"
+        // this should fail
+        #define 1
+    """
+    with pytest.raises(CxxParseError) as e:
+        parse_string(content, cleandoc=True)
+
+    assert "filename.h:41" in str(e.value)
 
 
 #

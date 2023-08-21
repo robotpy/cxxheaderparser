@@ -19,7 +19,7 @@ if sys.version_info >= (3, 8):
 else:
     Protocol = object
 
-_line_re = re.compile(r'^#line (\d+) "(.*)"')
+_line_re = re.compile(r'^\#[\t ]*line (\d+) "(.*)"')
 _multicomment_re = re.compile("\n[\\s]+\\*")
 
 
@@ -176,7 +176,6 @@ class PlyLexer:
         # Comments
         "COMMENT_SINGLELINE",
         "COMMENT_MULTILINE",
-        "LINE_DIRECTIVE",
         "PRAGMA_DIRECTIVE",
         "INCLUDE_DIRECTIVE",
         "PP_DIRECTIVE",
@@ -438,12 +437,6 @@ class PlyLexer:
             t.type = t.value
         return t
 
-    @TOKEN(r'\#[\t ]*line (\d+) "(.*)"')
-    def t_LINE_DIRECTIVE(self, t: LexToken) -> None:
-        m = t.lexmatch
-        self.filename = m.group(2)
-        self.line_offset = 1 + self.lex.lineno - int(m.group(1))
-
     @TOKEN(r"\#[\t ]*pragma")
     def t_PRAGMA_DIRECTIVE(self, t: LexToken) -> LexToken:
         return t
@@ -454,6 +447,12 @@ class PlyLexer:
 
     @TOKEN(r"\#(.*)")
     def t_PP_DIRECTIVE(self, t: LexToken):
+        # handle line macros
+        m = _line_re.match(t.value)
+        if m:
+            self.filename = m.group(2)
+            self.line_offset = 1 + self.lex.lineno - int(m.group(1))
+            return None
         # ignore C++23 warning directive
         if t.value.startswith("#warning"):
             return
