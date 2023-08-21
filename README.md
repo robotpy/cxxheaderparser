@@ -31,6 +31,7 @@ Non-goals:
   headers that contain macros, you should preprocess your code using the
   excellent pure python preprocessor [pcpp](https://github.com/ned14/pcpp)
   or your favorite compiler
+  * See `cxxheaderparser.preprocessor` for how to use
 * Probably won't be able to parse most IOCCC entries
 
 There are two APIs available:

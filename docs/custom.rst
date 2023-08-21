@@ -35,3 +35,10 @@ Parser state
 .. automodule:: cxxheaderparser.parserstate
    :members:
    :undoc-members:
+
+Preprocessor
+------------
+
+.. automodule:: cxxheaderparser.preprocessor
+   :members:
+   :undoc-members:

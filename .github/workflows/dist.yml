@@ -27,7 +27,7 @@ jobs:
         python-version: 3.8
     - name: Install requirements
       run: |
-        pip --disable-pip-version-check install mypy pytest
+        pip --disable-pip-version-check install mypy pytest pcpp
     - name: Run mypy
       run: |
         mypy .

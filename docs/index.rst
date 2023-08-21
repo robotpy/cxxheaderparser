@@ -10,10 +10,11 @@ A pure python C++ header parser that parses C++ headers in a mildly naive
 manner that allows it to handle many C++ constructs, including many modern
 (C++11 and beyond) features.
 
-.. warning:: cxxheaderparser intentionally does not have a C preprocessor
-             implementation! If you are parsing code with macros in it, use
-             a conforming preprocessor like the pure python preprocessor
-             `pcpp`_ or your favorite C++ compiler.
+.. warning:: cxxheaderparser intentionally does not use a C preprocessor by
+             default. If you are parsing code with macros in it, you need to
+             provide a preprocessor function in :py:class:`.ParserOptions`.
+
+             .. seealso:: :py:attr:`cxxheaderparser.options.ParserOptions.preprocessor`
 
 .. _pcpp: https://github.com/ned14/pcpp
 
