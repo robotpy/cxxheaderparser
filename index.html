@@ -23,7 +23,7 @@
         integrity="sha512-lNjb0qWDVvt1zfSiXufaxtlFtenve3BLbvljxuMXuSr0DE0HYp5OhX0u89uwNd6MvlX1bgJ8ulfG4JMGurs8UA=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
-    <script src="https://cdn.jsdelivr.net/pyodide/v0.21.3/full/pyodide.js"></script>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js"></script>
 
     <style>
 
@@ -73,7 +73,7 @@
             background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAeCAYAAADkftS9AAAAIklEQVQoU2M4c+bMfxAGAgYYmwGrIIiDjrELjpo5aiZeMwF+yNnOs5KSvgAAAABJRU5ErkJggg==');
             cursor: col-resize;
         }
-        
+
         .output pre {
             height: 100%;
         }
@@ -85,7 +85,7 @@
         <div class="info">
             <div>
                 <h1>cxxheaderparser interactive demo</h1>
-        
+
                 <p>
                     <a href="https://github.com/robotpy/cxxheaderparser">cxxheaderparser</a> is a pure python C++ header parser that parses C++ headers in a mildly naive
                     manner that allows it to handle many C++ constructs, including many modern
@@ -102,7 +102,8 @@
                     generated when you call `cxxheaderparser.simple.parse_string` (or an error message).
                 </p>
                 <p>
-                    <input type="checkbox" id="verbose" /> <label for="verbose">Show stack trace on parser error</label>
+                    <input type="checkbox" id="verbose" /> <label for="verbose">Show stack trace on parser error</label><br/>
+                    <input type="checkbox" id="pcpp" /> <label for="pcpp">Enable pcpp preprocessor</label>
                 </p>
             </div>
             <div>
@@ -112,11 +113,11 @@
                     <a href="https://ace.c9.io/">ACE Editor</a>,
                     <a href="https://github.com/nathancahill/split">Split.js</a>,
                     and <a href="">Bootstrap</a>
-            
+
                 </p>
             </div>
         </div>
-    
+
         <div class="playground">
             <div id="editor" class="editor">
 class FX {
@@ -148,6 +149,8 @@ class FF {
         var out = document.getElementById('cxxoutput');
         var verbose = document.getElementById('verbose');
         var version = document.getElementById('version');
+        var pcpp = document.getElementById('pcpp');
+        var pcpp_installed = false;
 
         var status = "";
 
@@ -177,7 +180,6 @@ class FF {
 
             await pyodide.runPythonAsync(`
                 import js
-                from pyodide import create_proxy
                 from pyodide.http import pyfetch
 
                 js.addStatus("Loading loader...")
@@ -193,8 +195,23 @@ class FF {
                 
             `, { globals: ns });
 
-            editor.session.on("change", ns.get("on_input"))
-            verbose.addEventListener("change", ns.get("on_input"));
+            editor.session.on("change", e => ns.get("on_input")())
+            verbose.addEventListener("change", e => ns.get("on_input")());
+            pcpp.addEventListener("change", async e => {
+                if (!pcpp_installed) {
+                    pcpp_installed = true;
+                    await pyodide.runPythonAsync(`
+                        import pyodide_js
+                        await pyodide_js.loadPackage("micropip")
+                        import micropip
+                        await micropip.install("pcpp")
+                        import pcpp
+                        on_input = make_input_function()
+                    `, { globals: ns });
+                }
+
+                ns.get("on_input")(e);
+            });
 
             version.innerText = ns.get("__version__");
         }

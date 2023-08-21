@@ -9,6 +9,7 @@ import io
 import os
 import traceback
 
+import pyodide
 from pyodide.http import pyfetch
 import js
 
@@ -82,11 +83,23 @@ def webrepr(data, defaults: bool = False, mxlen: int = 88) -> str:
 def make_input_function():
 
     from cxxheaderparser.errors import CxxParseError
+    from cxxheaderparser.options import ParserOptions
     from cxxheaderparser.simple import parse_string
 
+    pp_options = None
+
+    if js.pcpp.checked:
+        from cxxheaderparser.preprocessor import make_pcpp_preprocessor
+
+        pp_options = ParserOptions(preprocessor=make_pcpp_preprocessor())
+
     def on_input(*ignored):
+        options = None
+        if js.pcpp.checked:
+            options = pp_options
+
         try:
-            data = parse_string(js.editor.getValue())
+            data = parse_string(js.editor.getValue(), options=options)
         except Exception as e:
             if not isinstance(e, CxxParseError) or js.verbose.checked:
                 js.out.innerHTML = "Exception:\n" + "\n".join(
@@ -121,6 +134,7 @@ async def load_cxxheaderparser():
         "cxxheaderparser/lexer.py",
         "cxxheaderparser/options.py",
         "cxxheaderparser/parser.py",
+        "cxxheaderparser/preprocessor.py",
         "cxxheaderparser/parserstate.py",
         "cxxheaderparser/_ply/__init__.py",
         "cxxheaderparser/_ply/lex.py",
