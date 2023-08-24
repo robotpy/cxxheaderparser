@@ -81,6 +81,10 @@ class CxxParser:
     ) -> None:
         self.visitor = visitor
         self.filename = filename
+        self.options = options if options else ParserOptions()
+
+        if options and options.preprocessor is not None:
+            content = options.preprocessor(filename, content)
 
         self.lex: lexer.TokenStream = lexer.LexerTokenStream(filename, content)
 
@@ -89,8 +93,6 @@ class CxxParser:
 
         self.state: State = NamespaceBlockState(None, global_ns)
         self.anon_id = 0
-
-        self.options = options if options else ParserOptions()
 
         self.verbose = True if self.options.verbose else False
         if self.verbose:

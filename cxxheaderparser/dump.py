@@ -23,10 +23,19 @@ def dumpmain() -> None:
     parser.add_argument(
         "--mode", choices=["json", "pprint", "repr", "brepr"], default="pprint"
     )
+    parser.add_argument(
+        "--pcpp", default=False, action="store_true", help="Use pcpp preprocessor"
+    )
 
     args = parser.parse_args()
 
-    options = ParserOptions(verbose=args.verbose)
+    preprocessor = None
+    if args.pcpp:
+        from .preprocessor import make_pcpp_preprocessor
+
+        preprocessor = make_pcpp_preprocessor()
+
+    options = ParserOptions(verbose=args.verbose, preprocessor=preprocessor)
     data = parse_file(args.header, options=options)
 
     if args.mode == "pprint":
