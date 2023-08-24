@@ -68,6 +68,7 @@ setup(
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
     install_requires=["dataclasses; python_version < '3.7'"],
+    extras_require={"pcpp": ["pcpp~=1.30"]},
     license="BSD",
     platforms="Platform Independent",
     packages=find_packages(),
