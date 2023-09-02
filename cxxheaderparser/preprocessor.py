@@ -16,9 +16,10 @@ class PreprocessorError(Exception):
 
 
 class _CustomPreprocessor(Preprocessor):
-    def __init__(self):
+    def __init__(self, encoding: typing.Optional[str]):
         Preprocessor.__init__(self)
         self.errors: typing.List[str] = []
+        self.assume_encoding = encoding
 
     def on_error(self, file, line, msg):
         self.errors.append(f"{file}:{line} error: {msg}")
@@ -57,10 +58,13 @@ def make_pcpp_preprocessor(
     defines: typing.List[str] = [],
     include_paths: typing.List[str] = [],
     retain_all_content: bool = False,
+    encoding: typing.Optional[str] = None,
 ) -> PreprocessorFunction:
     """
     Creates a preprocessor function that uses pcpp (which must be installed
     separately) to preprocess the input text.
+
+    :param encoding: If specified any include files are opened with this encoding
 
     .. code-block:: python
 
@@ -72,7 +76,7 @@ def make_pcpp_preprocessor(
     """
 
     def _preprocess_file(filename: str, content: str) -> str:
-        pp = _CustomPreprocessor()
+        pp = _CustomPreprocessor(encoding)
         if include_paths:
             for p in include_paths:
                 pp.add_path(p)

@@ -64,3 +64,33 @@ def test_preprocessor_omit_content(tmp_path: pathlib.Path) -> None:
             ]
         )
     )
+
+
+def test_preprocessor_encoding(tmp_path: pathlib.Path) -> None:
+    """Ensure we can handle alternate encodings"""
+    h_content = b"// \xa9 2023 someone\n" b'#include "t2.h"' b"\n" b"int x = X;\n"
+
+    h2_content = b"// \xa9 2023 someone\n" b"#define X 3\n" b"int omitted = 1;\n"
+
+    with open(tmp_path / "t1.h", "wb") as fp:
+        fp.write(h_content)
+
+    with open(tmp_path / "t2.h", "wb") as fp:
+        fp.write(h2_content)
+
+    options = ParserOptions(preprocessor=make_pcpp_preprocessor(encoding="cp1252"))
+    data = parse_file(tmp_path / "t1.h", options=options, encoding="cp1252")
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            variables=[
+                Variable(
+                    name=PQName(segments=[NameSpecifier(name="x")]),
+                    type=Type(
+                        typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                    ),
+                    value=Value(tokens=[Token(value="3")]),
+                )
+            ]
+        )
+    )
