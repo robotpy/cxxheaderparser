@@ -6,6 +6,7 @@ import subprocess
 import typing
 
 from .errors import CxxParseError
+from .preprocessor import make_pcpp_preprocessor
 from .options import ParserOptions
 from .simple import parse_string, ParsedData
 
@@ -49,14 +50,23 @@ def nondefault_repr(data: ParsedData) -> str:
     return _inner_repr(data)
 
 
-def gentest(infile: str, name: str, outfile: str, verbose: bool, fail: bool) -> None:
+def gentest(
+    infile: str, name: str, outfile: str, verbose: bool, fail: bool, pcpp: bool
+) -> None:
     # Goal is to allow making a unit test as easy as running this dumper
     # on a file and copy/pasting this into a test
 
     with open(infile, "r") as fp:
         content = fp.read()
 
+    maybe_options = ""
+    popt = ""
+
     options = ParserOptions(verbose=verbose)
+    if options:
+        options.preprocessor = make_pcpp_preprocessor()
+        maybe_options = "options = ParserOptions(preprocessor=make_pcpp_preprocessor())"
+        popt = ", options=options"
 
     try:
         data = parse_string(content, options=options)
@@ -74,15 +84,17 @@ def gentest(infile: str, name: str, outfile: str, verbose: bool, fail: bool) -> 
     if not fail:
         stmt = nondefault_repr(data)
         stmt = f"""
-            data = parse_string(content, cleandoc=True)
+            {maybe_options}
+            data = parse_string(content, cleandoc=True{popt})
 
             assert data == {stmt}
         """
     else:
         stmt = f"""
+            {maybe_options}
             err = {repr(err)}
             with pytest.raises(CxxParseError, match=re.escape(err)):
-                parse_string(content, cleandoc=True)
+                parse_string(content, cleandoc=True{popt})
         """
 
     content = ("\n" + content.strip()).replace("\n", "\n              ")
@@ -113,6 +125,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("header")
     parser.add_argument("name", nargs="?", default="TODO")
+    parser.add_argument("--pcpp", default=False, action="store_true")
     parser.add_argument("-v", "--verbose", default=False, action="store_true")
     parser.add_argument("-o", "--output", default="-")
     parser.add_argument(
@@ -120,4 +133,4 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    gentest(args.header, args.name, args.output, args.verbose, args.fail)
+    gentest(args.header, args.name, args.output, args.verbose, args.fail, args.pcpp)

@@ -24,6 +24,7 @@ See below for the contents of the returned :class:`ParsedData`.
 
 """
 
+import os
 import sys
 import inspect
 import typing
@@ -344,7 +345,7 @@ def parse_string(
 
 
 def parse_file(
-    filename: str,
+    filename: typing.Union[str, os.PathLike],
     encoding: typing.Optional[str] = None,
     *,
     options: typing.Optional[ParserOptions] = None,
@@ -352,6 +353,7 @@ def parse_file(
     """
     Simple function to parse a header from a file and return a data structure
     """
+    filename = os.fsdecode(filename)
 
     if encoding is None:
         encoding = "utf-8-sig"
