@@ -3,6 +3,7 @@ Contains optional preprocessor support via pcpp
 """
 
 import io
+import os
 from os.path import relpath
 import typing
 from .options import PreprocessorFunction
@@ -17,7 +18,7 @@ class PreprocessorError(Exception):
 class _CustomPreprocessor(Preprocessor):
     def __init__(self):
         Preprocessor.__init__(self)
-        self.errors = []
+        self.errors: typing.List[str] = []
 
     def on_error(self, file, line, msg):
         self.errors.append(f"{file}:{line} error: {msg}")
@@ -34,21 +35,15 @@ def _filter_self(fname: str, fp: typing.TextIO) -> str:
     # isn't what a typical user of cxxheaderparser would want, so we strip out
     # the line directives and any content that isn't in our original file
 
-    # Compute the filename to match based on how pcpp does it
-    try:
-        relfname = relpath(fname)
-    except Exception:
-        relfname = fname
-    relfname = relfname.replace("\\", "/")
-
-    relfname += '"\n'
+    # pcpp always emits line directives that match whatever is passed in to it
+    line_ending = f'{fname}"\n'
 
     new_output = io.StringIO()
     keep = True
 
     for line in fp:
         if line.startswith("#line"):
-            keep = line.endswith(relfname)
+            keep = line.endswith(line_ending)
 
         if keep:
             new_output.write(line)
