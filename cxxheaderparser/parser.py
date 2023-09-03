@@ -106,6 +106,8 @@ class CxxParser:
         else:
             self.debug_print = lambda fmt, *args: None
 
+        self.visitor.on_parse_start(self.state)
+
     #
     # State management
     #

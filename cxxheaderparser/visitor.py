@@ -37,6 +37,11 @@ class CxxVisitor(Protocol):
     Defines the interface used by the parser to emit events
     """
 
+    def on_parse_start(self, state: NamespaceBlockState) -> None:
+        """
+        Called when parsing begins
+        """
+
     def on_pragma(self, state: State, content: Value) -> None:
         """
         Called once for each ``#pragma`` directive encountered

@@ -179,6 +179,13 @@ class ParsedData:
 # Visitor implementation
 #
 
+# define what user data we store in each state type
+SState = State[Block, Block]
+SEmptyBlockState = EmptyBlockState[Block, Block]
+SExternBlockState = ExternBlockState[Block, Block]
+SNamespaceBlockState = NamespaceBlockState[NamespaceScope, NamespaceScope]
+SClassBlockState = ClassBlockState[ClassScope, Block]
+
 
 class SimpleCxxVisitor:
     """
@@ -190,43 +197,35 @@ class SimpleCxxVisitor:
     """
 
     data: ParsedData
-    namespace: NamespaceScope
-    block: Block
 
-    def __init__(self) -> None:
-        self.namespace = NamespaceScope("")
-        self.block = self.namespace
+    def on_parse_start(self, state: SNamespaceBlockState) -> None:
+        ns = NamespaceScope("")
+        self.data = ParsedData(ns)
+        state.user_data = ns
 
-        self.ns_stack = typing.Deque[NamespaceScope]()
-        self.block_stack = typing.Deque[Block]()
-
-        self.data = ParsedData(self.namespace)
-
-    def on_pragma(self, state: State, content: Value) -> None:
+    def on_pragma(self, state: SState, content: Value) -> None:
         self.data.pragmas.append(Pragma(content))
 
-    def on_include(self, state: State, filename: str) -> None:
+    def on_include(self, state: SState, filename: str) -> None:
         self.data.includes.append(Include(filename))
 
-    def on_empty_block_start(self, state: EmptyBlockState) -> None:
+    def on_empty_block_start(self, state: SEmptyBlockState) -> None:
         # this matters for some scope/resolving purposes, but you're
         # probably going to want to use clang if you care about that
         # level of detail
+        state.user_data = state.parent.user_data
+
+    def on_empty_block_end(self, state: SEmptyBlockState) -> None:
         pass
 
-    def on_empty_block_end(self, state: EmptyBlockState) -> None:
+    def on_extern_block_start(self, state: SExternBlockState) -> None:
+        state.user_data = state.parent.user_data
+
+    def on_extern_block_end(self, state: SExternBlockState) -> None:
         pass
 
-    def on_extern_block_start(self, state: ExternBlockState) -> None:
-        pass  # TODO
-
-    def on_extern_block_end(self, state: ExternBlockState) -> None:
-        pass
-
-    def on_namespace_start(self, state: NamespaceBlockState) -> None:
-        parent_ns = self.namespace
-        self.block_stack.append(parent_ns)
-        self.ns_stack.append(parent_ns)
+    def on_namespace_start(self, state: SNamespaceBlockState) -> None:
+        parent_ns = state.parent.user_data
 
         ns = None
         names = state.namespace.names
@@ -247,81 +246,76 @@ class SimpleCxxVisitor:
         ns.inline = state.namespace.inline
         ns.doxygen = state.namespace.doxygen
 
-        self.block = ns
-        self.namespace = ns
+        state.user_data = ns
 
-    def on_namespace_end(self, state: NamespaceBlockState) -> None:
-        self.block = self.block_stack.pop()
-        self.namespace = self.ns_stack.pop()
+    def on_namespace_end(self, state: SNamespaceBlockState) -> None:
+        pass
 
-    def on_namespace_alias(self, state: State, alias: NamespaceAlias) -> None:
-        assert isinstance(self.block, NamespaceScope)
-        self.block.ns_alias.append(alias)
+    def on_namespace_alias(self, state: SState, alias: NamespaceAlias) -> None:
+        assert isinstance(state.user_data, NamespaceScope)
+        state.user_data.ns_alias.append(alias)
 
-    def on_forward_decl(self, state: State, fdecl: ForwardDecl) -> None:
-        self.block.forward_decls.append(fdecl)
+    def on_forward_decl(self, state: SState, fdecl: ForwardDecl) -> None:
+        state.user_data.forward_decls.append(fdecl)
 
-    def on_template_inst(self, state: State, inst: TemplateInst) -> None:
-        assert isinstance(self.block, NamespaceScope)
-        self.block.template_insts.append(inst)
+    def on_template_inst(self, state: SState, inst: TemplateInst) -> None:
+        assert isinstance(state.user_data, NamespaceScope)
+        state.user_data.template_insts.append(inst)
 
-    def on_variable(self, state: State, v: Variable) -> None:
-        assert isinstance(self.block, NamespaceScope)
-        self.block.variables.append(v)
+    def on_variable(self, state: SState, v: Variable) -> None:
+        assert isinstance(state.user_data, NamespaceScope)
+        state.user_data.variables.append(v)
 
-    def on_function(self, state: State, fn: Function) -> None:
-        assert isinstance(self.block, NamespaceScope)
-        self.block.functions.append(fn)
+    def on_function(self, state: SState, fn: Function) -> None:
+        assert isinstance(state.user_data, NamespaceScope)
+        state.user_data.functions.append(fn)
 
-    def on_method_impl(self, state: State, method: Method) -> None:
-        assert isinstance(self.block, NamespaceScope)
-        self.block.method_impls.append(method)
+    def on_method_impl(self, state: SState, method: Method) -> None:
+        assert isinstance(state.user_data, NamespaceScope)
+        state.user_data.method_impls.append(method)
 
-    def on_typedef(self, state: State, typedef: Typedef) -> None:
-        self.block.typedefs.append(typedef)
+    def on_typedef(self, state: SState, typedef: Typedef) -> None:
+        state.user_data.typedefs.append(typedef)
 
-    def on_using_namespace(self, state: State, namespace: typing.List[str]) -> None:
-        assert isinstance(self.block, NamespaceScope)
+    def on_using_namespace(self, state: SState, namespace: typing.List[str]) -> None:
+        assert isinstance(state.user_data, NamespaceScope)
         ns = UsingNamespace("::".join(namespace))
-        self.block.using_ns.append(ns)
+        state.user_data.using_ns.append(ns)
 
-    def on_using_alias(self, state: State, using: UsingAlias) -> None:
-        self.block.using_alias.append(using)
+    def on_using_alias(self, state: SState, using: UsingAlias) -> None:
+        state.user_data.using_alias.append(using)
 
-    def on_using_declaration(self, state: State, using: UsingDecl) -> None:
-        self.block.using.append(using)
+    def on_using_declaration(self, state: SState, using: UsingDecl) -> None:
+        state.user_data.using.append(using)
 
     #
     # Enums
     #
 
-    def on_enum(self, state: State, enum: EnumDecl) -> None:
-        self.block.enums.append(enum)
+    def on_enum(self, state: SState, enum: EnumDecl) -> None:
+        state.user_data.enums.append(enum)
 
     #
     # Class/union/struct
     #
 
-    def on_class_start(self, state: ClassBlockState) -> None:
+    def on_class_start(self, state: SClassBlockState) -> None:
+        parent = state.parent.user_data
         block = ClassScope(state.class_decl)
-        self.block.classes.append(block)
-        self.block_stack.append(self.block)
-        self.block = block
+        parent.classes.append(block)
+        state.user_data = block
 
-    def on_class_field(self, state: State, f: Field) -> None:
-        assert isinstance(self.block, ClassScope)
-        self.block.fields.append(f)
+    def on_class_field(self, state: SClassBlockState, f: Field) -> None:
+        state.user_data.fields.append(f)
 
-    def on_class_method(self, state: ClassBlockState, method: Method) -> None:
-        assert isinstance(self.block, ClassScope)
-        self.block.methods.append(method)
+    def on_class_method(self, state: SClassBlockState, method: Method) -> None:
+        state.user_data.methods.append(method)
 
-    def on_class_friend(self, state: ClassBlockState, friend: FriendDecl) -> None:
-        assert isinstance(self.block, ClassScope)
-        self.block.friends.append(friend)
+    def on_class_friend(self, state: SClassBlockState, friend: FriendDecl) -> None:
+        state.user_data.friends.append(friend)
 
-    def on_class_end(self, state: ClassBlockState) -> None:
-        self.block = self.block_stack.pop()
+    def on_class_end(self, state: SClassBlockState) -> None:
+        pass
 
 
 def parse_string(
