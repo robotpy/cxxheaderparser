@@ -3,6 +3,7 @@ Contains optional preprocessor support via pcpp
 """
 
 import io
+import os
 from os.path import relpath
 import typing
 from .options import PreprocessorFunction
@@ -15,9 +16,10 @@ class PreprocessorError(Exception):
 
 
 class _CustomPreprocessor(Preprocessor):
-    def __init__(self):
+    def __init__(self, encoding: typing.Optional[str]):
         Preprocessor.__init__(self)
-        self.errors = []
+        self.errors: typing.List[str] = []
+        self.assume_encoding = encoding
 
     def on_error(self, file, line, msg):
         self.errors.append(f"{file}:{line} error: {msg}")
@@ -34,21 +36,15 @@ def _filter_self(fname: str, fp: typing.TextIO) -> str:
     # isn't what a typical user of cxxheaderparser would want, so we strip out
     # the line directives and any content that isn't in our original file
 
-    # Compute the filename to match based on how pcpp does it
-    try:
-        relfname = relpath(fname)
-    except Exception:
-        relfname = fname
-    relfname = relfname.replace("\\", "/")
-
-    relfname += '"\n'
+    # pcpp always emits line directives that match whatever is passed in to it
+    line_ending = f'{fname}"\n'
 
     new_output = io.StringIO()
     keep = True
 
     for line in fp:
         if line.startswith("#line"):
-            keep = line.endswith(relfname)
+            keep = line.endswith(line_ending)
 
         if keep:
             new_output.write(line)
@@ -62,10 +58,13 @@ def make_pcpp_preprocessor(
     defines: typing.List[str] = [],
     include_paths: typing.List[str] = [],
     retain_all_content: bool = False,
+    encoding: typing.Optional[str] = None,
 ) -> PreprocessorFunction:
     """
     Creates a preprocessor function that uses pcpp (which must be installed
     separately) to preprocess the input text.
+
+    :param encoding: If specified any include files are opened with this encoding
 
     .. code-block:: python
 
@@ -77,7 +76,7 @@ def make_pcpp_preprocessor(
     """
 
     def _preprocess_file(filename: str, content: str) -> str:
-        pp = _CustomPreprocessor()
+        pp = _CustomPreprocessor(encoding)
         if include_paths:
             for p in include_paths:
                 pp.add_path(p)

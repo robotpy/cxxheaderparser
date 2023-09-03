@@ -26,6 +26,9 @@ def dumpmain() -> None:
     parser.add_argument(
         "--pcpp", default=False, action="store_true", help="Use pcpp preprocessor"
     )
+    parser.add_argument(
+        "--encoding", default=None, help="Use this encoding to open the file"
+    )
 
     args = parser.parse_args()
 
@@ -33,10 +36,10 @@ def dumpmain() -> None:
     if args.pcpp:
         from .preprocessor import make_pcpp_preprocessor
 
-        preprocessor = make_pcpp_preprocessor()
+        preprocessor = make_pcpp_preprocessor(encoding=args.encoding)
 
     options = ParserOptions(verbose=args.verbose, preprocessor=preprocessor)
-    data = parse_file(args.header, options=options)
+    data = parse_file(args.header, encoding=args.encoding, options=options)
 
     if args.mode == "pprint":
         ddata = dataclasses.asdict(data)

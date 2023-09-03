@@ -81,7 +81,7 @@ jobs:
       run: python setup.py bdist_wheel
     
     - name: Install test dependencies
-      run: python -m pip --disable-pip-version-check install pytest
+      run: python -m pip --disable-pip-version-check install pytest pcpp
     
     - name: Test wheel
       shell: bash
