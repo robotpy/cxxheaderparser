@@ -106,6 +106,8 @@ class CxxParser:
         else:
             self.debug_print = lambda fmt, *args: None
 
+        self.visitor.on_parse_start(self.state)
+
     #
     # State management
     #
@@ -505,7 +507,8 @@ class CxxParser:
     def _on_empty_block_start(
         self, tok: LexToken, doxygen: typing.Optional[str]
     ) -> None:
-        self._push_state(EmptyBlockState)
+        state = self._push_state(EmptyBlockState)
+        self.visitor.on_empty_block_start(state)
 
     def _on_block_end(self, tok: LexToken, doxygen: typing.Optional[str]) -> None:
         old_state = self._pop_state()
