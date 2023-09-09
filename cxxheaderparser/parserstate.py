@@ -28,26 +28,41 @@ class ParsedTypeModifiers(typing.NamedTuple):
                 raise CxxParseError(f"{msg}: unexpected '{tok.value}'")
 
 
-class State:
+#: custom user data for this state type
+T = typing.TypeVar("T")
+
+#: type of custom user data for a parent state
+PT = typing.TypeVar("PT")
+
+
+class State(typing.Generic[T, PT]):
+    #: Uninitialized user data available for use by visitor implementations. You
+    #: should set this in a ``*_start`` method.
+    user_data: T
+
     #: parent state
-    parent: typing.Optional["State"]
+    parent: typing.Optional["State[PT, typing.Any]"]
 
     #: Approximate location that the parsed element was found at
     location: Location
 
-    def __init__(self, parent: typing.Optional["State"]) -> None:
+    def __init__(self, parent: typing.Optional["State[PT, typing.Any]"]) -> None:
         self.parent = parent
 
     def _finish(self, visitor: "CxxVisitor") -> None:
         pass
 
 
-class EmptyBlockState(State):
+class EmptyBlockState(State[T, PT]):
+    parent: State[PT, typing.Any]
+
     def _finish(self, visitor: "CxxVisitor") -> None:
         visitor.on_empty_block_end(self)
 
 
-class ExternBlockState(State):
+class ExternBlockState(State[T, PT]):
+    parent: State[PT, typing.Any]
+
     #: The linkage for this extern block
     linkage: str
 
@@ -59,7 +74,9 @@ class ExternBlockState(State):
         visitor.on_extern_block_end(self)
 
 
-class NamespaceBlockState(State):
+class NamespaceBlockState(State[T, PT]):
+    parent: State[PT, typing.Any]
+
     #: The incremental namespace for this block
     namespace: NamespaceDecl
 
@@ -73,7 +90,9 @@ class NamespaceBlockState(State):
         visitor.on_namespace_end(self)
 
 
-class ClassBlockState(State):
+class ClassBlockState(State[T, PT]):
+    parent: State[PT, typing.Any]
+
     #: class decl block being processed
     class_decl: ClassDecl
 
