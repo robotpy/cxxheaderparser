@@ -46,6 +46,9 @@ class State(typing.Generic[T, PT]):
     #: Approximate location that the parsed element was found at
     location: Location
 
+    #: internal detail used by parser
+    _prior_visitor: "CxxVisitor"
+
     def __init__(self, parent: typing.Optional["State[PT, typing.Any]"]) -> None:
         self.parent = parent
 

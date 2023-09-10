@@ -209,22 +209,24 @@ class SimpleCxxVisitor:
     def on_include(self, state: SState, filename: str) -> None:
         self.data.includes.append(Include(filename))
 
-    def on_empty_block_start(self, state: SEmptyBlockState) -> None:
+    def on_empty_block_start(self, state: SEmptyBlockState) -> typing.Optional[bool]:
         # this matters for some scope/resolving purposes, but you're
         # probably going to want to use clang if you care about that
         # level of detail
         state.user_data = state.parent.user_data
+        return None
 
     def on_empty_block_end(self, state: SEmptyBlockState) -> None:
         pass
 
-    def on_extern_block_start(self, state: SExternBlockState) -> None:
+    def on_extern_block_start(self, state: SExternBlockState) -> typing.Optional[bool]:
         state.user_data = state.parent.user_data
+        return None
 
     def on_extern_block_end(self, state: SExternBlockState) -> None:
         pass
 
-    def on_namespace_start(self, state: SNamespaceBlockState) -> None:
+    def on_namespace_start(self, state: SNamespaceBlockState) -> typing.Optional[bool]:
         parent_ns = state.parent.user_data
 
         ns = None
@@ -247,6 +249,7 @@ class SimpleCxxVisitor:
         ns.doxygen = state.namespace.doxygen
 
         state.user_data = ns
+        return None
 
     def on_namespace_end(self, state: SNamespaceBlockState) -> None:
         pass
@@ -299,11 +302,12 @@ class SimpleCxxVisitor:
     # Class/union/struct
     #
 
-    def on_class_start(self, state: SClassBlockState) -> None:
+    def on_class_start(self, state: SClassBlockState) -> typing.Optional[bool]:
         parent = state.parent.user_data
         block = ClassScope(state.class_decl)
         parent.classes.append(block)
         state.user_data = block
+        return None
 
     def on_class_field(self, state: SClassBlockState, f: Field) -> None:
         state.user_data.fields.append(f)
