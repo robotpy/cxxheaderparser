@@ -58,7 +58,7 @@ from .types import (
     Value,
     Variable,
 )
-from .visitor import CxxVisitor
+from .visitor import CxxVisitor, null_visitor
 
 LexTokenList = typing.List[LexToken]
 T = typing.TypeVar("T")
@@ -114,6 +114,7 @@ class CxxParser:
 
     def _push_state(self, cls: typing.Type[ST], *args) -> ST:
         state = cls(self.state, *args)
+        state._prior_visitor = self.visitor
         if isinstance(state, NamespaceBlockState):
             self.current_namespace = state.namespace
         self.state = state
@@ -122,6 +123,7 @@ class CxxParser:
     def _pop_state(self) -> State:
         prev_state = self.state
         prev_state._finish(self.visitor)
+        self.visitor = prev_state._prior_visitor
         state = prev_state.parent
         if state is None:
             raise CxxParseError("INTERNAL ERROR: unbalanced state")
@@ -454,7 +456,8 @@ class CxxParser:
         ns = NamespaceDecl(names, inline, doxygen)
         state = self._push_state(NamespaceBlockState, ns)
         state.location = location
-        self.visitor.on_namespace_start(state)
+        if self.visitor.on_namespace_start(state) is False:
+            self.visitor = null_visitor
 
     def _parse_extern(self, tok: LexToken, doxygen: typing.Optional[str]) -> None:
         etok = self.lex.token_if("STRING_LITERAL", "template")
@@ -463,7 +466,8 @@ class CxxParser:
                 if self.lex.token_if("{"):
                     state = self._push_state(ExternBlockState, etok.value)
                     state.location = tok.location
-                    self.visitor.on_extern_block_start(state)
+                    if self.visitor.on_extern_block_start(state) is False:
+                        self.visitor = null_visitor
                     return
 
                 # an extern variable/function with specific linkage
@@ -508,7 +512,8 @@ class CxxParser:
         self, tok: LexToken, doxygen: typing.Optional[str]
     ) -> None:
         state = self._push_state(EmptyBlockState)
-        self.visitor.on_empty_block_start(state)
+        if self.visitor.on_empty_block_start(state) is False:
+            self.visitor = null_visitor
 
     def _on_block_end(self, tok: LexToken, doxygen: typing.Optional[str]) -> None:
         old_state = self._pop_state()
@@ -1143,7 +1148,8 @@ class CxxParser:
             ClassBlockState, clsdecl, default_access, typedef, mods
         )
         state.location = location
-        self.visitor.on_class_start(state)
+        if self.visitor.on_class_start(state) is False:
+            self.visitor = null_visitor
 
     def _finish_class_decl(self, state: ClassBlockState) -> None:
         self._finish_class_or_enum(

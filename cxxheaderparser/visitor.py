@@ -52,7 +52,7 @@ class CxxVisitor(Protocol):
         Called once for each ``#include`` directive encountered
         """
 
-    def on_empty_block_start(self, state: EmptyBlockState) -> None:
+    def on_empty_block_start(self, state: EmptyBlockState) -> typing.Optional[bool]:
         """
         Called when a ``{`` is encountered that isn't associated with or
         consumed by other declarations.
@@ -62,6 +62,9 @@ class CxxVisitor(Protocol):
             {
                 // stuff
             }
+
+        If this function returns False, the visitor will not be called for any
+        items inside this block (including on_empty_block_end)
         """
 
     def on_empty_block_end(self, state: EmptyBlockState) -> None:
@@ -69,7 +72,7 @@ class CxxVisitor(Protocol):
         Called when an empty block ends
         """
 
-    def on_extern_block_start(self, state: ExternBlockState) -> None:
+    def on_extern_block_start(self, state: ExternBlockState) -> typing.Optional[bool]:
         """
         .. code-block:: c++
 
@@ -77,6 +80,8 @@ class CxxVisitor(Protocol):
 
             }
 
+        If this function returns False, the visitor will not be called for any
+        items inside this block (including on_extern_block_end)
         """
 
     def on_extern_block_end(self, state: ExternBlockState) -> None:
@@ -84,9 +89,12 @@ class CxxVisitor(Protocol):
         Called when an extern block ends
         """
 
-    def on_namespace_start(self, state: NamespaceBlockState) -> None:
+    def on_namespace_start(self, state: NamespaceBlockState) -> typing.Optional[bool]:
         """
         Called when a ``namespace`` directive is encountered
+
+        If this function returns False, the visitor will not be called for any
+        items inside this namespace (including on_namespace_end)
         """
 
     def on_namespace_end(self, state: NamespaceBlockState) -> None:
@@ -186,7 +194,7 @@ class CxxVisitor(Protocol):
     # Class/union/struct
     #
 
-    def on_class_start(self, state: ClassBlockState) -> None:
+    def on_class_start(self, state: ClassBlockState) -> typing.Optional[bool]:
         """
         Called when a class/struct/union is encountered
 
@@ -199,6 +207,9 @@ class CxxVisitor(Protocol):
         This is called first, followed by on_typedef for each typedef instance
         encountered. The compound type object is passed as the type to the
         typedef.
+
+        If this function returns False, the visitor will not be called for any
+        items inside this class (including on_class_end)
         """
 
     def on_class_field(self, state: ClassBlockState, f: Field) -> None:
@@ -231,3 +242,87 @@ class CxxVisitor(Protocol):
         Then ``on_class_start``, .. ``on_class_end`` are emitted, along with
         ``on_variable`` for each instance declared.
         """
+
+
+class NullVisitor:
+    """
+    This visitor does nothing
+    """
+
+    def on_parse_start(self, state: NamespaceBlockState) -> None:
+        return None
+
+    def on_pragma(self, state: State, content: Value) -> None:
+        return None
+
+    def on_include(self, state: State, filename: str) -> None:
+        return None
+
+    def on_empty_block_start(self, state: EmptyBlockState) -> typing.Optional[bool]:
+        return None
+
+    def on_empty_block_end(self, state: EmptyBlockState) -> None:
+        return None
+
+    def on_extern_block_start(self, state: ExternBlockState) -> typing.Optional[bool]:
+        return None
+
+    def on_extern_block_end(self, state: ExternBlockState) -> None:
+        return None
+
+    def on_namespace_start(self, state: NamespaceBlockState) -> typing.Optional[bool]:
+        return None
+
+    def on_namespace_end(self, state: NamespaceBlockState) -> None:
+        return None
+
+    def on_namespace_alias(self, state: State, alias: NamespaceAlias) -> None:
+        return None
+
+    def on_forward_decl(self, state: State, fdecl: ForwardDecl) -> None:
+        return None
+
+    def on_template_inst(self, state: State, inst: TemplateInst) -> None:
+        return None
+
+    def on_variable(self, state: State, v: Variable) -> None:
+        return None
+
+    def on_function(self, state: State, fn: Function) -> None:
+        return None
+
+    def on_method_impl(self, state: State, method: Method) -> None:
+        return None
+
+    def on_typedef(self, state: State, typedef: Typedef) -> None:
+        return None
+
+    def on_using_namespace(self, state: State, namespace: typing.List[str]) -> None:
+        return None
+
+    def on_using_alias(self, state: State, using: UsingAlias) -> None:
+        return None
+
+    def on_using_declaration(self, state: State, using: UsingDecl) -> None:
+        return None
+
+    def on_enum(self, state: State, enum: EnumDecl) -> None:
+        return None
+
+    def on_class_start(self, state: ClassBlockState) -> typing.Optional[bool]:
+        return None
+
+    def on_class_field(self, state: ClassBlockState, f: Field) -> None:
+        return None
+
+    def on_class_friend(self, state: ClassBlockState, friend: FriendDecl) -> None:
+        return None
+
+    def on_class_method(self, state: ClassBlockState, method: Method) -> None:
+        return None
+
+    def on_class_end(self, state: ClassBlockState) -> None:
+        return None
+
+
+null_visitor = NullVisitor()
