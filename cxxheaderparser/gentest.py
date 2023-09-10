@@ -63,7 +63,7 @@ def gentest(
     popt = ""
 
     options = ParserOptions(verbose=verbose)
-    if options:
+    if pcpp:
         options.preprocessor = make_pcpp_preprocessor()
         maybe_options = "options = ParserOptions(preprocessor=make_pcpp_preprocessor())"
         popt = ", options=options"
