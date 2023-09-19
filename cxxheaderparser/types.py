@@ -168,41 +168,6 @@ class PQName:
 
 
 @dataclass
-class Enumerator:
-    """
-    An individual value of an enumeration
-    """
-
-    #: The enumerator key name
-    name: str
-
-    #: None if not explicitly specified
-    value: typing.Optional[Value] = None
-
-    #: Documentation if present
-    doxygen: typing.Optional[str] = None
-
-
-@dataclass
-class EnumDecl:
-    """
-    An enumeration type
-    """
-
-    typename: PQName
-
-    values: typing.List[Enumerator]
-
-    base: typing.Optional[PQName] = None
-
-    #: Documentation if present
-    doxygen: typing.Optional[str] = None
-
-    #: If within a class, the access level for this decl
-    access: typing.Optional[str] = None
-
-
-@dataclass
 class TemplateArgument:
     """
     A single argument for a template specialization
@@ -337,6 +302,41 @@ class MoveReference:
 #: .. note:: There can only be one of FunctionType or Type in a DecoratedType
 #:           chain
 DecoratedType = typing.Union[Array, Pointer, MoveReference, Reference, Type]
+
+
+@dataclass
+class Enumerator:
+    """
+    An individual value of an enumeration
+    """
+
+    #: The enumerator key name
+    name: str
+
+    #: None if not explicitly specified
+    value: typing.Optional[Value] = None
+
+    #: Documentation if present
+    doxygen: typing.Optional[str] = None
+
+
+@dataclass
+class EnumDecl:
+    """
+    An enumeration type
+    """
+
+    typename: PQName
+
+    values: typing.List[Enumerator]
+
+    base: typing.Optional[PQName] = None
+
+    #: Documentation if present
+    doxygen: typing.Optional[str] = None
+
+    #: If within a class, the access level for this decl
+    access: typing.Optional[str] = None
 
 
 @dataclass
