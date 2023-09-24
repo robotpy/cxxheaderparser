@@ -550,6 +550,15 @@ class Function:
     #:            calling convention
     msvc_convention: typing.Optional[str] = None
 
+    #: The operator type (+, +=, etc).
+    #:
+    #: If this object is a Function, then this is a free operator function. If
+    #: this object is a Method, then it is an operator method.
+    #:
+    #: In the case of a conversion operator (such as 'operator bool'), this
+    #: is the string "conversion" and the full Type is found in return_type
+    operator: typing.Optional[str] = None
+
 
 @dataclass
 class Method(Function):
@@ -583,19 +592,6 @@ class Method(Function):
     virtual: bool = False
     final: bool = False
     override: bool = False
-
-
-@dataclass
-class Operator(Method):
-    """
-    Represents an operator method
-    """
-
-    #: The operator type (+, +=, etc).
-    #:
-    #: In the case of a conversion operator (such as 'operator bool'), this
-    #: is the string "conversion" and the full Type is found in return_type
-    operator: str = ""
 
 
 @dataclass

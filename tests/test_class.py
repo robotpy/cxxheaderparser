@@ -14,7 +14,6 @@ from cxxheaderparser.types import (
     Method,
     MoveReference,
     NameSpecifier,
-    Operator,
     PQName,
     Parameter,
     Pointer,
@@ -369,7 +368,7 @@ def test_class_member_spec_2() -> None:
                             access="public",
                             constructor=True,
                         ),
-                        Operator(
+                        Method(
                             return_type=Type(
                                 typename=PQName(
                                     segments=[FundamentalSpecifier(name="int")]
@@ -399,7 +398,7 @@ def test_class_member_spec_2() -> None:
                             const=True,
                             operator="()",
                         ),
-                        Operator(
+                        Method(
                             return_type=Reference(
                                 ref_to=Type(
                                     typename=PQName(
