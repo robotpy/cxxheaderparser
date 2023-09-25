@@ -37,7 +37,6 @@ from .types import (
     NameSpecifier,
     NamespaceAlias,
     NamespaceDecl,
-    Operator,
     PQNameSegment,
     Parameter,
     PQName,
@@ -1825,33 +1824,19 @@ class CxxParser:
         if (is_class_block or multiple_name_segments) and not is_typedef:
             props.update(dict.fromkeys(mods.meths.keys(), True))
 
-            method: Method
-
-            if op:
-                method = Operator(
-                    return_type,
-                    pqname,
-                    params,
-                    vararg,
-                    doxygen=doxygen,
-                    operator=op,
-                    template=template,
-                    access=self._current_access,
-                    **props,  # type: ignore
-                )
-            else:
-                method = Method(
-                    return_type,
-                    pqname,
-                    params,
-                    vararg,
-                    doxygen=doxygen,
-                    constructor=constructor,
-                    destructor=destructor,
-                    template=template,
-                    access=self._current_access,
-                    **props,  # type: ignore
-                )
+            method = Method(
+                return_type,
+                pqname,
+                params,
+                vararg,
+                doxygen=doxygen,
+                constructor=constructor,
+                destructor=destructor,
+                template=template,
+                operator=op,
+                access=self._current_access,
+                **props,  # type: ignore
+            )
 
             self._parse_method_end(method)
 
@@ -1883,6 +1868,7 @@ class CxxParser:
                 vararg,
                 doxygen=doxygen,
                 template=template,
+                operator=op,
                 **props,
             )
             self._parse_fn_end(fn)

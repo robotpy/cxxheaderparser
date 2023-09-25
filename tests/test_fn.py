@@ -7,9 +7,9 @@ from cxxheaderparser.types import (
     Function,
     FunctionType,
     FundamentalSpecifier,
+    Method,
     MoveReference,
     NameSpecifier,
-    Operator,
     PQName,
     Parameter,
     Pointer,
@@ -888,7 +888,7 @@ def test_method_w_reference() -> None:
                         )
                     ),
                     methods=[
-                        Operator(
+                        Method(
                             return_type=Reference(
                                 ref_to=Type(
                                     typename=PQName(

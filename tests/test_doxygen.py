@@ -14,7 +14,6 @@ from cxxheaderparser.types import (
     Method,
     MoveReference,
     NameSpecifier,
-    Operator,
     PQName,
     Parameter,
     Pointer,
