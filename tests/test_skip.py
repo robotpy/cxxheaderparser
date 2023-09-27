@@ -10,7 +10,6 @@ from cxxheaderparser.simple import (
     NamespaceScope,
     ParsedData,
     SClassBlockState,
-    SEmptyBlockState,
     SExternBlockState,
     SNamespaceBlockState,
     SimpleCxxVisitor,
@@ -144,53 +143,6 @@ def test_skip_class() -> None:
                     parameters=[],
                 ),
             ],
-        )
-    )
-
-
-#
-# ensure empty block is skipped
-#
-
-
-class SkipEmptyBlock(SimpleCxxVisitor):
-    def on_empty_block_start(self, state: SEmptyBlockState) -> typing.Optional[bool]:
-        return False
-
-
-def test_skip_empty_block() -> None:
-    content = """
-      void fn1();
-
-      {
-          void fn2();
-      }
-
-      void fn3();
-    """
-    v = SkipEmptyBlock()
-    parser = CxxParser("<str>", inspect.cleandoc(content), v)
-    parser.parse()
-    data = v.data
-
-    assert data == ParsedData(
-        namespace=NamespaceScope(
-            functions=[
-                Function(
-                    return_type=Type(
-                        typename=PQName(segments=[FundamentalSpecifier(name="void")])
-                    ),
-                    name=PQName(segments=[NameSpecifier(name="fn1")]),
-                    parameters=[],
-                ),
-                Function(
-                    return_type=Type(
-                        typename=PQName(segments=[FundamentalSpecifier(name="void")])
-                    ),
-                    name=PQName(segments=[NameSpecifier(name="fn3")]),
-                    parameters=[],
-                ),
-            ]
         )
     )
 

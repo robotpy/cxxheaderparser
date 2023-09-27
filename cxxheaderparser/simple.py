@@ -51,7 +51,6 @@ from .types import (
 
 from .parserstate import (
     State,
-    EmptyBlockState,
     ClassBlockState,
     ExternBlockState,
     NamespaceBlockState,
@@ -181,7 +180,6 @@ class ParsedData:
 
 # define what user data we store in each state type
 SState = State[Block, Block]
-SEmptyBlockState = EmptyBlockState[Block, Block]
 SExternBlockState = ExternBlockState[Block, Block]
 SNamespaceBlockState = NamespaceBlockState[NamespaceScope, NamespaceScope]
 SClassBlockState = ClassBlockState[ClassScope, Block]
@@ -208,16 +206,6 @@ class SimpleCxxVisitor:
 
     def on_include(self, state: SState, filename: str) -> None:
         self.data.includes.append(Include(filename))
-
-    def on_empty_block_start(self, state: SEmptyBlockState) -> typing.Optional[bool]:
-        # this matters for some scope/resolving purposes, but you're
-        # probably going to want to use clang if you care about that
-        # level of detail
-        state.user_data = state.parent.user_data
-        return None
-
-    def on_empty_block_end(self, state: SEmptyBlockState) -> None:
-        pass
 
     def on_extern_block_start(self, state: SExternBlockState) -> typing.Optional[bool]:
         state.user_data = state.parent.user_data

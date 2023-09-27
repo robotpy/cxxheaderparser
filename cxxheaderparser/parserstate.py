@@ -56,13 +56,6 @@ class State(typing.Generic[T, PT]):
         pass
 
 
-class EmptyBlockState(State[T, PT]):
-    parent: State[PT, typing.Any]
-
-    def _finish(self, visitor: "CxxVisitor") -> None:
-        visitor.on_empty_block_end(self)
-
-
 class ExternBlockState(State[T, PT]):
     parent: State[PT, typing.Any]
 

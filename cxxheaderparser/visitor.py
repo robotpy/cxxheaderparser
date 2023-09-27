@@ -25,7 +25,6 @@ from .types import (
 
 from .parserstate import (
     State,
-    EmptyBlockState,
     ClassBlockState,
     ExternBlockState,
     NamespaceBlockState,
@@ -50,26 +49,6 @@ class CxxVisitor(Protocol):
     def on_include(self, state: State, filename: str) -> None:
         """
         Called once for each ``#include`` directive encountered
-        """
-
-    def on_empty_block_start(self, state: EmptyBlockState) -> typing.Optional[bool]:
-        """
-        Called when a ``{`` is encountered that isn't associated with or
-        consumed by other declarations.
-
-        .. code-block:: c++
-
-            {
-                // stuff
-            }
-
-        If this function returns False, the visitor will not be called for any
-        items inside this block (including on_empty_block_end)
-        """
-
-    def on_empty_block_end(self, state: EmptyBlockState) -> None:
-        """
-        Called when an empty block ends
         """
 
     def on_extern_block_start(self, state: ExternBlockState) -> typing.Optional[bool]:
@@ -256,12 +235,6 @@ class NullVisitor:
         return None
 
     def on_include(self, state: State, filename: str) -> None:
-        return None
-
-    def on_empty_block_start(self, state: EmptyBlockState) -> typing.Optional[bool]:
-        return None
-
-    def on_empty_block_end(self, state: EmptyBlockState) -> None:
         return None
 
     def on_extern_block_start(self, state: ExternBlockState) -> typing.Optional[bool]:

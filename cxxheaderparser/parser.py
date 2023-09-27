@@ -10,7 +10,6 @@ from .lexer import LexToken, Location, PhonyEnding
 from .options import ParserOptions
 from .parserstate import (
     ClassBlockState,
-    EmptyBlockState,
     ExternBlockState,
     NamespaceBlockState,
     ParsedTypeModifiers,
@@ -510,9 +509,7 @@ class CxxParser:
     def _on_empty_block_start(
         self, tok: LexToken, doxygen: typing.Optional[str]
     ) -> None:
-        state = self._push_state(EmptyBlockState)
-        if self.visitor.on_empty_block_start(state) is False:
-            self.visitor = null_visitor
+        raise self._parse_error(tok)
 
     def _on_block_end(self, tok: LexToken, doxygen: typing.Optional[str]) -> None:
         old_state = self._pop_state()
