@@ -12,6 +12,7 @@ from .parserstate import (
     ClassBlockState,
     ExternBlockState,
     NamespaceBlockState,
+    NonClassBlockState,
     ParsedTypeModifiers,
     State,
 )
@@ -61,7 +62,6 @@ from .visitor import CxxVisitor, null_visitor
 LexTokenList = typing.List[LexToken]
 T = typing.TypeVar("T")
 
-ST = typing.TypeVar("ST", bound=State)
 PT = typing.TypeVar("PT", Parameter, TemplateNonTypeParam)
 
 
@@ -89,7 +89,9 @@ class CxxParser:
         global_ns = NamespaceDecl([], False)
         self.current_namespace = global_ns
 
-        self.state: State = NamespaceBlockState(None, global_ns)
+        self.state: State = NamespaceBlockState(
+            None, self.lex.current_location(), global_ns
+        )
         self.anon_id = 0
 
         self.verbose = True if self.options.verbose else False
@@ -110,13 +112,9 @@ class CxxParser:
     # State management
     #
 
-    def _push_state(self, cls: typing.Type[ST], *args) -> ST:
-        state = cls(self.state, *args)
+    def _setup_state(self, state: State):
         state._prior_visitor = self.visitor
-        if isinstance(state, NamespaceBlockState):
-            self.current_namespace = state.namespace
         self.state = state
-        return state
 
     def _pop_state(self) -> State:
         prev_state = self.state
@@ -446,24 +444,37 @@ class CxxParser:
         if inline and len(names) > 1:
             raise CxxParseError("a nested namespace definition cannot be inline")
 
+        state = self.state
+        if not isinstance(state, (NamespaceBlockState, ExternBlockState)):
+            raise CxxParseError("namespace cannot be defined in a class")
+
         if ns_alias:
             alias = NamespaceAlias(ns_alias.value, names)
-            self.visitor.on_namespace_alias(self.state, alias)
+            self.visitor.on_namespace_alias(state, alias)
             return
 
         ns = NamespaceDecl(names, inline, doxygen)
-        state = self._push_state(NamespaceBlockState, ns)
-        state.location = location
+
+        state = NamespaceBlockState(state, location, ns)
+        self._setup_state(state)
+        self.current_namespace = state.namespace
+
         if self.visitor.on_namespace_start(state) is False:
             self.visitor = null_visitor
 
     def _parse_extern(self, tok: LexToken, doxygen: typing.Optional[str]) -> None:
         etok = self.lex.token_if("STRING_LITERAL", "template")
         if etok:
+            # classes cannot contain extern blocks/templates
+            state = self.state
+            if isinstance(state, ClassBlockState):
+                raise self._parse_error(tok)
+
             if etok.type == "STRING_LITERAL":
                 if self.lex.token_if("{"):
-                    state = self._push_state(ExternBlockState, etok.value)
-                    state.location = tok.location
+                    state = ExternBlockState(state, tok.location, etok.value)
+                    self._setup_state(state)
+
                     if self.visitor.on_extern_block_start(state) is False:
                         self.visitor = null_visitor
                     return
@@ -819,7 +830,7 @@ class CxxParser:
     # Using directive/declaration/typealias
     #
 
-    def _parse_using_directive(self) -> None:
+    def _parse_using_directive(self, state: NonClassBlockState) -> None:
         """
         using_directive: [attribute_specifier_seq] "using" "namespace" ["::"] [nested_name_specifier] IDENTIFIER ";"
         """
@@ -838,7 +849,7 @@ class CxxParser:
         if not names:
             raise self._parse_error(None, "NAME")
 
-        self.visitor.on_using_namespace(self.state, names)
+        self.visitor.on_using_namespace(state, names)
 
     def _parse_using_declaration(self, tok: LexToken) -> None:
         """
@@ -890,10 +901,11 @@ class CxxParser:
                 raise CxxParseError(
                     "unexpected using-directive when parsing alias-declaration", tok
                 )
-            if isinstance(self.state, ClassBlockState):
+            state = self.state
+            if not isinstance(state, (NamespaceBlockState, ExternBlockState)):
                 raise self._parse_error(tok)
 
-            self._parse_using_directive()
+            self._parse_using_directive(state)
         elif tok.type in ("DBL_COLON", "typename") or not self.lex.token_if("="):
             if template:
                 raise CxxParseError(
@@ -1140,10 +1152,11 @@ class CxxParser:
         clsdecl = ClassDecl(
             typename, bases, template, explicit, final, doxygen, self._current_access
         )
-        state = self._push_state(
-            ClassBlockState, clsdecl, default_access, typedef, mods
+        state: ClassBlockState = ClassBlockState(
+            self.state, location, clsdecl, default_access, typedef, mods
         )
-        state.location = location
+        self._setup_state(state)
+
         if self.visitor.on_class_start(state) is False:
             self.visitor = null_visitor
 
@@ -1850,6 +1863,7 @@ class CxxParser:
 
                     self.visitor.on_class_method(state, method)
             else:
+                assert isinstance(state, (ExternBlockState, NamespaceBlockState))
                 if not method.has_body:
                     raise self._parse_error(None, expected="Method body")
                 self.visitor.on_method_impl(state, method)
@@ -1909,6 +1923,9 @@ class CxxParser:
                 self.visitor.on_typedef(state, typedef)
                 return False
             else:
+                if not isinstance(state, (ExternBlockState, NamespaceBlockState)):
+                    raise CxxParseError("internal error")
+
                 self.visitor.on_function(state, fn)
                 return fn.has_body or fn.has_trailing_return
 

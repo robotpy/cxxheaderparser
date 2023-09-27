@@ -179,10 +179,12 @@ class ParsedData:
 #
 
 # define what user data we store in each state type
-SState = State[Block, Block]
-SExternBlockState = ExternBlockState[Block, Block]
-SNamespaceBlockState = NamespaceBlockState[NamespaceScope, NamespaceScope]
 SClassBlockState = ClassBlockState[ClassScope, Block]
+SExternBlockState = ExternBlockState[NamespaceScope, NamespaceScope]
+SNamespaceBlockState = NamespaceBlockState[NamespaceScope, NamespaceScope]
+
+SState = typing.Union[SClassBlockState, SExternBlockState, SNamespaceBlockState]
+SNonClassBlockState = typing.Union[SExternBlockState, SNamespaceBlockState]
 
 
 class SimpleCxxVisitor:
@@ -242,8 +244,9 @@ class SimpleCxxVisitor:
     def on_namespace_end(self, state: SNamespaceBlockState) -> None:
         pass
 
-    def on_namespace_alias(self, state: SState, alias: NamespaceAlias) -> None:
-        assert isinstance(state.user_data, NamespaceScope)
+    def on_namespace_alias(
+        self, state: SNonClassBlockState, alias: NamespaceAlias
+    ) -> None:
         state.user_data.ns_alias.append(alias)
 
     def on_forward_decl(self, state: SState, fdecl: ForwardDecl) -> None:
@@ -257,19 +260,18 @@ class SimpleCxxVisitor:
         assert isinstance(state.user_data, NamespaceScope)
         state.user_data.variables.append(v)
 
-    def on_function(self, state: SState, fn: Function) -> None:
-        assert isinstance(state.user_data, NamespaceScope)
+    def on_function(self, state: SNonClassBlockState, fn: Function) -> None:
         state.user_data.functions.append(fn)
 
-    def on_method_impl(self, state: SState, method: Method) -> None:
-        assert isinstance(state.user_data, NamespaceScope)
+    def on_method_impl(self, state: SNonClassBlockState, method: Method) -> None:
         state.user_data.method_impls.append(method)
 
     def on_typedef(self, state: SState, typedef: Typedef) -> None:
         state.user_data.typedefs.append(typedef)
 
-    def on_using_namespace(self, state: SState, namespace: typing.List[str]) -> None:
-        assert isinstance(state.user_data, NamespaceScope)
+    def on_using_namespace(
+        self, state: SNonClassBlockState, namespace: typing.List[str]
+    ) -> None:
         ns = UsingNamespace("::".join(namespace))
         state.user_data.using_ns.append(ns)
 

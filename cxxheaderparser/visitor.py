@@ -28,6 +28,7 @@ from .parserstate import (
     ClassBlockState,
     ExternBlockState,
     NamespaceBlockState,
+    NonClassBlockState,
 )
 
 
@@ -81,7 +82,9 @@ class CxxVisitor(Protocol):
         Called at the end of a ``namespace`` block
         """
 
-    def on_namespace_alias(self, state: State, alias: NamespaceAlias) -> None:
+    def on_namespace_alias(
+        self, state: NonClassBlockState, alias: NamespaceAlias
+    ) -> None:
         """
         Called when a ``namespace`` alias is encountered
         """
@@ -101,12 +104,12 @@ class CxxVisitor(Protocol):
         Called when a global variable is encountered
         """
 
-    def on_function(self, state: State, fn: Function) -> None:
+    def on_function(self, state: NonClassBlockState, fn: Function) -> None:
         """
         Called when a function is encountered that isn't part of a class
         """
 
-    def on_method_impl(self, state: State, method: Method) -> None:
+    def on_method_impl(self, state: NonClassBlockState, method: Method) -> None:
         """
         Called when a method implementation is encountered outside of a class
         declaration. For example:
@@ -134,7 +137,9 @@ class CxxVisitor(Protocol):
         once for ``*PT``
         """
 
-    def on_using_namespace(self, state: State, namespace: typing.List[str]) -> None:
+    def on_using_namespace(
+        self, state: NonClassBlockState, namespace: typing.List[str]
+    ) -> None:
         """
         .. code-block:: c++
 
@@ -249,7 +254,9 @@ class NullVisitor:
     def on_namespace_end(self, state: NamespaceBlockState) -> None:
         return None
 
-    def on_namespace_alias(self, state: State, alias: NamespaceAlias) -> None:
+    def on_namespace_alias(
+        self, state: NonClassBlockState, alias: NamespaceAlias
+    ) -> None:
         return None
 
     def on_forward_decl(self, state: State, fdecl: ForwardDecl) -> None:
@@ -261,16 +268,18 @@ class NullVisitor:
     def on_variable(self, state: State, v: Variable) -> None:
         return None
 
-    def on_function(self, state: State, fn: Function) -> None:
+    def on_function(self, state: NonClassBlockState, fn: Function) -> None:
         return None
 
-    def on_method_impl(self, state: State, method: Method) -> None:
+    def on_method_impl(self, state: NonClassBlockState, method: Method) -> None:
         return None
 
     def on_typedef(self, state: State, typedef: Typedef) -> None:
         return None
 
-    def on_using_namespace(self, state: State, namespace: typing.List[str]) -> None:
+    def on_using_namespace(
+        self, state: NonClassBlockState, namespace: typing.List[str]
+    ) -> None:
         return None
 
     def on_using_alias(self, state: State, using: UsingAlias) -> None:
