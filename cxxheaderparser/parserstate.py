@@ -35,13 +35,13 @@ T = typing.TypeVar("T")
 PT = typing.TypeVar("PT")
 
 
-class State(typing.Generic[T, PT]):
+class BaseState(typing.Generic[T, PT]):
     #: Uninitialized user data available for use by visitor implementations. You
     #: should set this in a ``*_start`` method.
     user_data: T
 
     #: parent state
-    parent: typing.Optional["State[PT, typing.Any]"]
+    parent: typing.Optional["State"]
 
     #: Approximate location that the parsed element was found at
     location: Location
@@ -49,52 +49,51 @@ class State(typing.Generic[T, PT]):
     #: internal detail used by parser
     _prior_visitor: "CxxVisitor"
 
-    def __init__(self, parent: typing.Optional["State[PT, typing.Any]"]) -> None:
+    def __init__(self, parent: typing.Optional["State"], location: Location) -> None:
         self.parent = parent
+        self.location = location
 
     def _finish(self, visitor: "CxxVisitor") -> None:
         pass
 
 
-class EmptyBlockState(State[T, PT]):
-    parent: State[PT, typing.Any]
-
-    def _finish(self, visitor: "CxxVisitor") -> None:
-        visitor.on_empty_block_end(self)
-
-
-class ExternBlockState(State[T, PT]):
-    parent: State[PT, typing.Any]
+class ExternBlockState(BaseState[T, PT]):
+    parent: "NonClassBlockState"
 
     #: The linkage for this extern block
     linkage: str
 
-    def __init__(self, parent: typing.Optional[State], linkage: str) -> None:
-        super().__init__(parent)
+    def __init__(
+        self, parent: "NonClassBlockState", location: Location, linkage: str
+    ) -> None:
+        super().__init__(parent, location)
         self.linkage = linkage
 
     def _finish(self, visitor: "CxxVisitor") -> None:
         visitor.on_extern_block_end(self)
 
 
-class NamespaceBlockState(State[T, PT]):
-    parent: State[PT, typing.Any]
+class NamespaceBlockState(BaseState[T, PT]):
+    parent: "NonClassBlockState"
 
     #: The incremental namespace for this block
     namespace: NamespaceDecl
 
     def __init__(
-        self, parent: typing.Optional[State], namespace: NamespaceDecl
+        self,
+        parent: typing.Optional["NonClassBlockState"],
+        location: Location,
+        namespace: NamespaceDecl,
     ) -> None:
-        super().__init__(parent)
+        super().__init__(parent, location)
         self.namespace = namespace
 
     def _finish(self, visitor: "CxxVisitor") -> None:
         visitor.on_namespace_end(self)
 
 
-class ClassBlockState(State[T, PT]):
-    parent: State[PT, typing.Any]
+class ClassBlockState(BaseState[T, PT]):
+    parent: "State"
 
     #: class decl block being processed
     class_decl: ClassDecl
@@ -110,13 +109,14 @@ class ClassBlockState(State[T, PT]):
 
     def __init__(
         self,
-        parent: typing.Optional[State],
+        parent: typing.Optional["State"],
+        location: Location,
         class_decl: ClassDecl,
         access: str,
         typedef: bool,
         mods: ParsedTypeModifiers,
     ) -> None:
-        super().__init__(parent)
+        super().__init__(parent, location)
         self.class_decl = class_decl
         self.access = access
         self.typedef = typedef
@@ -127,3 +127,9 @@ class ClassBlockState(State[T, PT]):
 
     def _finish(self, visitor: "CxxVisitor") -> None:
         visitor.on_class_end(self)
+
+
+State = typing.Union[
+    NamespaceBlockState[T, PT], ExternBlockState[T, PT], ClassBlockState[T, PT]
+]
+NonClassBlockState = typing.Union[ExternBlockState[T, PT], NamespaceBlockState[T, PT]]
