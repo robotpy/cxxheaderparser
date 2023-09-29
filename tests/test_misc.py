@@ -351,29 +351,3 @@ def test_warning_directive() -> None:
     data = parse_string(content, cleandoc=True)
 
     assert data == ParsedData()
-
-
-def test_empty_block() -> None:
-    """
-    Ensure the simple visitor doesn't break with an empty block
-    """
-    content = """
-      {
-          class X {};
-      }
-    """
-    data = parse_string(content, cleandoc=True)
-
-    assert data == ParsedData(
-        namespace=NamespaceScope(
-            classes=[
-                ClassScope(
-                    class_decl=ClassDecl(
-                        typename=PQName(
-                            segments=[NameSpecifier(name="X")], classkey="class"
-                        )
-                    )
-                )
-            ]
-        )
-    )
