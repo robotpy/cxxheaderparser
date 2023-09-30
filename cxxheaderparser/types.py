@@ -98,7 +98,11 @@ class DecltypeSpecifier:
 @dataclass
 class FundamentalSpecifier:
     """
-    A specifier that only contains fundamental types
+    A specifier that only contains fundamental types.
+
+    Fundamental types include various combinations of the following: unsigned,
+    signed, short, int, long, float, double, char, bool, char16_t, char32_t,
+    nullptr_t, wchar_t, void
     """
 
     name: str
