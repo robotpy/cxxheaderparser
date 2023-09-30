@@ -1,7 +1,7 @@
+from dataclasses import dataclass, field
 import typing
 
 from .lexer import LexToken, PlyLexer, LexerTokenStream
-from .types import Token
 
 # key: token type, value: (left spacing, right spacing)
 _want_spacing = {
@@ -33,6 +33,27 @@ _want_spacing = {
 }
 
 _want_spacing.update(dict.fromkeys(PlyLexer.keywords, (2, 2)))
+
+
+@dataclass
+class Token:
+    """
+    In an ideal world, this Token class would not be exposed via the user
+    visible API. Unfortunately, getting to that point would take a significant
+    amount of effort.
+
+    It is not expected that these will change, but they might.
+
+    At the moment, the only supported use of Token objects are in conjunction
+    with the ``tokfmt`` function. As this library matures, we'll try to clarify
+    the expectations around these. File an issue on github if you have ideas!
+    """
+
+    #: Raw value of the token
+    value: str
+
+    #: Lex type of the token
+    type: str = field(repr=False, compare=False, default="")
 
 
 def tokfmt(toks: typing.List[Token]) -> str:
