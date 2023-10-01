@@ -3,6 +3,7 @@ Contains optional preprocessor support via pcpp
 """
 
 import io
+import re
 import os
 from os.path import relpath
 import typing
@@ -36,7 +37,6 @@ def _filter_self(fname: str, fp: typing.TextIO) -> str:
     # isn't what a typical user of cxxheaderparser would want, so we strip out
     # the line directives and any content that isn't in our original file
 
-    # pcpp always emits line directives that match whatever is passed in to it
     line_ending = f'{fname}"\n'
 
     new_output = io.StringIO()
@@ -100,6 +100,18 @@ def make_pcpp_preprocessor(
         if retain_all_content:
             return fp.read()
         else:
+            # pcpp emits the #line directive using the filename you pass in
+            # but will rewrite it if it's on the include path it uses. This
+            # is copied from pcpp:
+            abssource = os.path.abspath(filename)
+            for rewrite in pp.rewrite_paths:
+                temp = re.sub(rewrite[0], rewrite[1], abssource)
+                if temp != abssource:
+                    filename = temp
+                    if os.sep != "/":
+                        filename = filename.replace(os.sep, "/")
+                    break
+
             return _filter_self(filename, fp)
 
     return _preprocess_file
