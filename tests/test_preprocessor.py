@@ -1,3 +1,4 @@
+import os
 import pathlib
 
 from cxxheaderparser.options import ParserOptions
@@ -50,6 +51,46 @@ def test_preprocessor_omit_content(tmp_path: pathlib.Path) -> None:
 
     options = ParserOptions(preprocessor=make_pcpp_preprocessor())
     data = parse_file(tmp_path / "t1.h", options=options)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            variables=[
+                Variable(
+                    name=PQName(segments=[NameSpecifier(name="x")]),
+                    type=Type(
+                        typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                    ),
+                    value=Value(tokens=[Token(value="2")]),
+                )
+            ]
+        )
+    )
+
+
+def test_preprocessor_omit_content2(tmp_path: pathlib.Path) -> None:
+    """
+    Ensure that content in other headers is omitted while handling pcpp
+    relative path quirk
+    """
+    h_content = '#include "t2.h"' "\n" "int x = X;\n"
+    h2_content = "#define X 2\n" "int omitted = 1;\n"
+
+    tmp_path2 = tmp_path / "l1"
+    tmp_path2.mkdir()
+
+    with open(tmp_path2 / "t1.h", "w") as fp:
+        fp.write(h_content)
+
+    with open(tmp_path2 / "t2.h", "w") as fp:
+        fp.write(h2_content)
+
+    options = ParserOptions(
+        preprocessor=make_pcpp_preprocessor(include_paths=[str(tmp_path)])
+    )
+
+    # Weirdness happens here
+    os.chdir(tmp_path)
+    data = parse_file(tmp_path2 / "t1.h", options=options)
 
     assert data == ParsedData(
         namespace=NamespaceScope(
