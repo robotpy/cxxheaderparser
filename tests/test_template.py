@@ -1987,3 +1987,43 @@ def test_extern_template() -> None:
             },
         )
     )
+
+
+def test_fwd_declared_method() -> None:
+    content = """
+      // forward declaration for specialized template function
+      template <> Clazz<A>::Clazz();
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            method_impls=[
+                Method(
+                    return_type=None,
+                    name=PQName(
+                        segments=[
+                            NameSpecifier(
+                                name="Clazz",
+                                specialization=TemplateSpecialization(
+                                    args=[
+                                        TemplateArgument(
+                                            arg=Type(
+                                                typename=PQName(
+                                                    segments=[NameSpecifier(name="A")]
+                                                )
+                                            )
+                                        )
+                                    ]
+                                ),
+                            ),
+                            NameSpecifier(name="Clazz"),
+                        ]
+                    ),
+                    parameters=[],
+                    template=TemplateDecl(),
+                    constructor=True,
+                )
+            ]
+        )
+    )
