@@ -1864,7 +1864,8 @@ class CxxParser:
                     self.visitor.on_class_method(state, method)
             else:
                 assert isinstance(state, (ExternBlockState, NamespaceBlockState))
-                if not method.has_body:
+                # only template specializations can be declared without a body here
+                if not method.has_body and not method.template:
                     raise self._parse_error(None, expected="Method body")
                 self.visitor.on_method_impl(state, method)
 
