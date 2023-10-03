@@ -9,6 +9,8 @@ from os.path import relpath
 import typing
 from .options import PreprocessorFunction
 
+from time import monotonic
+
 from pcpp import Preprocessor, OutputDirective, Action
 
 
@@ -53,7 +55,25 @@ def _filter_self(fname: str, fp: typing.TextIO) -> str:
     return new_output.read()
 
 
+class PPTime:
+    def __init__(self) -> None:
+        self.start = monotonic()
+        self.files = 0
+        self.parse_total: float = 0
+        self.write_total: float = 0
+        self.filter_total: float = 0
+
+    def report(self):
+        total = monotonic() - self.start
+        print("-- report --")
+        print(f" files={self.files} total_time={total:.5f}")
+        print(
+            f" preprocessor: parse={self.parse_total:.5f}, write={self.write_total:.5f}, filter={self.filter_total:.5f}"
+        )
+
+
 def make_pcpp_preprocessor(
+    pptime: PPTime,
     *,
     defines: typing.List[str] = [],
     include_paths: typing.List[str] = [],
@@ -87,19 +107,27 @@ def make_pcpp_preprocessor(
         if not retain_all_content:
             pp.line_directive = "#line"
 
+        pptime.files += 1
+
+        now = monotonic()
         pp.parse(content, filename)
+        pptime.parse_total += monotonic() - now
 
         if pp.errors:
             raise PreprocessorError("\n".join(pp.errors))
         elif pp.return_code:
             raise PreprocessorError("failed with exit code %d" % pp.return_code)
 
+        now = monotonic()
         fp = io.StringIO()
         pp.write(fp)
         fp.seek(0)
+        pptime.write_total += monotonic() - now
         if retain_all_content:
             return fp.read()
         else:
+            now = monotonic()
+
             # pcpp emits the #line directive using the filename you pass in
             # but will rewrite it if it's on the include path it uses. This
             # is copied from pcpp:
@@ -112,6 +140,8 @@ def make_pcpp_preprocessor(
                         filename = filename.replace(os.sep, "/")
                     break
 
-            return _filter_self(filename, fp)
+            flt = _filter_self(filename, fp)
+            pptime.filter_total += monotonic() - now
+            return flt
 
     return _preprocess_file
