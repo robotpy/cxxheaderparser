@@ -1773,7 +1773,7 @@ class CxxParser:
                 setattr(method, tok_value, True)
             elif tok_value in ("&", "&&"):
                 method.ref_qualifier = tok_value
-            elif tok_value == "ARROW":
+            elif tok_value == "->":
                 self._parse_trailing_return_type(method)
                 break
             elif tok_value == "throw":
