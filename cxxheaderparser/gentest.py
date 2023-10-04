@@ -36,7 +36,7 @@ def nondefault_repr(data: ParsedData) -> str:
 
             return f"{o.__class__.__qualname__ }({', '.join(vals)})"
 
-        if isinstance(o, list):
+        elif isinstance(o, list):
             return f"[{','.join(_inner_repr(l) for l in o)}]"
         elif isinstance(o, dict):
             vals = []
