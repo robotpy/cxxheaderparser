@@ -5,7 +5,6 @@ Contains optional preprocessor support via pcpp
 import io
 import re
 import os
-from os.path import relpath
 import typing
 from .options import PreprocessorFunction
 

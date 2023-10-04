@@ -50,7 +50,6 @@ from .types import (
 )
 
 from .parserstate import (
-    State,
     ClassBlockState,
     ExternBlockState,
     NamespaceBlockState,

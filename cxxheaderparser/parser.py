@@ -94,7 +94,7 @@ class CxxParser:
         )
         self.anon_id = 0
 
-        self.verbose = True if self.options.verbose else False
+        self.verbose = self.options.verbose
         if self.verbose:
 
             def debug_print(fmt: str, *args: typing.Any) -> None:
@@ -1755,7 +1755,7 @@ class CxxParser:
 
                 break
 
-            elif tok_value == "=":
+            if tok_value == "=":
                 tok = get_token()
                 tok_value = tok.value
 
@@ -1769,7 +1769,8 @@ class CxxParser:
                     raise self._parse_error(tok, "0/delete/default")
 
                 break
-            elif tok_value in ("const", "volatile", "override", "final"):
+
+            if tok_value in ("const", "volatile", "override", "final"):
                 setattr(method, tok_value, True)
             elif tok_value in ("&", "&&"):
                 method.ref_qualifier = tok_value

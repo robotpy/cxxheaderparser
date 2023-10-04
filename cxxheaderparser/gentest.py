@@ -1,7 +1,6 @@
 import argparse
 import dataclasses
 import inspect
-import re
 import subprocess
 import typing
 
@@ -37,15 +36,16 @@ def nondefault_repr(data: ParsedData) -> str:
 
             return f"{o.__class__.__qualname__ }({', '.join(vals)})"
 
-        elif isinstance(o, list):
+        if isinstance(o, list):
             return f"[{','.join(_inner_repr(l) for l in o)}]"
-        elif isinstance(o, dict):
+
+        if isinstance(o, dict):
             vals = []
             for k, v in o.items():
                 vals.append(f'"{k}": {_inner_repr(v)}')
             return "{" + ",".join(vals) + "}"
-        else:
-            return repr(o)
+
+        return repr(o)
 
     return _inner_repr(data)
 
@@ -72,7 +72,7 @@ def gentest(
         data = parse_string(content, options=options)
         if fail:
             raise ValueError("did not fail")
-    except CxxParseError as e:
+    except CxxParseError:
         if not fail:
             raise
         # do it again, but strip the content so the error message matches

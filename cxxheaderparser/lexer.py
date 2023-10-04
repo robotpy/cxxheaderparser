@@ -1,5 +1,3 @@
-import contextlib
-from collections import deque
 import re
 import typing
 import sys
@@ -782,7 +780,8 @@ class LexerTokenStream(TokenStream):
             tok = tokbuf.popleft()
             if tok.type == "NEWLINE":
                 break
-            elif tok.type == "WHITESPACE":
+
+            if tok.type == "WHITESPACE":
                 new_tokbuf.append(tok)
             elif tok.type in ("COMMENT_SINGLELINE", "COMMENT_MULTILINE"):
                 comments.append(tok)
@@ -838,8 +837,6 @@ class BoundedTokenStream(TokenStream):
         return len(self.tokbuf) > 0
 
     def _fill_tokbuf(self, tokbuf: typing.Deque[LexToken]) -> bool:
-        from .errors import CxxParseError
-
         raise CxxParseError("no more tokens left in this group")
 
     def current_location(self) -> Location:
