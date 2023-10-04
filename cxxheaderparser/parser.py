@@ -94,7 +94,7 @@ class CxxParser:
         )
         self.anon_id = 0
 
-        self.verbose = True if self.options.verbose else False
+        self.verbose = self.options.verbose
         if self.verbose:
 
             def debug_print(fmt: str, *args: typing.Any) -> None:

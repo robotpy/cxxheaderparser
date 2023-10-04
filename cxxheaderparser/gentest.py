@@ -1,7 +1,6 @@
 import argparse
 import dataclasses
 import inspect
-import re
 import subprocess
 import typing
 
@@ -72,7 +71,7 @@ def gentest(
         data = parse_string(content, options=options)
         if fail:
             raise ValueError("did not fail")
-    except CxxParseError as e:
+    except CxxParseError:
         if not fail:
             raise
         # do it again, but strip the content so the error message matches
