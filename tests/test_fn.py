@@ -4,6 +4,8 @@ from cxxheaderparser.types import (
     Array,
     AutoSpecifier,
     ClassDecl,
+    DecltypeSpecifier,
+    Field,
     Function,
     FunctionType,
     FundamentalSpecifier,
@@ -1137,6 +1139,57 @@ def test_noexcept_contents() -> None:
                     name=PQName(segments=[NameSpecifier(name="foo")]),
                     parameters=[],
                     noexcept=Value(tokens=[Token(value="false")]),
+                )
+            ]
+        )
+    )
+
+
+def test_auto_decltype_return() -> None:
+    content = """
+      class C {
+      public:
+        int x;
+        auto GetSelected() -> decltype(x);
+      };
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            classes=[
+                ClassScope(
+                    class_decl=ClassDecl(
+                        typename=PQName(
+                            segments=[NameSpecifier(name="C")], classkey="class"
+                        )
+                    ),
+                    fields=[
+                        Field(
+                            access="public",
+                            type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="int")]
+                                )
+                            ),
+                            name="x",
+                        )
+                    ],
+                    methods=[
+                        Method(
+                            return_type=Type(
+                                typename=PQName(
+                                    segments=[
+                                        DecltypeSpecifier(tokens=[Token(value="x")])
+                                    ]
+                                )
+                            ),
+                            name=PQName(segments=[NameSpecifier(name="GetSelected")]),
+                            parameters=[],
+                            has_trailing_return=True,
+                            access="public",
+                        )
+                    ],
                 )
             ]
         )
