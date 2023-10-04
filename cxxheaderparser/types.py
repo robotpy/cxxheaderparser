@@ -1,26 +1,7 @@
 import typing
 from dataclasses import dataclass, field
 
-
-@dataclass
-class Token:
-    """
-    In an ideal world, this Token class would not be exposed via the user
-    visible API. Unfortunately, getting to that point would take a significant
-    amount of effort.
-
-    It is not expected that these will change, but they might.
-
-    At the moment, the only supported use of Token objects are in conjunction
-    with the ``tokfmt`` function. As this library matures, we'll try to clarify
-    the expectations around these. File an issue on github if you have ideas!
-    """
-
-    #: Raw value of the token
-    value: str
-
-    #: Lex type of the token
-    type: str = field(repr=False, compare=False, default="")
+from .tokfmt import tokfmt, Token
 
 
 @dataclass
@@ -36,6 +17,9 @@ class Value:
 
     #: Tokens corresponding to the value
     tokens: typing.List[Token]
+
+    def format(self) -> str:
+        return tokfmt(self.tokens)
 
 
 @dataclass
@@ -94,6 +78,9 @@ class DecltypeSpecifier:
     #: Unparsed tokens within the decltype
     tokens: typing.List[Token]
 
+    def format(self) -> str:
+        return f"decltype({tokfmt(self.tokens)})"
+
 
 @dataclass
 class FundamentalSpecifier:
@@ -106,6 +93,9 @@ class FundamentalSpecifier:
     """
 
     name: str
+
+    def format(self) -> str:
+        return self.name
 
 
 @dataclass
@@ -124,6 +114,12 @@ class NameSpecifier:
 
     specialization: typing.Optional["TemplateSpecialization"] = None
 
+    def format(self) -> str:
+        if self.specialization:
+            return f"{self.name}{self.specialization.format()}"
+        else:
+            return self.name
+
 
 @dataclass
 class AutoSpecifier:
@@ -132,6 +128,9 @@ class AutoSpecifier:
     """
 
     name: str = "auto"
+
+    def format(self) -> str:
+        return self.name
 
 
 @dataclass
@@ -144,6 +143,10 @@ class AnonymousName:
 
     #: Unique id associated with this name (only unique per parser instance!)
     id: int
+
+    def format(self) -> str:
+        # TODO: not sure what makes sense here, subject to change
+        return f"<<id={self.id}>>"
 
 
 PQNameSegment = typing.Union[
@@ -170,6 +173,13 @@ class PQName:
     #: Set to true if the type was preceded with 'typename'
     has_typename: bool = False
 
+    def format(self) -> str:
+        tn = "typename " if self.has_typename else ""
+        if self.classkey:
+            return f"{tn}{self.classkey} {'::'.join(seg.format() for seg in self.segments)}"
+        else:
+            return tn + "::".join(seg.format() for seg in self.segments)
+
 
 @dataclass
 class TemplateArgument:
@@ -189,6 +199,12 @@ class TemplateArgument:
 
     param_pack: bool = False
 
+    def format(self) -> str:
+        if self.param_pack:
+            return f"{self.arg.format()}..."
+        else:
+            return self.arg.format()
+
 
 @dataclass
 class TemplateSpecialization:
@@ -203,6 +219,9 @@ class TemplateSpecialization:
     """
 
     args: typing.List[TemplateArgument]
+
+    def format(self) -> str:
+        return f"<{', '.join(arg.format() for arg in self.args)}>"
 
 
 @dataclass
@@ -238,6 +257,23 @@ class FunctionType:
     #:            calling convention
     msvc_convention: typing.Optional[str] = None
 
+    def format(self) -> str:
+        vararg = "..." if self.vararg else ""
+        params = ", ".join(p.format() for p in self.parameters)
+        if self.has_trailing_return:
+            return f"auto ({params}{vararg}) -> {self.return_type.format()}"
+        else:
+            return f"{self.return_type.format()} ({params}{vararg})"
+
+    def format_decl(self, name: str) -> str:
+        """Format as a named declaration"""
+        vararg = "..." if self.vararg else ""
+        params = ", ".join(p.format() for p in self.parameters)
+        if self.has_trailing_return:
+            return f"auto {name}({params}{vararg}) -> {self.return_type.format()}"
+        else:
+            return f"{self.return_type.format()} {name}({params}{vararg})"
+
 
 @dataclass
 class Type:
@@ -249,6 +285,17 @@ class Type:
 
     const: bool = False
     volatile: bool = False
+
+    def format(self) -> str:
+        c = "const " if self.const else ""
+        v = "volatile " if self.volatile else ""
+        return f"{c}{v}{self.typename.format()}"
+
+    def format_decl(self, name: str):
+        """Format as a named declaration"""
+        c = "const " if self.const else ""
+        v = "volatile " if self.volatile else ""
+        return f"{c}{v}{self.typename.format()} {name}"
 
 
 @dataclass
@@ -269,6 +316,14 @@ class Array:
     #:          ~~
     size: typing.Optional[Value]
 
+    def format(self) -> str:
+        s = self.size.format() if self.size else ""
+        return f"{self.array_of.format()}[{s}]"
+
+    def format_decl(self, name: str) -> str:
+        s = self.size.format() if self.size else ""
+        return f"{self.array_of.format()} {name}[{s}]"
+
 
 @dataclass
 class Pointer:
@@ -282,6 +337,25 @@ class Pointer:
     const: bool = False
     volatile: bool = False
 
+    def format(self) -> str:
+        c = " const" if self.const else ""
+        v = " volatile" if self.volatile else ""
+        ptr_to = self.ptr_to
+        if isinstance(ptr_to, (Array, FunctionType)):
+            return ptr_to.format_decl(f"(*{c}{v})")
+        else:
+            return f"{ptr_to.format()}*{c}{v}"
+
+    def format_decl(self, name: str):
+        """Format as a named declaration"""
+        c = " const" if self.const else ""
+        v = " volatile" if self.volatile else ""
+        ptr_to = self.ptr_to
+        if isinstance(ptr_to, (Array, FunctionType)):
+            return ptr_to.format_decl(f"(*{c}{v} {name})")
+        else:
+            return f"{ptr_to.format()}*{c}{v} {name}"
+
 
 @dataclass
 class Reference:
@@ -291,6 +365,22 @@ class Reference:
 
     ref_to: typing.Union[Array, FunctionType, Pointer, Type]
 
+    def format(self) -> str:
+        ref_to = self.ref_to
+        if isinstance(ref_to, Array):
+            return ref_to.format_decl("(&)")
+        else:
+            return f"{ref_to.format()}&"
+
+    def format_decl(self, name: str):
+        """Format as a named declaration"""
+        ref_to = self.ref_to
+
+        if isinstance(ref_to, Array):
+            return ref_to.format_decl(f"(& {name})")
+        else:
+            return f"{ref_to.format()}& {name}"
+
 
 @dataclass
 class MoveReference:
@@ -299,6 +389,13 @@ class MoveReference:
     """
 
     moveref_to: typing.Union[Array, FunctionType, Pointer, Type]
+
+    def format(self) -> str:
+        return f"{self.moveref_to.format()}&&"
+
+    def format_decl(self, name: str):
+        """Format as a named declaration"""
+        return f"{self.moveref_to.format()}&& {name}"
 
 
 #: A type or function type that is decorated with various things
@@ -504,6 +601,15 @@ class Parameter:
     name: typing.Optional[str] = None
     default: typing.Optional[Value] = None
     param_pack: bool = False
+
+    def format(self) -> str:
+        default = f" = {self.default.format()}" if self.default else ""
+        pp = "... " if self.param_pack else ""
+        name = self.name
+        if name:
+            return f"{self.type.format_decl(f'{pp}{name}')}{default}"
+        else:
+            return f"{self.type.format()}{pp}{default}"
 
 
 @dataclass
