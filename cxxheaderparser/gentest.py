@@ -38,14 +38,13 @@ def nondefault_repr(data: ParsedData) -> str:
 
         if isinstance(o, list):
             return f"[{','.join(_inner_repr(l) for l in o)}]"
-
-        if isinstance(o, dict):
+        elif isinstance(o, dict):
             vals = []
             for k, v in o.items():
                 vals.append(f'"{k}": {_inner_repr(v)}')
             return "{" + ",".join(vals) + "}"
-
-        return repr(o)
+        else:
+            return repr(o)
 
     return _inner_repr(data)
 

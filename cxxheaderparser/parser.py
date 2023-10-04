@@ -1755,7 +1755,7 @@ class CxxParser:
 
                 break
 
-            if tok_value == "=":
+            elif tok_value == "=":
                 tok = get_token()
                 tok_value = tok.value
 
@@ -1769,8 +1769,7 @@ class CxxParser:
                     raise self._parse_error(tok, "0/delete/default")
 
                 break
-
-            if tok_value in ("const", "volatile", "override", "final"):
+            elif tok_value in ("const", "volatile", "override", "final"):
                 setattr(method, tok_value, True)
             elif tok_value in ("&", "&&"):
                 method.ref_qualifier = tok_value

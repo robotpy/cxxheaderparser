@@ -233,9 +233,9 @@ class Lexer:
                     if tok.type:
                         self.lexpos = m.end()
                         return tok
-
-                    lexpos = m.end()
-                    break
+                    else:
+                        lexpos = m.end()
+                        break
 
                 lexpos = m.end()
 

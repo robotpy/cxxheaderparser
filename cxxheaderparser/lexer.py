@@ -780,8 +780,7 @@ class LexerTokenStream(TokenStream):
             tok = tokbuf.popleft()
             if tok.type == "NEWLINE":
                 break
-
-            if tok.type == "WHITESPACE":
+            elif tok.type == "WHITESPACE":
                 new_tokbuf.append(tok)
             elif tok.type in ("COMMENT_SINGLELINE", "COMMENT_MULTILINE"):
                 comments.append(tok)
