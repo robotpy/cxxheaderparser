@@ -1,9 +1,6 @@
 cxxheaderparser
 ===============
 
-**Note**: This is still a work in progress, but should be stable ~in a few weeks~
-once I port robotpy-build over to use it. Someday I'll do that, probably!
-
 A pure python C++ header parser that parses C++ headers in a mildly naive
 manner that allows it to handle many C++ constructs, including many modern
 (C++11 and beyond) features.
@@ -54,7 +51,9 @@ Install
 
 Requires Python 3.6+, no non-stdlib dependencies if using Python 3.7+.
 
-TODO: distribute on pip
+```
+pip install cxxheaderparser
+```
 
 Usage
 -----
