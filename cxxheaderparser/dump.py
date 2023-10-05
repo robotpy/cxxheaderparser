@@ -21,7 +21,9 @@ def dumpmain() -> None:
     )
     parser.add_argument("-v", "--verbose", default=False, action="store_true")
     parser.add_argument(
-        "--mode", choices=["json", "pprint", "repr", "brepr"], default="pprint"
+        "--mode",
+        choices=["json", "pprint", "repr", "brepr", "pponly"],
+        default="pprint",
     )
     parser.add_argument(
         "--pcpp", default=False, action="store_true", help="Use pcpp preprocessor"
@@ -33,10 +35,16 @@ def dumpmain() -> None:
     args = parser.parse_args()
 
     preprocessor = None
-    if args.pcpp:
+    if args.pcpp or args.mode == "pponly":
         from .preprocessor import make_pcpp_preprocessor
 
         preprocessor = make_pcpp_preprocessor(encoding=args.encoding)
+
+        if args.mode == "pponly":
+            with open(args.header, "r", encoding=args.encoding) as fp:
+                pp_content = preprocessor(args.header, fp.read())
+            sys.stdout.write(pp_content)
+            sys.exit(0)
 
     options = ParserOptions(verbose=args.verbose, preprocessor=preprocessor)
     data = parse_file(args.header, encoding=args.encoding, options=options)
