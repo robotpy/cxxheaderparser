@@ -2027,3 +2027,139 @@ def test_fwd_declared_method() -> None:
             ]
         )
     )
+
+
+def test_multiple_explicit_member_specialization() -> None:
+    content = """
+      template <>
+      template <>
+      inline Standard_CString
+      StdObjMgt_Attribute<TDF_TagSource>::Simple<Standard_Integer>::PName() const {
+        return "PDF_TagSource";
+      }
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            method_impls=[
+                Method(
+                    return_type=Type(
+                        typename=PQName(
+                            segments=[NameSpecifier(name="Standard_CString")]
+                        )
+                    ),
+                    name=PQName(
+                        segments=[
+                            NameSpecifier(
+                                name="StdObjMgt_Attribute",
+                                specialization=TemplateSpecialization(
+                                    args=[
+                                        TemplateArgument(
+                                            arg=Type(
+                                                typename=PQName(
+                                                    segments=[
+                                                        NameSpecifier(
+                                                            name="TDF_TagSource"
+                                                        )
+                                                    ]
+                                                )
+                                            )
+                                        )
+                                    ]
+                                ),
+                            ),
+                            NameSpecifier(
+                                name="Simple",
+                                specialization=TemplateSpecialization(
+                                    args=[
+                                        TemplateArgument(
+                                            arg=Type(
+                                                typename=PQName(
+                                                    segments=[
+                                                        NameSpecifier(
+                                                            name="Standard_Integer"
+                                                        )
+                                                    ]
+                                                )
+                                            )
+                                        )
+                                    ]
+                                ),
+                            ),
+                            NameSpecifier(name="PName"),
+                        ]
+                    ),
+                    parameters=[],
+                    inline=True,
+                    has_body=True,
+                    template=[TemplateDecl(), TemplateDecl()],
+                    const=True,
+                )
+            ]
+        )
+    )
+
+
+def test_member_class_template_specialization() -> None:
+    content = """
+      template <> // specialization of a member class template
+      template <class U>
+      struct A<char>::C {
+        void f();
+      };
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            classes=[
+                ClassScope(
+                    class_decl=ClassDecl(
+                        typename=PQName(
+                            segments=[
+                                NameSpecifier(
+                                    name="A",
+                                    specialization=TemplateSpecialization(
+                                        args=[
+                                            TemplateArgument(
+                                                arg=Type(
+                                                    typename=PQName(
+                                                        segments=[
+                                                            FundamentalSpecifier(
+                                                                name="char"
+                                                            )
+                                                        ]
+                                                    )
+                                                )
+                                            )
+                                        ]
+                                    ),
+                                ),
+                                NameSpecifier(name="C"),
+                            ],
+                            classkey="struct",
+                        ),
+                        template=[
+                            TemplateDecl(),
+                            TemplateDecl(
+                                params=[TemplateTypeParam(typekey="class", name="U")]
+                            ),
+                        ],
+                    ),
+                    methods=[
+                        Method(
+                            return_type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="void")]
+                                )
+                            ),
+                            name=PQName(segments=[NameSpecifier(name="f")]),
+                            parameters=[],
+                            access="public",
+                        )
+                    ],
+                )
+            ]
+        )
+    )
