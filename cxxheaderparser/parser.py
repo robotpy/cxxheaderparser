@@ -44,6 +44,7 @@ from .types import (
     Reference,
     TemplateArgument,
     TemplateDecl,
+    TemplateDeclTypeVar,
     TemplateInst,
     TemplateNonTypeParam,
     TemplateParam,
@@ -615,7 +616,18 @@ class CxxParser:
 
         template = self._parse_template_decl()
 
+        # Check for multiple specializations
         tok = self.lex.token()
+        if tok.type == "template":
+            templates = [template]
+            while tok.type == "template":
+                templates.append(self._parse_template_decl())
+                tok = self.lex.token()
+
+            # Can only be followed by declarations
+            self._parse_declarations(tok, doxygen, templates)
+            return
+
         if tok.type == "using":
             self._parse_using(tok, doxygen, template)
         elif tok.type == "friend":
@@ -1094,7 +1106,7 @@ class CxxParser:
         typename: PQName,
         tok: LexToken,
         doxygen: typing.Optional[str],
-        template: typing.Optional[TemplateDecl],
+        template: TemplateDeclTypeVar,
         typedef: bool,
         location: Location,
         mods: ParsedTypeModifiers,
@@ -1795,7 +1807,7 @@ class CxxParser:
         return_type: typing.Optional[DecoratedType],
         pqname: PQName,
         op: typing.Optional[str],
-        template: typing.Optional[TemplateDecl],
+        template: TemplateDeclTypeVar,
         doxygen: typing.Optional[str],
         location: Location,
         constructor: bool,
@@ -2168,7 +2180,7 @@ class CxxParser:
         mods: ParsedTypeModifiers,
         location: Location,
         doxygen: typing.Optional[str],
-        template: typing.Optional[TemplateDecl],
+        template: TemplateDeclTypeVar,
         is_typedef: bool,
         is_friend: bool,
     ) -> bool:
@@ -2295,6 +2307,9 @@ class CxxParser:
         if not dtype:
             raise CxxParseError("appear to be parsing a field without a type")
 
+        if isinstance(template, list):
+            raise CxxParseError("multiple template declarations on a field")
+
         self._parse_field(mods, dtype, pqname, template, doxygen, location, is_typedef)
         return False
 
@@ -2303,7 +2318,7 @@ class CxxParser:
         mods: ParsedTypeModifiers,
         location: Location,
         doxygen: typing.Optional[str],
-        template: typing.Optional[TemplateDecl],
+        template: TemplateDeclTypeVar,
         is_typedef: bool,
         is_friend: bool,
     ) -> None:
@@ -2356,7 +2371,7 @@ class CxxParser:
         self,
         tok: LexToken,
         doxygen: typing.Optional[str],
-        template: typing.Optional[TemplateDecl] = None,
+        template: TemplateDeclTypeVar = None,
         is_typedef: bool = False,
         is_friend: bool = False,
     ) -> None:
@@ -2426,7 +2441,7 @@ class CxxParser:
         parsed_type: Type,
         mods: ParsedTypeModifiers,
         doxygen: typing.Optional[str],
-        template: typing.Optional[TemplateDecl],
+        template: TemplateDeclTypeVar,
         is_typedef: bool,
         is_friend: bool,
         location: Location,

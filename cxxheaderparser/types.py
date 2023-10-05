@@ -514,6 +514,26 @@ class TemplateDecl:
     params: typing.List[TemplateParam] = field(default_factory=list)
 
 
+#: If no template, this is None. This is a TemplateDecl if this there is a single
+#: declaration:
+#:
+#: .. code-block:: c++
+#:
+#:    template <typename T>
+#:    struct C {};
+#:
+#: If there are multiple template declarations, then this is a list of
+#: declarations in the order that they're encountered:
+#:
+#: .. code-block:: c++
+#:
+#:    template<>
+#:    template<class U>
+#:    struct A<char>::C {};
+#:
+TemplateDeclTypeVar = typing.Union[None, TemplateDecl, typing.List[TemplateDecl]]
+
+
 @dataclass
 class TemplateInst:
     """
@@ -538,7 +558,7 @@ class ForwardDecl:
     """
 
     typename: PQName
-    template: typing.Optional[TemplateDecl] = None
+    template: TemplateDeclTypeVar = None
     doxygen: typing.Optional[str] = None
 
     #: Set if this is a forward declaration of an enum and it has a base
@@ -576,7 +596,7 @@ class ClassDecl:
     typename: PQName
 
     bases: typing.List[BaseClass] = field(default_factory=list)
-    template: typing.Optional[TemplateDecl] = None
+    template: TemplateDeclTypeVar = None
 
     explicit: bool = False
     final: bool = False
@@ -642,7 +662,7 @@ class Function:
     #: whatever the trailing return type was
     has_trailing_return: bool = False
 
-    template: typing.Optional[TemplateDecl] = None
+    template: TemplateDeclTypeVar = None
 
     #: Value of any throw specification for this function. The value omits the
     #: outer parentheses.
