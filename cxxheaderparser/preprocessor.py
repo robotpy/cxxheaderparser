@@ -16,10 +16,15 @@ class PreprocessorError(Exception):
 
 
 class _CustomPreprocessor(Preprocessor):
-    def __init__(self, encoding: typing.Optional[str]):
+    def __init__(
+        self,
+        encoding: typing.Optional[str],
+        passthru_includes: typing.Optional["re.Pattern"],
+    ):
         Preprocessor.__init__(self)
         self.errors: typing.List[str] = []
         self.assume_encoding = encoding
+        self.passthru_includes = passthru_includes
 
     def on_error(self, file, line, msg):
         self.errors.append(f"{file}:{line} error: {msg}")
@@ -58,12 +63,15 @@ def make_pcpp_preprocessor(
     include_paths: typing.List[str] = [],
     retain_all_content: bool = False,
     encoding: typing.Optional[str] = None,
+    passthru_includes: typing.Optional["re.Pattern"] = None,
 ) -> PreprocessorFunction:
     """
     Creates a preprocessor function that uses pcpp (which must be installed
     separately) to preprocess the input text.
 
     :param encoding: If specified any include files are opened with this encoding
+    :param passthru_includes: If specified any #include directives that match the
+                              compiled regex pattern will be part of the output.
 
     .. code-block:: python
 
@@ -75,7 +83,7 @@ def make_pcpp_preprocessor(
     """
 
     def _preprocess_file(filename: str, content: str) -> str:
-        pp = _CustomPreprocessor(encoding)
+        pp = _CustomPreprocessor(encoding, passthru_includes)
         if include_paths:
             for p in include_paths:
                 pp.add_path(p)
