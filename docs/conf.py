@@ -12,16 +12,11 @@ import pkg_resources
 # -- Project information -----------------------------------------------------
 
 project = "cxxheaderparser"
-copyright = "2020-2021, Dustin Spicuzza"
+copyright = "2020-2023, Dustin Spicuzza"
 author = "Dustin Spicuzza"
 
 # The full version, including alpha/beta/rc tags
 release = pkg_resources.get_distribution("cxxheaderparser").version
-
-# -- RTD configuration ------------------------------------------------
-
-# on_rtd is whether we are on readthedocs.org, this line of code grabbed from docs.readthedocs.org
-on_rtd = os.environ.get("READTHEDOCS", None) == "True"
 
 
 # -- General configuration ---------------------------------------------------
@@ -29,10 +24,7 @@ on_rtd = os.environ.get("READTHEDOCS", None) == "True"
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = [
-    "sphinx.ext.autodoc",
-    "sphinx_autodoc_typehints",
-]
+extensions = ["sphinx.ext.autodoc", "sphinx_autodoc_typehints", "sphinx_rtd_theme"]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
@@ -47,13 +39,7 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-#
-if not on_rtd:  # only import and set the theme if we're building docs locally
-    import sphinx_rtd_theme
 
-    html_theme = "sphinx_rtd_theme"
-    html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
-else:
-    html_theme = "default"
+html_theme = "sphinx_rtd_theme"
 
 always_document_param_types = True
