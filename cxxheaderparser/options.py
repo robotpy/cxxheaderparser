@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Callable, Optional
 
 #: arguments are (filename, content)
-PreprocessorFunction = Callable[[str, str], str]
+PreprocessorFunction = Callable[[str, Optional[str]], str]
 
 
 @dataclass

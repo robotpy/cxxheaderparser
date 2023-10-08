@@ -74,9 +74,10 @@ class CxxParser:
     def __init__(
         self,
         filename: str,
-        content: str,
+        content: typing.Optional[str],
         visitor: CxxVisitor,
         options: typing.Optional[ParserOptions] = None,
+        encoding: typing.Optional[str] = None,
     ) -> None:
         self.visitor = visitor
         self.filename = filename
@@ -84,6 +85,13 @@ class CxxParser:
 
         if options and options.preprocessor is not None:
             content = options.preprocessor(filename, content)
+
+        if content is None:
+            if encoding is None:
+                encoding = "utf-8-sig"
+
+            with open(filename, "r", encoding=encoding) as fp:
+                content = fp.read()
 
         self.lex: lexer.TokenStream = lexer.LexerTokenStream(filename, content)
 
