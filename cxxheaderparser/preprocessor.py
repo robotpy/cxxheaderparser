@@ -74,7 +74,7 @@ def make_gcc_preprocessor(
     if not encoding:
         encoding = "utf-8"
 
-    def _preprocess_file(filename: str, content: str) -> str:
+    def _preprocess_file(filename: str, content: typing.Optional[str]) -> str:
         cmd = gcc_args + ["-w", "-E", "-C"]
 
         for p in include_paths:
@@ -86,6 +86,8 @@ def make_gcc_preprocessor(
         if filename == "<str>":
             cmd.append("-")
             filename = "<stdin>"
+            if content is None:
+                raise PreprocessorError("no content specified for stdin")
             kwargs["input"] = content
         else:
             cmd.append(filename)
@@ -191,7 +193,7 @@ def make_pcpp_preprocessor(
     if pcpp is None:
         raise PreprocessorError("pcpp is not installed")
 
-    def _preprocess_file(filename: str, content: str) -> str:
+    def _preprocess_file(filename: str, content: typing.Optional[str]) -> str:
         pp = _CustomPreprocessor(encoding, passthru_includes)
         if include_paths:
             for p in include_paths:
@@ -202,6 +204,10 @@ def make_pcpp_preprocessor(
 
         if not retain_all_content:
             pp.line_directive = "#line"
+
+        if content is None:
+            with open(filename, "r", encoding=encoding) as fp:
+                content = fp.read()
 
         pp.parse(content, filename)
 
