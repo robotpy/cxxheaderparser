@@ -17,7 +17,7 @@ if sys.version_info >= (3, 8):
 else:
     Protocol = object
 
-_line_re = re.compile(r'^\#[\t ]*line (\d+) "(.*)"')
+_line_re = re.compile(r'^\#[\t ]*(line)? (\d+) "(.*)"')
 _multicomment_re = re.compile("\n[\\s]+\\*")
 
 
@@ -448,8 +448,8 @@ class PlyLexer:
         # handle line macros
         m = _line_re.match(t.value)
         if m:
-            self.filename = m.group(2)
-            self.line_offset = 1 + self.lex.lineno - int(m.group(1))
+            self.filename = m.group(3)
+            self.line_offset = 1 + self.lex.lineno - int(m.group(2))
             return None
         # ignore C++23 warning directive
         if t.value.startswith("#warning"):

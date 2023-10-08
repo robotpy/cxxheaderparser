@@ -26,10 +26,17 @@ from cxxheaderparser.types import (
 )
 
 
-@pytest.fixture(params=["pcpp"])
+@pytest.fixture(params=["gcc", "pcpp"])
 def make_pp(request) -> typing.Callable[..., PreprocessorFunction]:
     param = request.param
-    if param == "pcpp":
+    if param == "gcc":
+        gcc_path = shutil.which("g++")
+        if not gcc_path:
+            pytest.skip("g++ not found")
+
+        subprocess.run([gcc_path, "--version"])
+        return preprocessor.make_gcc_preprocessor
+    elif param == "pcpp":
         if preprocessor.pcpp is None:
             pytest.skip("pcpp not installed")
         return preprocessor.make_pcpp_preprocessor
