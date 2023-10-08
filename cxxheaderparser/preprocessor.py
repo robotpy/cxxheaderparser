@@ -8,32 +8,37 @@ import os
 import typing
 from .options import PreprocessorFunction
 
-from pcpp import Preprocessor, OutputDirective, Action
-
 
 class PreprocessorError(Exception):
     pass
 
 
-class _CustomPreprocessor(Preprocessor):
-    def __init__(
-        self,
-        encoding: typing.Optional[str],
-        passthru_includes: typing.Optional["re.Pattern"],
-    ):
-        Preprocessor.__init__(self)
-        self.errors: typing.List[str] = []
-        self.assume_encoding = encoding
-        self.passthru_includes = passthru_includes
+try:
+    import pcpp
+    from pcpp import Preprocessor, OutputDirective, Action
 
-    def on_error(self, file, line, msg):
-        self.errors.append(f"{file}:{line} error: {msg}")
+    class _CustomPreprocessor(Preprocessor):
+        def __init__(
+            self,
+            encoding: typing.Optional[str],
+            passthru_includes: typing.Optional["re.Pattern"],
+        ):
+            Preprocessor.__init__(self)
+            self.errors: typing.List[str] = []
+            self.assume_encoding = encoding
+            self.passthru_includes = passthru_includes
 
-    def on_include_not_found(self, *ignored):
-        raise OutputDirective(Action.IgnoreAndPassThrough)
+        def on_error(self, file, line, msg):
+            self.errors.append(f"{file}:{line} error: {msg}")
 
-    def on_comment(self, *ignored):
-        return True
+        def on_include_not_found(self, *ignored):
+            raise OutputDirective(Action.IgnoreAndPassThrough)
+
+        def on_comment(self, *ignored):
+            return True
+
+except ImportError:
+    pcpp = None
 
 
 def _filter_self(fname: str, fp: typing.TextIO) -> str:
@@ -81,6 +86,9 @@ def make_pcpp_preprocessor(
         parse_file(content, options=options)
 
     """
+
+    if pcpp is None:
+        raise PreprocessorError("pcpp is not installed")
 
     def _preprocess_file(filename: str, content: str) -> str:
         pp = _CustomPreprocessor(encoding, passthru_includes)
