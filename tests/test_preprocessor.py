@@ -26,7 +26,7 @@ from cxxheaderparser.types import (
 )
 
 
-@pytest.fixture(params=["gcc", "pcpp"])
+@pytest.fixture(params=["gcc", "msvc", "pcpp"])
 def make_pp(request) -> typing.Callable[..., PreprocessorFunction]:
     param = request.param
     if param == "gcc":
@@ -36,6 +36,12 @@ def make_pp(request) -> typing.Callable[..., PreprocessorFunction]:
 
         subprocess.run([gcc_path, "--version"])
         return preprocessor.make_gcc_preprocessor
+    elif param == "msvc":
+        gcc_path = shutil.which("cl.exe")
+        if not gcc_path:
+            pytest.skip("cl.exe not found")
+
+        return preprocessor.make_msvc_preprocessor
     elif param == "pcpp":
         if preprocessor.pcpp is None:
             pytest.skip("pcpp not installed")
