@@ -348,7 +348,10 @@ def parse_file(
     if filename == "-":
         content = sys.stdin.read()
     else:
-        with open(filename, encoding=encoding) as fp:
-            content = fp.read()
+        content = None
 
-    return parse_string(content, filename=filename, options=options)
+    visitor = SimpleCxxVisitor()
+    parser = CxxParser(filename, content, visitor, options)
+    parser.parse()
+
+    return visitor.data

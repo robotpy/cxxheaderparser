@@ -7,6 +7,7 @@ import re
 import os
 import subprocess
 import sys
+import tempfile
 import typing
 
 from .options import PreprocessorFunction
@@ -74,7 +75,7 @@ def make_gcc_preprocessor(
     if not encoding:
         encoding = "utf-8"
 
-    def _preprocess_file(filename: str, content: str) -> str:
+    def _preprocess_file(filename: str, content: typing.Optional[str]) -> str:
         cmd = gcc_args + ["-w", "-E", "-C"]
 
         for p in include_paths:
@@ -86,6 +87,8 @@ def make_gcc_preprocessor(
         if filename == "<str>":
             cmd.append("-")
             filename = "<stdin>"
+            if content is None:
+                raise PreprocessorError("no content specified for stdin")
             kwargs["input"] = content
         else:
             cmd.append(filename)
@@ -96,6 +99,110 @@ def make_gcc_preprocessor(
         result: str = subprocess.check_output(cmd, **kwargs)  # type: ignore
         if not retain_all_content:
             result = _gcc_filter(filename, io.StringIO(result))
+
+        return result
+
+    return _preprocess_file
+
+
+#
+# Microsoft Visual Studio preprocessor support
+#
+
+
+def _msvc_filter(fp: typing.TextIO) -> str:
+    # MSVC outputs the original file as the very first #line directive
+    # so we just use that
+    new_output = io.StringIO()
+    keep = True
+
+    first = fp.readline()
+    assert first.startswith("#line")
+    fname = first[first.find('"') :]
+
+    for line in fp:
+        if line.startswith("#line"):
+            keep = line.endswith(fname)
+
+        if keep:
+            new_output.write(line)
+
+    new_output.seek(0)
+    return new_output.read()
+
+
+def make_msvc_preprocessor(
+    *,
+    defines: typing.List[str] = [],
+    include_paths: typing.List[str] = [],
+    retain_all_content: bool = False,
+    encoding: typing.Optional[str] = None,
+    msvc_args: typing.List[str] = ["cl.exe"],
+    print_cmd: bool = True,
+) -> PreprocessorFunction:
+    """
+    Creates a preprocessor function that uses cl.exe from Microsoft Visual Studio
+    to preprocess the input text. cl.exe is not typically on the path, so you
+    may need to open the correct developer tools shell or pass in the correct path
+    to cl.exe in the `msvc_args` parameter.
+
+    cl.exe will throw an error if a file referenced by an #include directive is not found.
+
+    :param defines: list of #define macros specified as "key value"
+    :param include_paths: list of directories to search for included files
+    :param retain_all_content: If False, only the parsed file content will be retained
+    :param encoding: If specified any include files are opened with this encoding
+    :param msvc_args: This is the path to cl.exe and any extra args you might want
+    :param print_cmd: Prints the command as its executed
+
+    .. code-block:: python
+
+        pp = make_msvc_preprocessor()
+        options = ParserOptions(preprocessor=pp)
+
+        parse_file(content, options=options)
+
+    """
+
+    if not encoding:
+        encoding = "utf-8"
+
+    def _preprocess_file(filename: str, content: typing.Optional[str]) -> str:
+        cmd = msvc_args + ["/nologo", "/E", "/C"]
+
+        for p in include_paths:
+            cmd.append(f"/I{p}")
+        for d in defines:
+            cmd.append(f"/D{d.replace(' ', '=')}")
+
+        tfpname = None
+
+        try:
+            kwargs = {"encoding": encoding}
+            if filename == "<str>":
+                if content is None:
+                    raise PreprocessorError("no content specified for stdin")
+
+                tfp = tempfile.NamedTemporaryFile(
+                    mode="w", encoding=encoding, suffix=".h", delete=False
+                )
+                tfpname = tfp.name
+                tfp.write(content)
+                tfp.close()
+
+                cmd.append(tfpname)
+            else:
+                cmd.append(filename)
+
+            if print_cmd:
+                print("+", " ".join(cmd), file=sys.stderr)
+
+            result: str = subprocess.check_output(cmd, **kwargs)  # type: ignore
+            if not retain_all_content:
+                result = _msvc_filter(io.StringIO(result))
+        finally:
+            if tfpname:
+                os.unlink(tfpname)
 
         return result
 
@@ -191,7 +298,7 @@ def make_pcpp_preprocessor(
     if pcpp is None:
         raise PreprocessorError("pcpp is not installed")
 
-    def _preprocess_file(filename: str, content: str) -> str:
+    def _preprocess_file(filename: str, content: typing.Optional[str]) -> str:
         pp = _CustomPreprocessor(encoding, passthru_includes)
         if include_paths:
             for p in include_paths:
@@ -202,6 +309,10 @@ def make_pcpp_preprocessor(
 
         if not retain_all_content:
             pp.line_directive = "#line"
+
+        if content is None:
+            with open(filename, "r", encoding=encoding) as fp:
+                content = fp.read()
 
         pp.parse(content, filename)
 

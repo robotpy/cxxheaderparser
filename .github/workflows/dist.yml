@@ -112,6 +112,10 @@ jobs:
     - name: Install test dependencies
       run: python -m pip --disable-pip-version-check install -r tests/requirements.txt
     
+    - name: Setup MSVC compiler
+      uses: ilammy/msvc-dev-cmd@v1
+      if: matrix.os == 'windows-latest'
+
     - name: Test wheel
       shell: bash
       run: |
