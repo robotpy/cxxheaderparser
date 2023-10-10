@@ -454,11 +454,18 @@ class TemplateNonTypeParam:
 
        template <auto T>
                  ~~~~~~
+
+       // abbreviated template parameters are converted to this and param_idx is set
+       void fn(C auto p)
+               ~~~~~~
     """
 
     type: DecoratedType
     name: typing.Optional[str] = None
     default: typing.Optional[Value] = None
+
+    #: If this was promoted, the parameter index that this corresponds with
+    param_idx: typing.Optional[int] = None
 
     #: Contains a ``...``
     param_pack: bool = False
