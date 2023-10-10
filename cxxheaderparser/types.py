@@ -552,6 +552,31 @@ class TemplateInst:
 
 
 @dataclass
+class Concept:
+    """
+    Preliminary support for consuming headers that contain concepts, but
+    not trying to actually make sense of them at this time. If this is
+    something you care about, pull requests are welcomed!
+
+    .. code-block:: c++
+
+        template <class T>
+        concept Meowable = is_meowable<T>;
+
+        template<typename T>
+        concept Addable = requires (T x) { x + x; };
+    """
+
+    template: TemplateDecl
+    name: str
+
+    #: In the future this will be removed if we fully parse the expression
+    raw_constraint: Value
+
+    doxygen: typing.Optional[str] = None
+
+
+@dataclass
 class ForwardDecl:
     """
     Represents a forward declaration of a user defined type

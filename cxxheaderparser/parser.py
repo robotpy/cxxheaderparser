@@ -22,6 +22,7 @@ from .types import (
     AutoSpecifier,
     BaseClass,
     ClassDecl,
+    Concept,
     DecltypeSpecifier,
     DecoratedType,
     EnumDecl,
@@ -537,7 +538,7 @@ class CxxParser:
             self._finish_class_decl(old_state)
 
     #
-    # Template parsing
+    # Template and concept parsing
     #
 
     def _parse_template_type_parameter(
@@ -640,6 +641,8 @@ class CxxParser:
             self._parse_using(tok, doxygen, template)
         elif tok.type == "friend":
             self._parse_friend_decl(tok, doxygen, template)
+        elif tok.type == "concept":
+            self._parse_concept(tok, doxygen, template)
         else:
             self._parse_declarations(tok, doxygen, template)
 
@@ -748,6 +751,32 @@ class CxxParser:
 
         self.visitor.on_template_inst(
             self.state, TemplateInst(typename, extern, doxygen)
+        )
+
+    def _parse_concept(
+        self,
+        tok: LexToken,
+        doxygen: typing.Optional[str],
+        template: TemplateDecl,
+    ) -> None:
+        name = self._next_token_must_be("NAME")
+        self._next_token_must_be("=")
+
+        # not trying to understand this for now
+        raw_constraint = self._create_value(self._consume_value_until([], ",", ";"))
+
+        state = self.state
+        if isinstance(state, ClassBlockState):
+            raise CxxParseError("concept cannot be defined in a class")
+
+        self.visitor.on_concept(
+            state,
+            Concept(
+                template=template,
+                name=name.value,
+                raw_constraint=raw_constraint,
+                doxygen=doxygen,
+            ),
         )
 
     #

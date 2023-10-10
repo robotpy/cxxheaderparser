@@ -8,6 +8,7 @@ else:
 
 
 from .types import (
+    Concept,
     EnumDecl,
     Field,
     ForwardDecl,
@@ -87,6 +88,14 @@ class CxxVisitor(Protocol):
     ) -> None:
         """
         Called when a ``namespace`` alias is encountered
+        """
+
+    def on_concept(self, state: NonClassBlockState, concept: Concept) -> None:
+        """
+        .. code-block:: c++
+
+            template <class T>
+            concept Meowable = is_meowable<T>;
         """
 
     def on_forward_decl(self, state: State, fdecl: ForwardDecl) -> None:
@@ -252,6 +261,9 @@ class NullVisitor:
         return None
 
     def on_namespace_end(self, state: NamespaceBlockState) -> None:
+        return None
+
+    def on_concept(self, state: NonClassBlockState, concept: Concept) -> None:
         return None
 
     def on_namespace_alias(

@@ -34,6 +34,7 @@ from dataclasses import dataclass, field
 
 from .types import (
     ClassDecl,
+    Concept,
     EnumDecl,
     Field,
     ForwardDecl,
@@ -112,6 +113,9 @@ class NamespaceScope:
     using_ns: typing.List["UsingNamespace"] = field(default_factory=list)
     using_alias: typing.List[UsingAlias] = field(default_factory=list)
     ns_alias: typing.List[NamespaceAlias] = field(default_factory=list)
+
+    #: Concepts
+    concepts: typing.List[Concept] = field(default_factory=list)
 
     #: Explicit template instantiations
     template_insts: typing.List[TemplateInst] = field(default_factory=list)
@@ -242,6 +246,9 @@ class SimpleCxxVisitor:
 
     def on_namespace_end(self, state: SNamespaceBlockState) -> None:
         pass
+
+    def on_concept(self, state: SNonClassBlockState, concept: Concept) -> None:
+        state.user_data.concepts.append(concept)
 
     def on_namespace_alias(
         self, state: SNonClassBlockState, alias: NamespaceAlias
