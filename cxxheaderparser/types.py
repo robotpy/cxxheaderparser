@@ -520,6 +520,15 @@ class TemplateDecl:
 
     params: typing.List[TemplateParam] = field(default_factory=list)
 
+    # Currently don't interpret requires, if that changes in the future
+    # then this API will change.
+
+    #: template <typename T> requires ...
+    raw_requires_pre: typing.Optional[Value] = None
+
+    #: template <typename T> int main() requires ...
+    raw_requires_post: typing.Optional[Value] = None
+
 
 #: If no template, this is None. This is a TemplateDecl if this there is a single
 #: declaration:

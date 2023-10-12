@@ -188,6 +188,7 @@ class PlyLexer:
         "DBL_RBRACKET",
         "DBL_COLON",
         "DBL_AMP",
+        "DBL_PIPE",
         "ARROW",
         "SHIFT_LEFT",
     ] + list(keywords)
@@ -473,6 +474,7 @@ class PlyLexer:
     t_DBL_RBRACKET = r"\]\]"
     t_DBL_COLON = r"::"
     t_DBL_AMP = r"&&"
+    t_DBL_PIPE = r"\|\|"
     t_ARROW = r"->"
     t_SHIFT_LEFT = r"<<"
     # SHIFT_RIGHT introduces ambiguity

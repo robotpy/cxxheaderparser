@@ -1,9 +1,12 @@
-from cxxheaderparser.simple import NamespaceScope, ParsedData, parse_string
+from cxxheaderparser.simple import ClassScope, NamespaceScope, ParsedData, parse_string
 from cxxheaderparser.tokfmt import Token
 from cxxheaderparser.types import (
+    AutoSpecifier,
+    ClassDecl,
     Concept,
     Function,
     FundamentalSpecifier,
+    MoveReference,
     NameSpecifier,
     PQName,
     Parameter,
@@ -396,6 +399,411 @@ def test_concept_nested_requirements() -> None:
                             Token(value=";"),
                             Token(value="}"),
                         ]
+                    ),
+                )
+            ]
+        )
+    )
+
+
+def test_concept_requires_class() -> None:
+    content = """
+      // clang-format off
+      template <typename T>
+      concept Number = std::integral<T> || std::floating_point<T>;
+
+      template <typename T>
+      requires Number<T>
+      struct WrappedNumber {};
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            classes=[
+                ClassScope(
+                    class_decl=ClassDecl(
+                        typename=PQName(
+                            segments=[NameSpecifier(name="WrappedNumber")],
+                            classkey="struct",
+                        ),
+                        template=TemplateDecl(
+                            params=[TemplateTypeParam(typekey="typename", name="T")],
+                            raw_requires_pre=Value(
+                                tokens=[
+                                    Token(value="Number"),
+                                    Token(value="<"),
+                                    Token(value="T"),
+                                    Token(value=">"),
+                                ]
+                            ),
+                        ),
+                    )
+                )
+            ],
+            concepts=[
+                Concept(
+                    template=TemplateDecl(
+                        params=[TemplateTypeParam(typekey="typename", name="T")]
+                    ),
+                    name="Number",
+                    raw_constraint=Value(
+                        tokens=[
+                            Token(value="std"),
+                            Token(value="::"),
+                            Token(value="integral"),
+                            Token(value="<"),
+                            Token(value="T"),
+                            Token(value=">"),
+                            Token(value="||"),
+                            Token(value="std"),
+                            Token(value="::"),
+                            Token(value="floating_point"),
+                            Token(value="<"),
+                            Token(value="T"),
+                            Token(value=">"),
+                        ]
+                    ),
+                )
+            ],
+        )
+    )
+
+
+def test_requires_last_elem() -> None:
+    content = """
+      template<typename T>
+      void f(T&&) requires Eq<T>;  // can appear as the last element of a function declarator
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            functions=[
+                Function(
+                    return_type=Type(
+                        typename=PQName(segments=[FundamentalSpecifier(name="void")])
+                    ),
+                    name=PQName(segments=[NameSpecifier(name="f")]),
+                    parameters=[
+                        Parameter(
+                            type=MoveReference(
+                                moveref_to=Type(
+                                    typename=PQName(segments=[NameSpecifier(name="T")])
+                                )
+                            )
+                        )
+                    ],
+                    template=TemplateDecl(
+                        params=[TemplateTypeParam(typekey="typename", name="T")],
+                        raw_requires_post=Value(
+                            tokens=[
+                                Token(value="Eq"),
+                                Token(value="<"),
+                                Token(value="T"),
+                                Token(value=">"),
+                            ]
+                        ),
+                    ),
+                )
+            ]
+        )
+    )
+
+
+def test_requires_first_elem1() -> None:
+    content = """
+      template<typename T> requires Addable<T> // or right after a template parameter list
+      T add(T a, T b) { return a + b; }
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            functions=[
+                Function(
+                    return_type=Type(
+                        typename=PQName(segments=[NameSpecifier(name="T")])
+                    ),
+                    name=PQName(segments=[NameSpecifier(name="add")]),
+                    parameters=[
+                        Parameter(
+                            type=Type(
+                                typename=PQName(segments=[NameSpecifier(name="T")])
+                            ),
+                            name="a",
+                        ),
+                        Parameter(
+                            type=Type(
+                                typename=PQName(segments=[NameSpecifier(name="T")])
+                            ),
+                            name="b",
+                        ),
+                    ],
+                    has_body=True,
+                    template=TemplateDecl(
+                        params=[TemplateTypeParam(typekey="typename", name="T")],
+                        raw_requires_pre=Value(
+                            tokens=[
+                                Token(value="Addable"),
+                                Token(value="<"),
+                                Token(value="T"),
+                                Token(value=">"),
+                            ]
+                        ),
+                    ),
+                )
+            ]
+        )
+    )
+
+
+def test_requires_first_elem2() -> None:
+    content = """
+      template<typename T> requires std::is_arithmetic_v<T>
+      T add(T a, T b) { return a + b; }
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            functions=[
+                Function(
+                    return_type=Type(
+                        typename=PQName(segments=[NameSpecifier(name="T")])
+                    ),
+                    name=PQName(segments=[NameSpecifier(name="add")]),
+                    parameters=[
+                        Parameter(
+                            type=Type(
+                                typename=PQName(segments=[NameSpecifier(name="T")])
+                            ),
+                            name="a",
+                        ),
+                        Parameter(
+                            type=Type(
+                                typename=PQName(segments=[NameSpecifier(name="T")])
+                            ),
+                            name="b",
+                        ),
+                    ],
+                    has_body=True,
+                    template=TemplateDecl(
+                        params=[TemplateTypeParam(typekey="typename", name="T")],
+                        raw_requires_pre=Value(
+                            tokens=[
+                                Token(value="std"),
+                                Token(value="is_arithmetic_v"),
+                                Token(value="<"),
+                                Token(value="T"),
+                                Token(value=">"),
+                            ]
+                        ),
+                    ),
+                )
+            ]
+        )
+    )
+
+
+def test_requires_compound() -> None:
+    content = """
+      template<typename T> requires Addable<T> || Subtractable<T>
+      T add(T a, T b) { return a + b; }
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            functions=[
+                Function(
+                    return_type=Type(
+                        typename=PQName(segments=[NameSpecifier(name="T")])
+                    ),
+                    name=PQName(segments=[NameSpecifier(name="add")]),
+                    parameters=[
+                        Parameter(
+                            type=Type(
+                                typename=PQName(segments=[NameSpecifier(name="T")])
+                            ),
+                            name="a",
+                        ),
+                        Parameter(
+                            type=Type(
+                                typename=PQName(segments=[NameSpecifier(name="T")])
+                            ),
+                            name="b",
+                        ),
+                    ],
+                    has_body=True,
+                    template=TemplateDecl(
+                        params=[TemplateTypeParam(typekey="typename", name="T")],
+                        raw_requires_pre=Value(
+                            tokens=[
+                                Token(value="Addable"),
+                                Token(value="<"),
+                                Token(value="T"),
+                                Token(value=">"),
+                                Token(value="||"),
+                                Token(value="Subtractable"),
+                                Token(value="<"),
+                                Token(value="T"),
+                                Token(value=">"),
+                            ]
+                        ),
+                    ),
+                )
+            ]
+        )
+    )
+
+
+def test_requires_ad_hoc() -> None:
+    content = """
+      template<typename T>
+          requires requires (T x) { x + x; } // ad-hoc constraint, note keyword used twice
+      T add(T a, T b) { return a + b; }
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            functions=[
+                Function(
+                    return_type=Type(
+                        typename=PQName(segments=[NameSpecifier(name="T")])
+                    ),
+                    name=PQName(segments=[NameSpecifier(name="add")]),
+                    parameters=[
+                        Parameter(
+                            type=Type(
+                                typename=PQName(segments=[NameSpecifier(name="T")])
+                            ),
+                            name="a",
+                        ),
+                        Parameter(
+                            type=Type(
+                                typename=PQName(segments=[NameSpecifier(name="T")])
+                            ),
+                            name="b",
+                        ),
+                    ],
+                    has_body=True,
+                    template=TemplateDecl(
+                        params=[TemplateTypeParam(typekey="typename", name="T")],
+                        raw_requires_pre=Value(
+                            tokens=[
+                                Token(value="requires"),
+                                Token(value="("),
+                                Token(value="T"),
+                                Token(value="x"),
+                                Token(value=")"),
+                                Token(value="{"),
+                                Token(value="x"),
+                                Token(value="+"),
+                                Token(value="x"),
+                                Token(value=";"),
+                                Token(value="}"),
+                            ]
+                        ),
+                    ),
+                )
+            ]
+        )
+    )
+
+
+def test_requires_both() -> None:
+    content = """
+      // clang-format off
+      template<typename T>
+      requires Addable<T>
+      auto f1(T a, T b) requires Subtractable<T>;
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            functions=[
+                Function(
+                    return_type=Type(typename=PQName(segments=[AutoSpecifier()])),
+                    name=PQName(segments=[NameSpecifier(name="f1")]),
+                    parameters=[
+                        Parameter(
+                            type=Type(
+                                typename=PQName(segments=[NameSpecifier(name="T")])
+                            ),
+                            name="a",
+                        ),
+                        Parameter(
+                            type=Type(
+                                typename=PQName(segments=[NameSpecifier(name="T")])
+                            ),
+                            name="b",
+                        ),
+                    ],
+                    template=TemplateDecl(
+                        params=[TemplateTypeParam(typekey="typename", name="T")],
+                        raw_requires_pre=Value(
+                            tokens=[
+                                Token(value="Addable"),
+                                Token(value="<"),
+                                Token(value="T"),
+                                Token(value=">"),
+                            ]
+                        ),
+                        raw_requires_post=Value(
+                            tokens=[
+                                Token(value="Subtractable"),
+                                Token(value="<"),
+                                Token(value="T"),
+                                Token(value=">"),
+                            ]
+                        ),
+                    ),
+                )
+            ]
+        )
+    )
+
+
+def test_requires_paren() -> None:
+    content = """
+      // clang-format off
+      template<class T>
+      void h(T) requires (is_purrable<T>());
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            functions=[
+                Function(
+                    return_type=Type(
+                        typename=PQName(segments=[FundamentalSpecifier(name="void")])
+                    ),
+                    name=PQName(segments=[NameSpecifier(name="h")]),
+                    parameters=[
+                        Parameter(
+                            type=Type(
+                                typename=PQName(segments=[NameSpecifier(name="T")])
+                            )
+                        )
+                    ],
+                    template=TemplateDecl(
+                        params=[TemplateTypeParam(typekey="class", name="T")],
+                        raw_requires_post=Value(
+                            tokens=[
+                                Token(value="("),
+                                Token(value="is_purrable"),
+                                Token(value="<"),
+                                Token(value="T"),
+                                Token(value=">"),
+                                Token(value="("),
+                                Token(value=")"),
+                                Token(value=")"),
+                            ]
+                        ),
                     ),
                 )
             ]

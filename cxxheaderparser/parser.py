@@ -647,6 +647,9 @@ class CxxParser:
             self._parse_friend_decl(tok, doxygen, template)
         elif tok.type == "concept":
             self._parse_concept(tok, doxygen, template)
+        elif tok.type == "requires":
+            template.raw_requires_pre = self._parse_requires(tok)
+            self._parse_declarations(self.lex.token(), doxygen, template)
         else:
             self._parse_declarations(tok, doxygen, template)
 
@@ -782,6 +785,91 @@ class CxxParser:
                 doxygen=doxygen,
             ),
         )
+
+    # fmt: off
+    _expr_operators = {
+        "<", ">", "|", "%", "^", "!", "*", "-", "+", "&", "=",
+        "&&", "||", "<<"
+    }
+    # fmt: on
+
+    def _parse_requires(
+        self,
+        tok: LexToken,
+    ) -> Value:
+        tok = self.lex.token()
+
+        rawtoks: typing.List[LexToken] = []
+
+        # The easier case -- requires requires
+        if tok.type == "requires":
+            rawtoks.append(tok)
+            for tt in ("(", "{"):
+                tok = self._next_token_must_be(tt)
+                rawtoks.extend(self._consume_balanced_tokens(tok))
+            # .. and that's it?
+
+        # this is either a parenthesized expression or a primary clause
+        elif tok.type == "(":
+            rawtoks.extend(self._consume_balanced_tokens(tok))
+        else:
+            while True:
+                if tok.type == "(":
+                    rawtoks.extend(self._consume_balanced_tokens(tok))
+                else:
+                    tok = self._parse_requires_segment(tok, rawtoks)
+
+                # If this is not an operator of some kind, we don't know how
+                # to proceed so let the next parser figure it out
+                if tok.value not in self._expr_operators:
+                    break
+
+                rawtoks.append(tok)
+
+                # check once more for compound operator?
+                tok = self.lex.token()
+                if tok.value in self._expr_operators:
+                    rawtoks.append(tok)
+                    tok = self.lex.token()
+
+            self.lex.return_token(tok)
+
+        return self._create_value(rawtoks)
+
+    def _parse_requires_segment(
+        self, tok: LexToken, rawtoks: typing.List[LexToken]
+    ) -> LexToken:
+        # first token could be a name or ::
+        if tok.type == "DBL_COLON":
+            rawtoks.append(tok)
+            tok = self.lex.token()
+
+        while True:
+            # This token has to be a name or some other valid name-like thing
+            if tok.value == "decltype":
+                rawtoks.append(tok)
+                tok = self._next_token_must_be("(")
+                rawtoks.extend(self._consume_balanced_tokens(tok))
+            elif tok.type == "NAME":
+                rawtoks.append(tok)
+            else:
+                # not sure what I expected, but I didn't find it
+                raise self._parse_error(tok)
+
+            tok = self.lex.token()
+
+            # Maybe there's a specialization
+            if tok.value == "<":
+                rawtoks.extend(self._consume_balanced_tokens(tok))
+                tok = self.lex.token()
+
+            # Maybe we keep trying to parse this name
+            if tok.type == "DBL_COLON":
+                tok = self.lex.token()
+                continue
+
+            # Let the caller decide
+            return tok
 
     #
     # Attributes
@@ -1816,6 +1904,15 @@ class CxxParser:
             if otok:
                 toks = self._consume_balanced_tokens(otok)[1:-1]
             fn.noexcept = self._create_value(toks)
+        else:
+            rtok = self.lex.token_if("requires")
+            if rtok:
+                fn_template = fn.template
+                if fn_template is None:
+                    raise self._parse_error(rtok)
+                elif isinstance(fn_template, list):
+                    fn_template = fn_template[0]
+                fn_template.raw_requires_post = self._parse_requires(rtok)
 
         if self.lex.token_if("{"):
             self._discard_contents("{", "}")
@@ -1876,6 +1973,13 @@ class CxxParser:
                 if otok:
                     toks = self._consume_balanced_tokens(otok)[1:-1]
                 method.noexcept = self._create_value(toks)
+            elif tok_value == "requires":
+                method_template = method.template
+                if method_template is None:
+                    raise self._parse_error(tok)
+                elif isinstance(method_template, list):
+                    method_template = method_template[0]
+                method_template.raw_requires_post = self._parse_requires(tok)
             else:
                 self.lex.return_token(tok)
                 break
