@@ -454,11 +454,18 @@ class TemplateNonTypeParam:
 
        template <auto T>
                  ~~~~~~
+
+       // abbreviated template parameters are converted to this and param_idx is set
+       void fn(C auto p)
+               ~~~~~~
     """
 
     type: DecoratedType
     name: typing.Optional[str] = None
     default: typing.Optional[Value] = None
+
+    #: If this was promoted, the parameter index that this corresponds with
+    param_idx: typing.Optional[int] = None
 
     #: Contains a ``...``
     param_pack: bool = False
@@ -513,6 +520,15 @@ class TemplateDecl:
 
     params: typing.List[TemplateParam] = field(default_factory=list)
 
+    # Currently don't interpret requires, if that changes in the future
+    # then this API will change.
+
+    #: template <typename T> requires ...
+    raw_requires_pre: typing.Optional[Value] = None
+
+    #: template <typename T> int main() requires ...
+    raw_requires_post: typing.Optional[Value] = None
+
 
 #: If no template, this is None. This is a TemplateDecl if this there is a single
 #: declaration:
@@ -548,6 +564,31 @@ class TemplateInst:
 
     typename: PQName
     extern: bool
+    doxygen: typing.Optional[str] = None
+
+
+@dataclass
+class Concept:
+    """
+    Preliminary support for consuming headers that contain concepts, but
+    not trying to actually make sense of them at this time. If this is
+    something you care about, pull requests are welcomed!
+
+    .. code-block:: c++
+
+        template <class T>
+        concept Meowable = is_meowable<T>;
+
+        template<typename T>
+        concept Addable = requires (T x) { x + x; };
+    """
+
+    template: TemplateDecl
+    name: str
+
+    #: In the future this will be removed if we fully parse the expression
+    raw_constraint: Value
+
     doxygen: typing.Optional[str] = None
 
 
