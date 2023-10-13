@@ -22,6 +22,7 @@ from .types import (
     AutoSpecifier,
     BaseClass,
     ClassDecl,
+    Concept,
     DecltypeSpecifier,
     DecoratedType,
     EnumDecl,
@@ -537,7 +538,7 @@ class CxxParser:
             self._finish_class_decl(old_state)
 
     #
-    # Template parsing
+    # Template and concept parsing
     #
 
     def _parse_template_type_parameter(
@@ -605,9 +606,13 @@ class CxxParser:
                         lex.return_token(ptok)
                         param = self._parse_template_type_parameter(tok, None)
                     else:
-                        param = self._parse_parameter(ptok, TemplateNonTypeParam, ">")
+                        param, _ = self._parse_parameter(
+                            ptok, TemplateNonTypeParam, False, ">"
+                        )
                 else:
-                    param = self._parse_parameter(tok, TemplateNonTypeParam, ">")
+                    param, _ = self._parse_parameter(
+                        tok, TemplateNonTypeParam, concept_ok=False, end=">"
+                    )
 
                 params.append(param)
 
@@ -640,6 +645,11 @@ class CxxParser:
             self._parse_using(tok, doxygen, template)
         elif tok.type == "friend":
             self._parse_friend_decl(tok, doxygen, template)
+        elif tok.type == "concept":
+            self._parse_concept(tok, doxygen, template)
+        elif tok.type == "requires":
+            template.raw_requires_pre = self._parse_requires(tok)
+            self._parse_declarations(self.lex.token(), doxygen, template)
         else:
             self._parse_declarations(tok, doxygen, template)
 
@@ -749,6 +759,117 @@ class CxxParser:
         self.visitor.on_template_inst(
             self.state, TemplateInst(typename, extern, doxygen)
         )
+
+    def _parse_concept(
+        self,
+        tok: LexToken,
+        doxygen: typing.Optional[str],
+        template: TemplateDecl,
+    ) -> None:
+        name = self._next_token_must_be("NAME")
+        self._next_token_must_be("=")
+
+        # not trying to understand this for now
+        raw_constraint = self._create_value(self._consume_value_until([], ",", ";"))
+
+        state = self.state
+        if isinstance(state, ClassBlockState):
+            raise CxxParseError("concept cannot be defined in a class")
+
+        self.visitor.on_concept(
+            state,
+            Concept(
+                template=template,
+                name=name.value,
+                raw_constraint=raw_constraint,
+                doxygen=doxygen,
+            ),
+        )
+
+    # fmt: off
+    _expr_operators = {
+        "<", ">", "|", "%", "^", "!", "*", "-", "+", "&", "=",
+        "&&", "||", "<<"
+    }
+    # fmt: on
+
+    def _parse_requires(
+        self,
+        tok: LexToken,
+    ) -> Value:
+        tok = self.lex.token()
+
+        rawtoks: typing.List[LexToken] = []
+
+        # The easier case -- requires requires
+        if tok.type == "requires":
+            rawtoks.append(tok)
+            for tt in ("(", "{"):
+                tok = self._next_token_must_be(tt)
+                rawtoks.extend(self._consume_balanced_tokens(tok))
+            # .. and that's it?
+
+        # this is either a parenthesized expression or a primary clause
+        elif tok.type == "(":
+            rawtoks.extend(self._consume_balanced_tokens(tok))
+        else:
+            while True:
+                if tok.type == "(":
+                    rawtoks.extend(self._consume_balanced_tokens(tok))
+                else:
+                    tok = self._parse_requires_segment(tok, rawtoks)
+
+                # If this is not an operator of some kind, we don't know how
+                # to proceed so let the next parser figure it out
+                if tok.value not in self._expr_operators:
+                    break
+
+                rawtoks.append(tok)
+
+                # check once more for compound operator?
+                tok = self.lex.token()
+                if tok.value in self._expr_operators:
+                    rawtoks.append(tok)
+                    tok = self.lex.token()
+
+            self.lex.return_token(tok)
+
+        return self._create_value(rawtoks)
+
+    def _parse_requires_segment(
+        self, tok: LexToken, rawtoks: typing.List[LexToken]
+    ) -> LexToken:
+        # first token could be a name or ::
+        if tok.type == "DBL_COLON":
+            rawtoks.append(tok)
+            tok = self.lex.token()
+
+        while True:
+            # This token has to be a name or some other valid name-like thing
+            if tok.value == "decltype":
+                rawtoks.append(tok)
+                tok = self._next_token_must_be("(")
+                rawtoks.extend(self._consume_balanced_tokens(tok))
+            elif tok.type == "NAME":
+                rawtoks.append(tok)
+            else:
+                # not sure what I expected, but I didn't find it
+                raise self._parse_error(tok)
+
+            tok = self.lex.token()
+
+            # Maybe there's a specialization
+            if tok.value == "<":
+                rawtoks.extend(self._consume_balanced_tokens(tok))
+                tok = self.lex.token()
+
+            # Maybe we keep trying to parse this name
+            if tok.type == "DBL_COLON":
+                tok = self.lex.token()
+                continue
+
+            # Let the caller decide
+            return tok
 
     #
     # Attributes
@@ -1615,23 +1736,43 @@ class CxxParser:
     #
 
     def _parse_parameter(
-        self, tok: typing.Optional[LexToken], cls: typing.Type[PT], end: str = ")"
-    ) -> PT:
+        self,
+        tok: typing.Optional[LexToken],
+        cls: typing.Type[PT],
+        concept_ok: bool,
+        end: str = ")",
+    ) -> typing.Tuple[PT, typing.Optional[Type]]:
         """
         Parses a single parameter (excluding vararg parameters). Also used
         to parse template non-type parameters
+
+        Returns parameter type, abbreviated template type
         """
 
         param_name = None
         default = None
         param_pack = False
+        parsed_type: typing.Optional[Type]
+        at_type: typing.Optional[Type] = None
 
-        # required typename + decorators
-        parsed_type, mods = self._parse_type(tok)
-        if parsed_type is None:
-            raise self._parse_error(None)
+        if not tok:
+            tok = self.lex.token()
 
-        mods.validate(var_ok=False, meth_ok=False, msg="parsing parameter")
+        # placeholder type, skip typename
+        if tok.type == "auto":
+            at_type = parsed_type = Type(PQName([AutoSpecifier()]))
+        else:
+            # required typename + decorators
+            parsed_type, mods = self._parse_type(tok)
+            if parsed_type is None:
+                raise self._parse_error(None)
+
+            mods.validate(var_ok=False, meth_ok=False, msg="parsing parameter")
+
+            # Could be a concept
+            if concept_ok and self.lex.token_if("auto"):
+                at_type = Type(parsed_type.typename)
+                parsed_type.typename = PQName([AutoSpecifier()])
 
         dtype = self._parse_cv_ptr(parsed_type)
 
@@ -1659,23 +1800,32 @@ class CxxParser:
         if self.lex.token_if("="):
             default = self._create_value(self._consume_value_until([], ",", end))
 
+        # abbreviated template pack
+        if at_type and self.lex.token_if("ELLIPSIS"):
+            param_pack = True
+
         param = cls(type=dtype, name=param_name, default=default, param_pack=param_pack)
         self.debug_print("parameter: %s", param)
-        return param
+        return param, at_type
 
-    def _parse_parameters(self) -> typing.Tuple[typing.List[Parameter], bool]:
+    def _parse_parameters(
+        self, concept_ok: bool
+    ) -> typing.Tuple[typing.List[Parameter], bool, typing.List[TemplateParam]]:
         """
-        Consumes function parameters and returns them, and vararg if found
+        Consumes function parameters and returns them, and vararg if found, and
+        promotes abbreviated template parameters to actual template parameters
+        if concept_ok is True
         """
 
         # starting at a (
 
         # special case: zero parameters
         if self.lex.token_if(")"):
-            return [], False
+            return [], False, []
 
         params: typing.List[Parameter] = []
         vararg = False
+        at_params: typing.List[TemplateParam] = []
 
         while True:
             if self.lex.token_if("ELLIPSIS"):
@@ -1683,8 +1833,17 @@ class CxxParser:
                 self._next_token_must_be(")")
                 break
 
-            param = self._parse_parameter(None, Parameter)
+            param, at_type = self._parse_parameter(None, Parameter, concept_ok)
             params.append(param)
+            if at_type:
+                at_params.append(
+                    TemplateNonTypeParam(
+                        type=at_type,
+                        param_idx=len(params) - 1,
+                        param_pack=param.param_pack,
+                    )
+                )
+
             tok = self._next_token_must_be(",", ")")
             if tok.value == ")":
                 break
@@ -1699,7 +1858,7 @@ class CxxParser:
             ):
                 params = []
 
-        return params, vararg
+        return params, vararg, at_params
 
     _auto_return_typename = PQName([AutoSpecifier()])
 
@@ -1745,6 +1904,15 @@ class CxxParser:
             if otok:
                 toks = self._consume_balanced_tokens(otok)[1:-1]
             fn.noexcept = self._create_value(toks)
+        else:
+            rtok = self.lex.token_if("requires")
+            if rtok:
+                fn_template = fn.template
+                if fn_template is None:
+                    raise self._parse_error(rtok)
+                elif isinstance(fn_template, list):
+                    fn_template = fn_template[0]
+                fn_template.raw_requires_post = self._parse_requires(rtok)
 
         if self.lex.token_if("{"):
             self._discard_contents("{", "}")
@@ -1805,6 +1973,13 @@ class CxxParser:
                 if otok:
                     toks = self._consume_balanced_tokens(otok)[1:-1]
                 method.noexcept = self._create_value(toks)
+            elif tok_value == "requires":
+                method_template = method.template
+                if method_template is None:
+                    raise self._parse_error(tok)
+                elif isinstance(method_template, list):
+                    method_template = method_template[0]
+                method_template.raw_requires_post = self._parse_requires(tok)
             else:
                 self.lex.return_token(tok)
                 break
@@ -1846,7 +2021,16 @@ class CxxParser:
         state.location = location
         is_class_block = isinstance(state, ClassBlockState)
 
-        params, vararg = self._parse_parameters()
+        params, vararg, at_params = self._parse_parameters(True)
+
+        # Promote abbreviated template parameters
+        if at_params:
+            if template is None:
+                template = TemplateDecl(at_params)
+            elif isinstance(template, TemplateDecl):
+                template.params.extend(at_params)
+            else:
+                template[-1].params.extend(at_params)
 
         # A method outside of a class has multiple name segments
         multiple_name_segments = len(pqname.segments) > 1
@@ -2019,7 +2203,7 @@ class CxxParser:
                     toks = self._consume_balanced_tokens(gtok)
                     self.lex.return_tokens(toks[1:-1])
 
-                fn_params, vararg = self._parse_parameters()
+                fn_params, vararg, _ = self._parse_parameters(False)
 
                 assert not isinstance(dtype, FunctionType)
                 dtype = dtype_fn = FunctionType(dtype, fn_params, vararg)
@@ -2047,7 +2231,7 @@ class CxxParser:
                         assert not isinstance(dtype, FunctionType)
                         dtype = self._parse_array_type(aptok, dtype)
                     elif aptok.type == "(":
-                        fn_params, vararg = self._parse_parameters()
+                        fn_params, vararg, _ = self._parse_parameters(False)
                         # the type we already have is the return type of the function pointer
 
                         assert not isinstance(dtype, FunctionType)
