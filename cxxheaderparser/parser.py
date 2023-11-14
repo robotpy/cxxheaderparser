@@ -1914,11 +1914,12 @@ class CxxParser:
                     fn_template = fn_template[0]
                 fn_template.raw_requires_post = self._parse_requires(rtok)
 
+        if self.lex.token_if("ARROW"):
+            self._parse_trailing_return_type(fn)
+
         if self.lex.token_if("{"):
             self._discard_contents("{", "}")
             fn.has_body = True
-        elif self.lex.token_if("ARROW"):
-            self._parse_trailing_return_type(fn)
 
     def _parse_method_end(self, method: Method) -> None:
         """
@@ -1963,6 +1964,9 @@ class CxxParser:
                 method.ref_qualifier = tok_value
             elif tok_value == "->":
                 self._parse_trailing_return_type(method)
+                if self.lex.token_if("{"):
+                    self._discard_contents("{", "}")
+                    method.has_body = True
                 break
             elif tok_value == "throw":
                 tok = self._next_token_must_be("(")
