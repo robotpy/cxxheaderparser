@@ -1194,3 +1194,67 @@ def test_auto_decltype_return() -> None:
             ]
         )
     )
+
+
+def test_fn_trailing_return_with_body() -> None:
+    content = """
+      auto test() -> void
+      {
+      }
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            functions=[
+                Function(
+                    return_type=Type(
+                        typename=PQName(segments=[FundamentalSpecifier(name="void")])
+                    ),
+                    name=PQName(segments=[NameSpecifier(name="test")]),
+                    parameters=[],
+                    has_body=True,
+                    has_trailing_return=True,
+                )
+            ]
+        )
+    )
+
+
+def test_method_trailing_return_with_body() -> None:
+    content = """
+      struct X {
+          auto test() -> void
+          {
+          }
+      };
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            classes=[
+                ClassScope(
+                    class_decl=ClassDecl(
+                        typename=PQName(
+                            segments=[NameSpecifier(name="X")], classkey="struct"
+                        )
+                    ),
+                    methods=[
+                        Method(
+                            return_type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="void")]
+                                )
+                            ),
+                            name=PQName(segments=[NameSpecifier(name="test")]),
+                            parameters=[],
+                            has_body=True,
+                            has_trailing_return=True,
+                            access="public",
+                        )
+                    ],
+                )
+            ]
+        )
+    )
