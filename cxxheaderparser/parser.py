@@ -992,7 +992,9 @@ class CxxParser:
 
         self.visitor.on_using_namespace(state, names)
 
-    def _parse_using_declaration(self, tok: LexToken) -> None:
+    def _parse_using_declaration(
+        self, tok: LexToken, doxygen: typing.Optional[str]
+    ) -> None:
         """
         using_declaration: "using" ["typename"] ["::"] nested_name_specifier unqualified_id ";"
                          | "using" "::" unqualified_id ";"
@@ -1004,12 +1006,15 @@ class CxxParser:
         typename, _ = self._parse_pqname(
             tok, fn_ok=True, compound_ok=True, fund_ok=True
         )
-        decl = UsingDecl(typename, self._current_access)
+        decl = UsingDecl(typename, self._current_access, doxygen)
 
         self.visitor.on_using_declaration(self.state, decl)
 
     def _parse_using_typealias(
-        self, id_tok: LexToken, template: typing.Optional[TemplateDecl]
+        self,
+        id_tok: LexToken,
+        template: typing.Optional[TemplateDecl],
+        doxygen: typing.Optional[str],
     ) -> None:
         """
         alias_declaration: "using" IDENTIFIER "=" type_id ";"
@@ -1023,7 +1028,7 @@ class CxxParser:
 
         dtype = self._parse_cv_ptr(parsed_type)
 
-        alias = UsingAlias(id_tok.value, dtype, template, self._current_access)
+        alias = UsingAlias(id_tok.value, dtype, template, self._current_access, doxygen)
 
         self.visitor.on_using_alias(self.state, alias)
 
@@ -1052,9 +1057,9 @@ class CxxParser:
                 raise CxxParseError(
                     "unexpected using-declaration when parsing alias-declaration", tok
                 )
-            self._parse_using_declaration(tok)
+            self._parse_using_declaration(tok, doxygen)
         else:
-            self._parse_using_typealias(tok, template)
+            self._parse_using_typealias(tok, template, doxygen)
 
         # All using things end with a semicolon
         self._next_token_must_be(";")

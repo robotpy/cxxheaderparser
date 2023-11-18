@@ -866,6 +866,9 @@ class UsingDecl:
     #: If within a class, the access level for this decl
     access: typing.Optional[str] = None
 
+    #: Documentation if present
+    doxygen: typing.Optional[str] = None
+
 
 @dataclass
 class UsingAlias:
@@ -886,3 +889,6 @@ class UsingAlias:
 
     #: If within a class, the access level for this decl
     access: typing.Optional[str] = None
+
+    #: Documentation if present
+    doxygen: typing.Optional[str] = None
