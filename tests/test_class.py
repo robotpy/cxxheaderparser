@@ -3336,3 +3336,40 @@ def test_constructor_outside_class() -> None:
             ]
         )
     )
+
+
+def test_class_inline_static() -> None:
+    content = """
+      struct X {
+          inline static bool Foo = 1;
+      };
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            classes=[
+                ClassScope(
+                    class_decl=ClassDecl(
+                        typename=PQName(
+                            segments=[NameSpecifier(name="X")], classkey="struct"
+                        )
+                    ),
+                    fields=[
+                        Field(
+                            access="public",
+                            type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="bool")]
+                                )
+                            ),
+                            name="Foo",
+                            value=Value(tokens=[Token(value="1")]),
+                            static=True,
+                            inline=True,
+                        )
+                    ],
+                )
+            ]
+        )
+    )
