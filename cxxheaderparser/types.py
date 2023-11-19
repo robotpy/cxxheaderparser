@@ -848,6 +848,7 @@ class Field:
     constexpr: bool = False
     mutable: bool = False
     static: bool = False
+    inline: bool = False
 
     doxygen: typing.Optional[str] = None
 
