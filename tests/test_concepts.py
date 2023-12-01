@@ -835,15 +835,13 @@ def test_non_template_requires() -> None:
                             segments=[NameSpecifier(name="Payload")], classkey="struct"
                         ),
                         template=TemplateDecl(
-                            params=[TemplateTypeParam(
-                                typekey="class", name="T")]
+                            params=[TemplateTypeParam(typekey="class", name="T")]
                         ),
                     ),
                     methods=[
                         Method(
                             return_type=None,
-                            name=PQName(
-                                segments=[NameSpecifier(name="Payload")]),
+                            name=PQName(segments=[NameSpecifier(name="Payload")]),
                             parameters=[
                                 Parameter(
                                     type=Type(
