@@ -6,6 +6,7 @@ from cxxheaderparser.types import (
     Concept,
     Function,
     FundamentalSpecifier,
+    Method,
     MoveReference,
     NameSpecifier,
     PQName,
@@ -805,6 +806,60 @@ def test_requires_paren() -> None:
                             ]
                         ),
                     ),
+                )
+            ]
+        )
+    )
+
+
+def test_non_template_requires() -> None:
+    content = """
+      template <class T>
+      struct Payload
+      {
+          constexpr Payload(T v)
+              requires(std::is_pod_v<T>)
+              : Value(v)
+          {
+          }
+      };
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            classes=[
+                ClassScope(
+                    class_decl=ClassDecl(
+                        typename=PQName(
+                            segments=[NameSpecifier(name="Payload")], classkey="struct"
+                        ),
+                        template=TemplateDecl(
+                            params=[TemplateTypeParam(
+                                typekey="class", name="T")]
+                        ),
+                    ),
+                    methods=[
+                        Method(
+                            return_type=None,
+                            name=PQName(
+                                segments=[NameSpecifier(name="Payload")]),
+                            parameters=[
+                                Parameter(
+                                    type=Type(
+                                        typename=PQName(
+                                            segments=[NameSpecifier(name="T")]
+                                        )
+                                    ),
+                                    name="v",
+                                )
+                            ],
+                            constexpr=True,
+                            has_body=True,
+                            access="public",
+                            constructor=True,
+                        )
+                    ],
                 )
             ]
         )

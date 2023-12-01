@@ -1980,7 +1980,7 @@ class CxxParser:
             elif tok_value == "requires":
                 method_template = method.template
                 if method_template is None:
-                    raise self._parse_error(tok)
+                    method_template = TemplateDecl([])
                 elif isinstance(method_template, list):
                     method_template = method_template[0]
                 method_template.raw_requires_post = self._parse_requires(tok)
