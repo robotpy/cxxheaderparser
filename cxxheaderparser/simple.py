@@ -35,6 +35,7 @@ from dataclasses import dataclass, field
 from .types import (
     ClassDecl,
     Concept,
+    DeductionGuide,
     EnumDecl,
     Field,
     ForwardDecl,
@@ -122,6 +123,9 @@ class NamespaceScope:
 
     #: Child namespaces
     namespaces: typing.Dict[str, "NamespaceScope"] = field(default_factory=dict)
+
+    #: Deduction guides
+    deduction_guides: typing.List[DeductionGuide] = field(default_factory=list)
 
 
 Block = typing.Union[ClassScope, NamespaceScope]
@@ -316,6 +320,11 @@ class SimpleCxxVisitor:
 
     def on_class_end(self, state: SClassBlockState) -> None:
         pass
+
+    def on_deduction_guide(
+        self, state: SNonClassBlockState, guide: DeductionGuide
+    ) -> None:
+        state.user_data.deduction_guides.append(guide)
 
 
 def parse_string(

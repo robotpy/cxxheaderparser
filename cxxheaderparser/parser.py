@@ -25,6 +25,7 @@ from .types import (
     Concept,
     DecltypeSpecifier,
     DecoratedType,
+    DeductionGuide,
     EnumDecl,
     Enumerator,
     Field,
@@ -1868,10 +1869,9 @@ class CxxParser:
     _auto_return_typename = PQName([AutoSpecifier()])
 
     def _parse_trailing_return_type(
-        self, fn: typing.Union[Function, FunctionType]
-    ) -> None:
+        self, return_type: typing.Optional[DecoratedType]
+    ) -> DecoratedType:
         # entry is "->"
-        return_type = fn.return_type
         if not (
             isinstance(return_type, Type)
             and not return_type.const
@@ -1890,8 +1890,7 @@ class CxxParser:
 
         dtype = self._parse_cv_ptr(parsed_type)
 
-        fn.has_trailing_return = True
-        fn.return_type = dtype
+        return dtype
 
     def _parse_fn_end(self, fn: Function) -> None:
         """
@@ -1918,7 +1917,9 @@ class CxxParser:
                 fn.raw_requires = self._parse_requires(rtok)
 
         if self.lex.token_if("ARROW"):
-            self._parse_trailing_return_type(fn)
+            return_type = self._parse_trailing_return_type(fn.return_type)
+            fn.has_trailing_return = True
+            fn.return_type = return_type
 
         if self.lex.token_if("{"):
             self._discard_contents("{", "}")
@@ -1966,7 +1967,9 @@ class CxxParser:
             elif tok_value in ("&", "&&"):
                 method.ref_qualifier = tok_value
             elif tok_value == "->":
-                self._parse_trailing_return_type(method)
+                return_type = self._parse_trailing_return_type(method.return_type)
+                method.has_trailing_return = True
+                method.return_type = return_type
                 if self.lex.token_if("{"):
                     self._discard_contents("{", "}")
                     method.has_body = True
@@ -2000,6 +2003,7 @@ class CxxParser:
         is_friend: bool,
         is_typedef: bool,
         msvc_convention: typing.Optional[LexToken],
+        is_guide: bool = False,
     ) -> bool:
         """
         Assumes the caller has already consumed the return type and name, this consumes the
@@ -2076,7 +2080,21 @@ class CxxParser:
                 self.visitor.on_method_impl(state, method)
 
             return method.has_body or method.has_trailing_return
-
+        elif is_guide:
+            assert isinstance(state, (ExternBlockState, NamespaceBlockState))
+            if not self.lex.token_if("ARROW"):
+                raise self._parse_error(None, expected="Trailing return type")
+            return_type = self._parse_trailing_return_type(
+                Type(PQName([AutoSpecifier()]))
+            )
+            guide = DeductionGuide(
+                return_type,
+                name=pqname,
+                parameters=params,
+                doxygen=doxygen,
+            )
+            self.visitor.on_deduction_guide(state, guide)
+            return False
         else:
             assert return_type is not None
             fn = Function(
@@ -2210,7 +2228,9 @@ class CxxParser:
                 assert not isinstance(dtype, FunctionType)
                 dtype = dtype_fn = FunctionType(dtype, fn_params, vararg)
                 if self.lex.token_if("ARROW"):
-                    self._parse_trailing_return_type(dtype_fn)
+                    return_type = self._parse_trailing_return_type(dtype_fn.return_type)
+                    dtype_fn.has_trailing_return = True
+                    dtype_fn.return_type = return_type
 
             else:
                 msvc_convention = None
@@ -2391,6 +2411,7 @@ class CxxParser:
         destructor = False
         op = None
         msvc_convention = None
+        is_guide = False
 
         # If we have a leading (, that's either an obnoxious grouping
         # paren or it's a constructor
@@ -2441,8 +2462,15 @@ class CxxParser:
                 # grouping paren like "void (name(int x));"
                 toks = self._consume_balanced_tokens(tok)
 
-                # .. not sure what it's grouping, so put it back?
-                self.lex.return_tokens(toks[1:-1])
+                # check to see if the next token is an arrow, and thus a trailing return
+                if self.lex.token_peek_if("ARROW"):
+                    self.lex.return_tokens(toks)
+                    # the leading name of the class/ctor has been parsed as a type before the parens
+                    pqname = parsed_type.typename
+                    is_guide = True
+                else:
+                    # .. not sure what it's grouping, so put it back?
+                    self.lex.return_tokens(toks[1:-1])
 
         if dtype:
             msvc_convention = self.lex.token_if_val(*self._msvc_conventions)
@@ -2473,6 +2501,7 @@ class CxxParser:
                 is_friend,
                 is_typedef,
                 msvc_convention,
+                is_guide,
             )
         elif msvc_convention:
             raise self._parse_error(msvc_convention)
