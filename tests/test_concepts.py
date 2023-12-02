@@ -6,6 +6,7 @@ from cxxheaderparser.types import (
     Concept,
     Function,
     FundamentalSpecifier,
+    Method,
     MoveReference,
     NameSpecifier,
     PQName,
@@ -495,15 +496,15 @@ def test_requires_last_elem() -> None:
                         )
                     ],
                     template=TemplateDecl(
-                        params=[TemplateTypeParam(typekey="typename", name="T")],
-                        raw_requires_post=Value(
-                            tokens=[
-                                Token(value="Eq"),
-                                Token(value="<"),
-                                Token(value="T"),
-                                Token(value=">"),
-                            ]
-                        ),
+                        params=[TemplateTypeParam(typekey="typename", name="T")]
+                    ),
+                    raw_requires=Value(
+                        tokens=[
+                            Token(value="Eq"),
+                            Token(value="<"),
+                            Token(value="T"),
+                            Token(value=">"),
+                        ]
                     ),
                 )
             ]
@@ -752,14 +753,14 @@ def test_requires_both() -> None:
                                 Token(value=">"),
                             ]
                         ),
-                        raw_requires_post=Value(
-                            tokens=[
-                                Token(value="Subtractable"),
-                                Token(value="<"),
-                                Token(value="T"),
-                                Token(value=">"),
-                            ]
-                        ),
+                    ),
+                    raw_requires=Value(
+                        tokens=[
+                            Token(value="Subtractable"),
+                            Token(value="<"),
+                            Token(value="T"),
+                            Token(value=">"),
+                        ]
                     ),
                 )
             ]
@@ -791,20 +792,86 @@ def test_requires_paren() -> None:
                         )
                     ],
                     template=TemplateDecl(
-                        params=[TemplateTypeParam(typekey="class", name="T")],
-                        raw_requires_post=Value(
-                            tokens=[
-                                Token(value="("),
-                                Token(value="is_purrable"),
-                                Token(value="<"),
-                                Token(value="T"),
-                                Token(value=">"),
-                                Token(value="("),
-                                Token(value=")"),
-                                Token(value=")"),
-                            ]
+                        params=[TemplateTypeParam(typekey="class", name="T")]
+                    ),
+                    raw_requires=Value(
+                        tokens=[
+                            Token(value="("),
+                            Token(value="is_purrable"),
+                            Token(value="<"),
+                            Token(value="T"),
+                            Token(value=">"),
+                            Token(value="("),
+                            Token(value=")"),
+                            Token(value=")"),
+                        ]
+                    ),
+                )
+            ]
+        )
+    )
+
+
+def test_non_template_requires() -> None:
+    content = """
+      // clang-format off
+
+      template <class T>
+      struct Payload
+      {
+          constexpr Payload(T v)
+              requires(std::is_pod_v<T>)
+              : Value(v)
+          {
+          }
+      };
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            classes=[
+                ClassScope(
+                    class_decl=ClassDecl(
+                        typename=PQName(
+                            segments=[NameSpecifier(name="Payload")], classkey="struct"
+                        ),
+                        template=TemplateDecl(
+                            params=[TemplateTypeParam(typekey="class", name="T")]
                         ),
                     ),
+                    methods=[
+                        Method(
+                            return_type=None,
+                            name=PQName(segments=[NameSpecifier(name="Payload")]),
+                            parameters=[
+                                Parameter(
+                                    type=Type(
+                                        typename=PQName(
+                                            segments=[NameSpecifier(name="T")]
+                                        )
+                                    ),
+                                    name="v",
+                                )
+                            ],
+                            constexpr=True,
+                            has_body=True,
+                            raw_requires=Value(
+                                tokens=[
+                                    Token(value="("),
+                                    Token(value="std"),
+                                    Token(value="::"),
+                                    Token(value="is_pod_v"),
+                                    Token(value="<"),
+                                    Token(value="T"),
+                                    Token(value=">"),
+                                    Token(value=")"),
+                                ]
+                            ),
+                            access="public",
+                            constructor=True,
+                        )
+                    ],
                 )
             ]
         )

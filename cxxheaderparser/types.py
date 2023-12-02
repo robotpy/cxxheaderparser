@@ -526,9 +526,6 @@ class TemplateDecl:
     #: template <typename T> requires ...
     raw_requires_pre: typing.Optional[Value] = None
 
-    #: template <typename T> int main() requires ...
-    raw_requires_post: typing.Optional[Value] = None
-
 
 #: If no template, this is None. This is a TemplateDecl if this there is a single
 #: declaration:
@@ -729,6 +726,13 @@ class Function:
     #: In the case of a conversion operator (such as 'operator bool'), this
     #: is the string "conversion" and the full Type is found in return_type
     operator: typing.Optional[str] = None
+
+    #: A requires constraint following the function declaration. If you need the
+    #: prior, look at TemplateDecl.raw_requires_pre. At the moment this is just
+    #: a raw value, if we interpret it in the future this will change.
+    #:
+    #: template <typename T> int main() requires ...
+    raw_requires: typing.Optional[Value] = None
 
 
 @dataclass
