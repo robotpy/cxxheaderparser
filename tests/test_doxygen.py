@@ -26,6 +26,7 @@ from cxxheaderparser.types import (
     Type,
     Typedef,
     UsingDecl,
+    UsingAlias,
     Value,
     Variable,
 )
@@ -432,6 +433,56 @@ def test_doxygen_attribute() -> None:
                     name=PQName(segments=[NameSpecifier(name="hasattr")]),
                     parameters=[],
                     doxygen="/// hasattr comment",
+                )
+            ]
+        )
+    )
+
+
+def test_doxygen_using_decl() -> None:
+    content = """
+      // clang-format off
+
+      /// Comment
+      using ns::ClassName;
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            using=[
+                UsingDecl(
+                    typename=PQName(
+                        segments=[
+                            NameSpecifier(name="ns"),
+                            NameSpecifier(name="ClassName"),
+                        ]
+                    ),
+                    doxygen="/// Comment",
+                )
+            ]
+        )
+    )
+
+
+def test_doxygen_using_alias() -> None:
+    content = """
+      // clang-format off
+
+      /// Comment
+      using alias = sometype;
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            using_alias=[
+                UsingAlias(
+                    alias="alias",
+                    type=Type(
+                        typename=PQName(segments=[NameSpecifier(name="sometype")])
+                    ),
+                    doxygen="/// Comment",
                 )
             ]
         )
