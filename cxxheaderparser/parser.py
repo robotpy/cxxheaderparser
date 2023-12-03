@@ -1912,12 +1912,10 @@ class CxxParser:
         else:
             rtok = self.lex.token_if("requires")
             if rtok:
-                fn_template = fn.template
-                if fn_template is None:
+                # requires on a function must always be accompanied by a template
+                if fn.template is None:
                     raise self._parse_error(rtok)
-                elif isinstance(fn_template, list):
-                    fn_template = fn_template[0]
-                fn_template.raw_requires_post = self._parse_requires(rtok)
+                fn.raw_requires = self._parse_requires(rtok)
 
         if self.lex.token_if("ARROW"):
             self._parse_trailing_return_type(fn)
@@ -1983,12 +1981,7 @@ class CxxParser:
                     toks = self._consume_balanced_tokens(otok)[1:-1]
                 method.noexcept = self._create_value(toks)
             elif tok_value == "requires":
-                method_template = method.template
-                if method_template is None:
-                    raise self._parse_error(tok)
-                elif isinstance(method_template, list):
-                    method_template = method_template[0]
-                method_template.raw_requires_post = self._parse_requires(tok)
+                method.raw_requires = self._parse_requires(tok)
             else:
                 self.lex.return_token(tok)
                 break
