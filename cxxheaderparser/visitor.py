@@ -9,6 +9,7 @@ else:
 
 from .types import (
     Concept,
+    DeductionGuide,
     EnumDecl,
     Field,
     ForwardDecl,
@@ -236,6 +237,13 @@ class CxxVisitor(Protocol):
         ``on_variable`` for each instance declared.
         """
 
+    def on_deduction_guide(
+        self, state: NonClassBlockState, guide: DeductionGuide
+    ) -> None:
+        """
+        Called when a deduction guide is encountered
+        """
+
 
 class NullVisitor:
     """
@@ -316,6 +324,11 @@ class NullVisitor:
         return None
 
     def on_class_end(self, state: ClassBlockState) -> None:
+        return None
+
+    def on_deduction_guide(
+        self, state: NonClassBlockState, guide: DeductionGuide
+    ) -> None:
         return None
 
 

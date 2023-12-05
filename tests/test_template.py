@@ -5,6 +5,7 @@ from cxxheaderparser.types import (
     BaseClass,
     ClassDecl,
     DecltypeSpecifier,
+    DeductionGuide,
     Field,
     ForwardDecl,
     Function,
@@ -2157,6 +2158,89 @@ def test_member_class_template_specialization() -> None:
                             name=PQName(segments=[NameSpecifier(name="f")]),
                             parameters=[],
                             access="public",
+                        )
+                    ],
+                )
+            ]
+        )
+    )
+
+
+def test_template_deduction_guide() -> None:
+    content = """
+      template <class CharT, class Traits = std::char_traits<CharT>>
+      Error(std::basic_string_view<CharT, Traits>) -> Error<std::string>;
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            deduction_guides=[
+                DeductionGuide(
+                    result_type=Type(
+                        typename=PQName(
+                            segments=[
+                                NameSpecifier(
+                                    name="Error",
+                                    specialization=TemplateSpecialization(
+                                        args=[
+                                            TemplateArgument(
+                                                arg=Type(
+                                                    typename=PQName(
+                                                        segments=[
+                                                            NameSpecifier(name="std"),
+                                                            NameSpecifier(
+                                                                name="string"
+                                                            ),
+                                                        ]
+                                                    )
+                                                )
+                                            )
+                                        ]
+                                    ),
+                                )
+                            ]
+                        )
+                    ),
+                    name=PQName(segments=[NameSpecifier(name="Error")]),
+                    parameters=[
+                        Parameter(
+                            type=Type(
+                                typename=PQName(
+                                    segments=[
+                                        NameSpecifier(name="std"),
+                                        NameSpecifier(
+                                            name="basic_string_view",
+                                            specialization=TemplateSpecialization(
+                                                args=[
+                                                    TemplateArgument(
+                                                        arg=Type(
+                                                            typename=PQName(
+                                                                segments=[
+                                                                    NameSpecifier(
+                                                                        name="CharT"
+                                                                    )
+                                                                ]
+                                                            )
+                                                        )
+                                                    ),
+                                                    TemplateArgument(
+                                                        arg=Type(
+                                                            typename=PQName(
+                                                                segments=[
+                                                                    NameSpecifier(
+                                                                        name="Traits"
+                                                                    )
+                                                                ]
+                                                            )
+                                                        )
+                                                    ),
+                                                ]
+                                            ),
+                                        ),
+                                    ]
+                                )
+                            )
                         )
                     ],
                 )
