@@ -896,3 +896,21 @@ class UsingAlias:
 
     #: Documentation if present
     doxygen: typing.Optional[str] = None
+
+
+@dataclass
+class DeductionGuide:
+    """
+    .. code-block:: c++
+
+    template <class T>
+    MyClass(T) -> MyClass(int);
+    """
+
+    #: Only constructors and destructors don't have a return type
+    result_type: typing.Optional[DecoratedType]
+
+    name: PQName
+    parameters: typing.List[Parameter]
+
+    doxygen: typing.Optional[str] = None
