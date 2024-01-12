@@ -3,10 +3,11 @@ from collections import deque
 import inspect
 import re
 import typing
+from dataclasses import dataclass
 
 from . import lexer
 from .errors import CxxParseError
-from .lexer import LexToken, Location, PhonyEnding, PlyLexer
+from .lexer import LexToken, Location, PhonyEnding
 from .options import ParserOptions
 from .parserstate import (
     ClassBlockState,
@@ -39,7 +40,6 @@ from .types import (
     NameSpecifier,
     NamespaceAlias,
     NamespaceDecl,
-    Operator,
     PQNameSegment,
     Parameter,
     PQName,
@@ -64,9 +64,24 @@ from .types import (
 from .visitor import CxxVisitor, null_visitor
 
 LexTokenList = typing.List[LexToken]
-T = typing.TypeVar("T")
-
 PT = typing.TypeVar("PT", Parameter, TemplateNonTypeParam)
+
+
+@dataclass
+class Operator:
+    """An internal structure for parsing operator."""
+
+    #: Possibly qualified name for operator.
+    pqname: PQName
+
+    #: Conversion operator have always `conversion` str in this attribute.
+    operator_name: str
+
+    #: Return type for this operator.
+    ctype: Type
+
+    #: Return type modifiers for this operator.
+    cmods: ParsedTypeModifiers
 
 
 class CxxParser:
