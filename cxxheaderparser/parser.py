@@ -1759,7 +1759,7 @@ class CxxParser:
         param_name = None
         default = None
         param_pack = False
-        parsed_type: typing.Optional[Type]
+        parsed_type: typing.Union[Type, Operator]
         at_type: typing.Optional[Type] = None
 
         if not tok:
@@ -2383,6 +2383,9 @@ class CxxParser:
 
             tok = get_token()
 
+        if pqname is None:
+            raise self._parse_error(tok)
+
         # Construct a type from the parsed name
         parsed_type = Type(pqname, const, volatile)
 
@@ -2410,6 +2413,7 @@ class CxxParser:
     ) -> Operator:
         """This function parses operator implemented outside class body."""
         last_seg = pqname.segments[-1]
+        assert isinstance(last_seg, NameSpecifier)
         assert last_seg.name.startswith("operator")
         last_seg.name = "operator"
 
