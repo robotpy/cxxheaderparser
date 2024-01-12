@@ -305,14 +305,17 @@ class Type:
 class Operator:
     """An internal structure for parsing operator."""
 
+    #: Possibly qualified name for operator.
     pqname: PQName
-    """Possibly qualified name for operator."""
+
+    #: Conversion operator have always `conversion` str in this attribute.
     operator_name: str
-    """Conversion operator have always `conversion` str in this attribute."""
+
+    #: Return type for this operator.
     ctype: Type
-    """Return type for this operator."""
+
+    #: Return type modifiers for this operator.
     cmods: "ParsedTypeModifiers"
-    """Return type modifiers for this operator."""
 
 
 @dataclass
