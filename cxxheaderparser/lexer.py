@@ -225,18 +225,18 @@ class PlyLexer:
     #
 
     hex_prefix = "0[xX]"
-    hex_digits = "[0-9a-fA-F]+"
+    hex_digits = "[0-9a-fA-F']+"
     bin_prefix = "0[bB]"
-    bin_digits = "[01]+"
+    bin_digits = "[01']+"
 
     # integer constants (K&R2: A.2.5.1)
     integer_suffix_opt = (
         r"(([uU]ll)|([uU]LL)|(ll[uU]?)|(LL[uU]?)|([uU][lL])|([lL][uU]?)|[uU])?"
     )
     decimal_constant = (
-        "(0" + integer_suffix_opt + ")|([1-9][0-9]*" + integer_suffix_opt + ")"
+        "(0" + integer_suffix_opt + ")|([1-9][0-9']*" + integer_suffix_opt + ")"
     )
-    octal_constant = "0[0-7]*" + integer_suffix_opt
+    octal_constant = "0[0-7']*" + integer_suffix_opt
     hex_constant = hex_prefix + hex_digits + integer_suffix_opt
     bin_constant = bin_prefix + bin_digits + integer_suffix_opt
 
