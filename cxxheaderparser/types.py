@@ -3,6 +3,9 @@ from dataclasses import dataclass, field
 
 from .tokfmt import tokfmt, Token
 
+if typing.TYPE_CHECKING:
+    from .parserstate import ParsedTypeModifiers
+
 
 @dataclass
 class Value:
@@ -296,6 +299,20 @@ class Type:
         c = "const " if self.const else ""
         v = "volatile " if self.volatile else ""
         return f"{c}{v}{self.typename.format()} {name}"
+
+
+@dataclass
+class Operator:
+    """An internal structure for parsing operator."""
+
+    pqname: PQName
+    """Possibly qualified name for operator."""
+    operator_name: str
+    """Conversion operator have always `conversion` str in this attribute."""
+    ctype: Type
+    """Return type for this operator."""
+    cmods: "ParsedTypeModifiers"
+    """Return type modifiers for this operator."""
 
 
 @dataclass
