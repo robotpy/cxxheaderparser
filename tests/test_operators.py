@@ -746,3 +746,130 @@ def test_free_operator() -> None:
             ]
         )
     )
+
+
+def test_free_conversion_operator() -> None:
+    content = """
+      Foo::operator Type1() { return SomeMethod(); }
+      const Foo::operator Type2() const { return SomeMethod(); }
+      volatile Foo::operator Type3() const { return SomeMethod(); }
+
+      Foo::operator Foo::Type4() { return SomeMethod(); }
+      const Foo::operator Foo::Type5() const { return SomeMethod(); }
+      volatile Foo::operator Foo::Type6() const { return SomeMethod(); }
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            method_impls=[
+                Method(
+                    return_type=Type(
+                        typename=PQName(segments=[NameSpecifier(name="Type1")])
+                    ),
+                    name=PQName(
+                        segments=[
+                            NameSpecifier(name="Foo"),
+                            NameSpecifier(name="operator"),
+                        ]
+                    ),
+                    parameters=[],
+                    has_body=True,
+                    operator="conversion",
+                ),
+                Method(
+                    return_type=Type(
+                        typename=PQName(segments=[NameSpecifier(name="Type2")]),
+                        const=True,
+                    ),
+                    name=PQName(
+                        segments=[
+                            NameSpecifier(name="Foo"),
+                            NameSpecifier(name="operator"),
+                        ]
+                    ),
+                    parameters=[],
+                    has_body=True,
+                    operator="conversion",
+                    const=True,
+                ),
+                Method(
+                    return_type=Type(
+                        typename=PQName(segments=[NameSpecifier(name="Type3")]),
+                        volatile=True,
+                    ),
+                    name=PQName(
+                        segments=[
+                            NameSpecifier(name="Foo"),
+                            NameSpecifier(name="operator"),
+                        ]
+                    ),
+                    parameters=[],
+                    has_body=True,
+                    operator="conversion",
+                    const=True,
+                ),
+                Method(
+                    return_type=Type(
+                        typename=PQName(
+                            segments=[
+                                NameSpecifier(name="Foo"),
+                                NameSpecifier(name="Type4"),
+                            ]
+                        )
+                    ),
+                    name=PQName(
+                        segments=[
+                            NameSpecifier(name="Foo"),
+                            NameSpecifier(name="operator"),
+                        ]
+                    ),
+                    parameters=[],
+                    has_body=True,
+                    operator="conversion",
+                ),
+                Method(
+                    return_type=Type(
+                        typename=PQName(
+                            segments=[
+                                NameSpecifier(name="Foo"),
+                                NameSpecifier(name="Type5"),
+                            ]
+                        ),
+                        const=True,
+                    ),
+                    name=PQName(
+                        segments=[
+                            NameSpecifier(name="Foo"),
+                            NameSpecifier(name="operator"),
+                        ]
+                    ),
+                    parameters=[],
+                    has_body=True,
+                    operator="conversion",
+                    const=True,
+                ),
+                Method(
+                    return_type=Type(
+                        typename=PQName(
+                            segments=[
+                                NameSpecifier(name="Foo"),
+                                NameSpecifier(name="Type6"),
+                            ]
+                        ),
+                        volatile=True,
+                    ),
+                    name=PQName(
+                        segments=[
+                            NameSpecifier(name="Foo"),
+                            NameSpecifier(name="operator"),
+                        ]
+                    ),
+                    parameters=[],
+                    has_body=True,
+                    operator="conversion",
+                    const=True,
+                ),
+            ]
+        )
+    )
