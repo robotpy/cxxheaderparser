@@ -1041,7 +1041,9 @@ class CxxParser:
     ) -> None:
         self.state.location = tok.location
 
-        tok = self._next_token_must_be("NAME", "DBL_COLON", "namespace", "typename")
+        tok = self._next_token_must_be(
+            "NAME", "DBL_COLON", "namespace", "typename", "enum"
+        )
 
         if tok.type == "namespace":
             if template:
