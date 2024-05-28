@@ -83,11 +83,11 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [windows-latest, macos-latest, ubuntu-20.04]
+        os: [windows-latest, macos-13, ubuntu-20.04]
         python_version: [3.6, 3.7, 3.8, 3.9, "3.10", "3.11", "3.12"]
         architecture: [x86, x64]
         exclude:
-        - os: macos-latest
+        - os: macos-13
           architecture: x86
         - os: ubuntu-20.04
           architecture: x86
