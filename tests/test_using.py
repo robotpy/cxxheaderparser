@@ -716,3 +716,64 @@ def test_using_typename_in_class() -> None:
             ]
         )
     )
+
+
+def test_using_enum_global() -> None:
+    content = """
+      namespace A {
+      using enum B::C;
+      }
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            namespaces={
+                "A": NamespaceScope(
+                    name="A",
+                    using=[
+                        UsingDecl(
+                            typename=PQName(
+                                segments=[
+                                    NameSpecifier(name="B"),
+                                    NameSpecifier(name="C"),
+                                ],
+                                classkey="enum",
+                            )
+                        )
+                    ],
+                )
+            }
+        )
+    )
+
+
+def test_using_enum_in_struct() -> None:
+    content = """
+      struct S {
+        using enum fruit;
+      };
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            classes=[
+                ClassScope(
+                    class_decl=ClassDecl(
+                        typename=PQName(
+                            segments=[NameSpecifier(name="S")], classkey="struct"
+                        )
+                    ),
+                    using=[
+                        UsingDecl(
+                            typename=PQName(
+                                segments=[NameSpecifier(name="fruit")], classkey="enum"
+                            ),
+                            access="public",
+                        )
+                    ],
+                )
+            ]
+        )
+    )
