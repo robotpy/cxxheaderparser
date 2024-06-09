@@ -1258,3 +1258,58 @@ def test_method_trailing_return_with_body() -> None:
             ]
         )
     )
+
+
+def test_msvc_inline() -> None:
+    content = """
+      __inline double fn1() {}
+      __forceinline double fn2() {}
+      static __inline double fn3() {}
+      static __forceinline double fn4() {}
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            functions=[
+                Function(
+                    return_type=Type(
+                        typename=PQName(segments=[FundamentalSpecifier(name="double")])
+                    ),
+                    name=PQName(segments=[NameSpecifier(name="fn1")]),
+                    parameters=[],
+                    inline=True,
+                    has_body=True,
+                ),
+                Function(
+                    return_type=Type(
+                        typename=PQName(segments=[FundamentalSpecifier(name="double")])
+                    ),
+                    name=PQName(segments=[NameSpecifier(name="fn2")]),
+                    parameters=[],
+                    inline=True,
+                    has_body=True,
+                ),
+                Function(
+                    return_type=Type(
+                        typename=PQName(segments=[FundamentalSpecifier(name="double")])
+                    ),
+                    name=PQName(segments=[NameSpecifier(name="fn3")]),
+                    parameters=[],
+                    static=True,
+                    inline=True,
+                    has_body=True,
+                ),
+                Function(
+                    return_type=Type(
+                        typename=PQName(segments=[FundamentalSpecifier(name="double")])
+                    ),
+                    name=PQName(segments=[NameSpecifier(name="fn4")]),
+                    parameters=[],
+                    static=True,
+                    inline=True,
+                    has_body=True,
+                ),
+            ]
+        )
+    )
