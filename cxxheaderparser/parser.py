@@ -2371,6 +2371,8 @@ class CxxParser:
                 volatile = True
             elif tok_type in _attribute_start:
                 self._consume_attribute(tok)
+            elif tok_type in ("__inline", "__forceinline"):
+                both["inline"] = tok
             else:
                 break
 
