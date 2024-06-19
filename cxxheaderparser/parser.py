@@ -1514,6 +1514,10 @@ class CxxParser:
         "float",
         "double",
         "char",
+        "__int8",
+        "__int16",
+        "__int32",
+        "__int64"
     }
 
     _fundamentals = _compound_fundamentals | {
@@ -1522,11 +1526,7 @@ class CxxParser:
         "char32_t",
         "nullptr_t",
         "wchar_t",
-        "void",
-        "__int8",
-        "__int16",
-        "__int32",
-        "__int64"
+        "void"
     }
 
     def _parse_pqname_fundamental(self, tok_value: str) -> FundamentalSpecifier:
