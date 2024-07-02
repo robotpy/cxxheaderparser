@@ -1677,6 +1677,10 @@ class CxxParser:
         "float",
         "double",
         "char",
+        "__int8",
+        "__int16",
+        "__int32",
+        "__int64",
     }
 
     _fundamentals = _compound_fundamentals | {
