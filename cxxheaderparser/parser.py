@@ -2624,6 +2624,16 @@ class CxxParser:
         ):
             return
 
+        # Check for an abbreviated template return type, promote it
+        if not is_typedef and parsed_type is not None and self.lex.token_if_val("auto"):
+            abv_ret_tmpl = TemplateNonTypeParam(type=parsed_type, param_idx=-1)
+            if template is None:
+                template = TemplateDecl(params=[abv_ret_tmpl])
+            elif isinstance(template, TemplateDecl):
+                template.params.append(abv_ret_tmpl)
+            else:
+                template[-1].params.append(abv_ret_tmpl)
+
         var_ok = True
 
         if is_typedef:
