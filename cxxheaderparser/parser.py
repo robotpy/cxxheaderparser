@@ -718,6 +718,17 @@ class CxxParser:
             if dtype:
                 args.append(TemplateArgument(dtype, param_pack))
             else:
+                # special case for sizeof...(thing)
+                if (
+                    param_pack
+                    and len(val.tokens) == 1
+                    and val.tokens[0].value == "sizeof"
+                ):
+                    val.tokens.append(Token("...", "ELLIPSIS"))
+                    tok = self._next_token_must_be("(")
+                    raw_toks = self._consume_balanced_tokens(tok)
+                    val.tokens.extend(Token(tok.value, tok.type) for tok in raw_toks)
+
                 args.append(TemplateArgument(val, param_pack))
 
             tok = self._next_token_must_be(",", ">")
@@ -2623,6 +2634,16 @@ class CxxParser:
             )
         ):
             return
+
+        # Check for an abbreviated template return type, promote it
+        if not is_typedef and parsed_type is not None and self.lex.token_if_val("auto"):
+            abv_ret_tmpl = TemplateNonTypeParam(type=parsed_type, param_idx=-1)
+            if template is None:
+                template = TemplateDecl(params=[abv_ret_tmpl])
+            elif isinstance(template, TemplateDecl):
+                template.params.append(abv_ret_tmpl)
+            else:
+                template[-1].params.append(abv_ret_tmpl)
 
         var_ok = True
 
