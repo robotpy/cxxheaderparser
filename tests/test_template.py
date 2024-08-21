@@ -2247,3 +2247,108 @@ def test_template_deduction_guide() -> None:
             ]
         )
     )
+
+
+def test_sizeof_pack() -> None:
+    content = """
+      template <std::same_as<int>... OutputIndices>
+      LinearSystem<States, Inputs, sizeof...(OutputIndices)> Slice(OutputIndices... outputIndices);
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            functions=[
+                Function(
+                    return_type=Type(
+                        typename=PQName(
+                            segments=[
+                                NameSpecifier(
+                                    name="LinearSystem",
+                                    specialization=TemplateSpecialization(
+                                        args=[
+                                            TemplateArgument(
+                                                arg=Type(
+                                                    typename=PQName(
+                                                        segments=[
+                                                            NameSpecifier(name="States")
+                                                        ]
+                                                    )
+                                                )
+                                            ),
+                                            TemplateArgument(
+                                                arg=Type(
+                                                    typename=PQName(
+                                                        segments=[
+                                                            NameSpecifier(name="Inputs")
+                                                        ]
+                                                    )
+                                                )
+                                            ),
+                                            TemplateArgument(
+                                                arg=Value(
+                                                    tokens=[
+                                                        Token(value="sizeof"),
+                                                        Token(value="..."),
+                                                        Token(value="("),
+                                                        Token(value="OutputIndices"),
+                                                        Token(value=")"),
+                                                    ]
+                                                ),
+                                                param_pack=True,
+                                            ),
+                                        ]
+                                    ),
+                                )
+                            ]
+                        )
+                    ),
+                    name=PQName(segments=[NameSpecifier(name="Slice")]),
+                    parameters=[
+                        Parameter(
+                            type=Type(
+                                typename=PQName(
+                                    segments=[NameSpecifier(name="OutputIndices")]
+                                )
+                            ),
+                            name="outputIndices",
+                            param_pack=True,
+                        )
+                    ],
+                    template=TemplateDecl(
+                        params=[
+                            TemplateNonTypeParam(
+                                type=Type(
+                                    typename=PQName(
+                                        segments=[
+                                            NameSpecifier(name="std"),
+                                            NameSpecifier(
+                                                name="same_as",
+                                                specialization=TemplateSpecialization(
+                                                    args=[
+                                                        TemplateArgument(
+                                                            arg=Type(
+                                                                typename=PQName(
+                                                                    segments=[
+                                                                        FundamentalSpecifier(
+                                                                            name="int"
+                                                                        )
+                                                                    ]
+                                                                )
+                                                            )
+                                                        )
+                                                    ]
+                                                ),
+                                            ),
+                                        ]
+                                    )
+                                ),
+                                name="OutputIndices",
+                                param_pack=True,
+                            )
+                        ]
+                    ),
+                )
+            ]
+        )
+    )

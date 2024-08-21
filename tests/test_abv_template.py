@@ -351,3 +351,77 @@ def test_abv_template_f5() -> None:
             ]
         )
     )
+
+
+def test_returned_abv_template() -> None:
+    content = """
+      constexpr std::signed_integral auto FloorDiv(std::signed_integral auto x,
+                                                   std::signed_integral auto y);
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            functions=[
+                Function(
+                    return_type=Type(
+                        typename=PQName(
+                            segments=[
+                                NameSpecifier(name="std"),
+                                NameSpecifier(name="signed_integral"),
+                            ]
+                        )
+                    ),
+                    name=PQName(segments=[NameSpecifier(name="FloorDiv")]),
+                    parameters=[
+                        Parameter(
+                            type=Type(typename=PQName(segments=[AutoSpecifier()])),
+                            name="x",
+                        ),
+                        Parameter(
+                            type=Type(typename=PQName(segments=[AutoSpecifier()])),
+                            name="y",
+                        ),
+                    ],
+                    constexpr=True,
+                    template=TemplateDecl(
+                        params=[
+                            TemplateNonTypeParam(
+                                type=Type(
+                                    typename=PQName(
+                                        segments=[
+                                            NameSpecifier(name="std"),
+                                            NameSpecifier(name="signed_integral"),
+                                        ]
+                                    )
+                                ),
+                                param_idx=-1,
+                            ),
+                            TemplateNonTypeParam(
+                                type=Type(
+                                    typename=PQName(
+                                        segments=[
+                                            NameSpecifier(name="std"),
+                                            NameSpecifier(name="signed_integral"),
+                                        ]
+                                    )
+                                ),
+                                param_idx=0,
+                            ),
+                            TemplateNonTypeParam(
+                                type=Type(
+                                    typename=PQName(
+                                        segments=[
+                                            NameSpecifier(name="std"),
+                                            NameSpecifier(name="signed_integral"),
+                                        ]
+                                    )
+                                ),
+                                param_idx=1,
+                            ),
+                        ]
+                    ),
+                )
+            ]
+        )
+    )
