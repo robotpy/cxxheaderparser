@@ -718,6 +718,17 @@ class CxxParser:
             if dtype:
                 args.append(TemplateArgument(dtype, param_pack))
             else:
+                # special case for sizeof...(thing)
+                if (
+                    param_pack
+                    and len(val.tokens) == 1
+                    and val.tokens[0].value == "sizeof"
+                ):
+                    val.tokens.append(Token("...", "ELLIPSIS"))
+                    tok = self._next_token_must_be("(")
+                    raw_toks = self._consume_balanced_tokens(tok)
+                    val.tokens.extend(Token(tok.value, tok.type) for tok in raw_toks)
+
                 args.append(TemplateArgument(val, param_pack))
 
             tok = self._next_token_must_be(",", ">")
