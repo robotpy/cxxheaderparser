@@ -696,6 +696,7 @@ class Function:
     extern: typing.Union[bool, str] = False
     static: bool = False
     inline: bool = False
+    deleted: bool = False
 
     #: If true, the body of the function is present
     has_body: bool = False
@@ -764,7 +765,6 @@ class Method(Function):
     constructor: bool = False
     explicit: bool = False
     default: bool = False
-    deleted: bool = False
 
     destructor: bool = False
 
