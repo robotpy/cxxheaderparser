@@ -1937,6 +1937,11 @@ class CxxParser:
         if self.lex.token_if("{"):
             self._discard_contents("{", "}")
             fn.has_body = True
+        elif self.lex.token_if("="):
+            if self.lex.token_if_val("delete"):
+                fn.deleted = True
+            else:
+                raise self._parse_error(None, "expected 'delete")
 
     def _parse_method_end(self, method: Method) -> None:
         """

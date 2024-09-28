@@ -1313,3 +1313,25 @@ def test_msvc_inline() -> None:
             ]
         )
     )
+
+
+def test_deleted_function() -> None:
+    content = """
+      void trim() = delete;
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            functions=[
+                Function(
+                    return_type=Type(
+                        typename=PQName(segments=[FundamentalSpecifier(name="void")])
+                    ),
+                    name=PQName(segments=[NameSpecifier(name="trim")]),
+                    parameters=[],
+                    deleted=True,
+                )
+            ]
+        )
+    )
