@@ -2352,3 +2352,68 @@ def test_sizeof_pack() -> None:
             ]
         )
     )
+
+
+def test_deduction_sizeof_pack() -> None:
+    content = """
+      template <typename ModuleTranslation, typename... ModuleTranslations>
+      SwerveDriveKinematics(ModuleTranslation, ModuleTranslations...)
+          -> SwerveDriveKinematics<1 + sizeof...(ModuleTranslations)>;
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            deduction_guides=[
+                DeductionGuide(
+                    result_type=Type(
+                        typename=PQName(
+                            segments=[
+                                NameSpecifier(
+                                    name="SwerveDriveKinematics",
+                                    specialization=TemplateSpecialization(
+                                        args=[
+                                            TemplateArgument(
+                                                arg=Value(
+                                                    tokens=[
+                                                        Token(value="1"),
+                                                        Token(value="+"),
+                                                        Token(value="sizeof"),
+                                                        Token(value="..."),
+                                                        Token(value="("),
+                                                        Token(
+                                                            value="ModuleTranslations"
+                                                        ),
+                                                        Token(value=")"),
+                                                    ]
+                                                ),
+                                                param_pack=True,
+                                            )
+                                        ]
+                                    ),
+                                )
+                            ]
+                        )
+                    ),
+                    name=PQName(segments=[NameSpecifier(name="SwerveDriveKinematics")]),
+                    parameters=[
+                        Parameter(
+                            type=Type(
+                                typename=PQName(
+                                    segments=[NameSpecifier(name="ModuleTranslation")]
+                                )
+                            )
+                        ),
+                        Parameter(
+                            type=Type(
+                                typename=PQName(
+                                    segments=[NameSpecifier(name="ModuleTranslations")]
+                                )
+                            ),
+                            param_pack=True,
+                        ),
+                    ],
+                )
+            ]
+        )
+    )
