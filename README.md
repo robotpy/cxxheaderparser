@@ -24,11 +24,12 @@ Non-goals:
 * **Does not produce a full AST**, use Clang if you need that
 * **Not intended to validate C++**, which means this will not reject all
   invalid C++ headers! Use a compiler if you need that
-* **No C preprocessor substitution support implemented**. If you are parsing
+* **Parser requires a C++ preprocessor**. If you are parsing
   headers that contain macros, you should preprocess your code using the
   excellent pure python preprocessor [pcpp](https://github.com/ned14/pcpp)
   or your favorite compiler
-  * See `cxxheaderparser.preprocessor` for how to use
+  * We have implemented support for PCPP, GCC, and MSVC -- but it is not enabled
+    by default. See the `cxxheaderparser.preprocessor` module for how to enable it.
 * Probably won't be able to parse most IOCCC entries
 
 There are two APIs available:
