@@ -383,13 +383,13 @@ def make_pcpp_preprocessor(
 
             if depfile is not None:
                 assert deps is not None
-                with open(depfile, "w") as fp:
-                    fp.write(f"{target}:")
+                with open(depfile, "w") as dfp:
+                    dfp.write(f"{target}:")
                     for dep in reversed(list(deps.keys())):
                         dep = dep.replace("\\", "\\\\")
                         dep = dep.replace(" ", "\\ ")
-                        fp.write(f" \\\n  {dep}")
-                    fp.write("\n")
+                        dfp.write(f" \\\n  {dep}")
+                    dfp.write("\n")
 
             return filtered
 
