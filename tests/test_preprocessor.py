@@ -51,7 +51,7 @@ def make_pp(request) -> typing.Callable[..., PreprocessorFunction]:
 
 
 def test_basic_preprocessor(
-    make_pp: typing.Callable[..., PreprocessorFunction]
+    make_pp: typing.Callable[..., PreprocessorFunction],
 ) -> None:
     content = """
       #define X 1
