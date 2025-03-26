@@ -3,8 +3,10 @@ Contains optional preprocessor support functions
 """
 
 import io
+import pathlib
 import re
 import os
+import os.path
 import subprocess
 import sys
 import tempfile
@@ -48,6 +50,8 @@ def make_gcc_preprocessor(
     encoding: typing.Optional[str] = None,
     gcc_args: typing.List[str] = ["g++"],
     print_cmd: bool = True,
+    depfile: typing.Optional[pathlib.Path] = None,
+    deptarget: typing.Optional[typing.List[str]] = None,
 ) -> PreprocessorFunction:
     """
     Creates a preprocessor function that uses g++ to preprocess the input text.
@@ -62,6 +66,9 @@ def make_gcc_preprocessor(
     :param encoding: If specified any include files are opened with this encoding
     :param gcc_args: This is the path to G++ and any extra args you might want
     :param print_cmd: Prints the gcc command as its executed
+    :param depfile: If specified, will generate a preprocessor depfile that contains
+                    a list of include files that were parsed. Must also specify deptarget.
+    :param deptarget: List of targets to put in the depfile
 
     .. code-block:: python
 
@@ -92,6 +99,16 @@ def make_gcc_preprocessor(
             kwargs["input"] = content
         else:
             cmd.append(filename)
+
+        if depfile is not None:
+            if deptarget is None:
+                raise PreprocessorError(
+                    "must specify deptarget if depfile is specified"
+                )
+            cmd.append("-MD")
+            for target in deptarget:
+                cmd += ["-MQ", target]
+            cmd += ["-MF", str(depfile)]
 
         if print_cmd:
             print("+", " ".join(cmd), file=sys.stderr)
@@ -242,7 +259,9 @@ except ImportError:
     pcpp = None
 
 
-def _pcpp_filter(fname: str, fp: typing.TextIO) -> str:
+def _pcpp_filter(
+    fname: str, fp: typing.TextIO, deps: typing.Optional[typing.Dict[str, bool]]
+) -> str:
     # the output of pcpp includes the contents of all the included files, which
     # isn't what a typical user of cxxheaderparser would want, so we strip out
     # the line directives and any content that isn't in our original file
@@ -255,6 +274,9 @@ def _pcpp_filter(fname: str, fp: typing.TextIO) -> str:
     for line in fp:
         if line.startswith("#line"):
             keep = line.endswith(line_ending)
+            if deps is not None:
+                start = line.find('"')
+                deps[line[start + 1 : -2]] = True
 
         if keep:
             new_output.write(line)
@@ -270,6 +292,8 @@ def make_pcpp_preprocessor(
     retain_all_content: bool = False,
     encoding: typing.Optional[str] = None,
     passthru_includes: typing.Optional["re.Pattern"] = None,
+    depfile: typing.Optional[pathlib.Path] = None,
+    deptarget: typing.Optional[typing.List[str]] = None,
 ) -> PreprocessorFunction:
     """
     Creates a preprocessor function that uses pcpp (which must be installed
@@ -285,6 +309,10 @@ def make_pcpp_preprocessor(
     :param encoding: If specified any include files are opened with this encoding
     :param passthru_includes: If specified any #include directives that match the
                               compiled regex pattern will be part of the output.
+    :param depfile: If specified, will generate a preprocessor depfile that contains
+                    a list of include files that were parsed. Must also specify deptarget.
+                    Not compatible with retain_all_content
+    :param deptarget: List of targets to put in the depfile
 
     .. code-block:: python
 
@@ -309,6 +337,8 @@ def make_pcpp_preprocessor(
 
         if not retain_all_content:
             pp.line_directive = "#line"
+        elif depfile:
+            raise PreprocessorError("retain_all_content and depfile not compatible")
 
         if content is None:
             with open(filename, "r", encoding=encoding) as fp:
@@ -327,6 +357,16 @@ def make_pcpp_preprocessor(
         if retain_all_content:
             return fp.read()
         else:
+            deps: typing.Optional[typing.Dict[str, bool]] = None
+            target = None
+            if depfile:
+                deps = {}
+                if not deptarget:
+                    base, _ = os.path.splitext(filename)
+                    target = f"{base}.o"
+                else:
+                    target = " ".join(deptarget)
+
             # pcpp emits the #line directive using the filename you pass in
             # but will rewrite it if it's on the include path it uses. This
             # is copied from pcpp:
@@ -339,6 +379,18 @@ def make_pcpp_preprocessor(
                         filename = filename.replace(os.sep, "/")
                     break
 
-            return _pcpp_filter(filename, fp)
+            filtered = _pcpp_filter(filename, fp, deps)
+
+            if depfile is not None:
+                assert deps is not None
+                with open(depfile, "w") as fp:
+                    fp.write(f"{target}:")
+                    for dep in reversed(list(deps.keys())):
+                        dep = dep.replace("\\", "\\\\")
+                        dep = dep.replace(" ", "\\ ")
+                        fp.write(f" \\\n  {dep}")
+                    fp.write("\n")
+
+            return filtered
 
     return _preprocess_file

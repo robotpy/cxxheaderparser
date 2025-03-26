@@ -202,3 +202,47 @@ def test_preprocessor_passthru_includes(tmp_path: pathlib.Path) -> None:
     assert data == ParsedData(
         namespace=NamespaceScope(), includes=[Include(filename='"t2.h"')]
     )
+
+
+def test_preprocessor_depfile(
+    make_pp: typing.Callable[..., PreprocessorFunction],
+    tmp_path: pathlib.Path,
+) -> None:
+
+    tmp_path = tmp_path / "hard path"
+    tmp_path.mkdir(parents=True, exist_ok=True)
+
+    # not supported
+    if make_pp is preprocessor.make_msvc_preprocessor:
+        return
+
+    h_content = '#include "t2.h"' "\n" "int x = X;\n"
+    h2_content = '#include "t3.h"\n' "#define X 2\n" "int omitted = 1;\n"
+    h3_content = "int h3;"
+
+    with open(tmp_path / "t1.h", "w") as fp:
+        fp.write(h_content)
+
+    with open(tmp_path / "t2.h", "w") as fp:
+        fp.write(h2_content)
+
+    with open(tmp_path / "t3.h", "w") as fp:
+        fp.write(h3_content)
+
+    depfile = tmp_path / "t1.d"
+    deptarget = ["tgt"]
+
+    options = ParserOptions(preprocessor=make_pp(depfile=depfile, deptarget=deptarget))
+    parse_file(tmp_path / "t1.h", options=options)
+
+    with open(depfile) as fp:
+        depcontent = fp.read()
+
+    assert depcontent.startswith("tgt:")
+    deps = [d.strip() for d in depcontent[4:].strip().split("\\\n")]
+    deps = [d.replace("\\ ", " ").replace("\\\\", "\\") for d in deps if d]
+
+    # gcc will insert extra paths of predefined stuff, so just make sure this is sane
+    assert str(tmp_path / "t1.h") in deps
+    assert str(tmp_path / "t2.h") in deps
+    assert str(tmp_path / "t3.h") in deps
