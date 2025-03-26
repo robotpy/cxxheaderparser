@@ -341,8 +341,8 @@ def make_pcpp_preprocessor(
             raise PreprocessorError("retain_all_content and depfile not compatible")
 
         if content is None:
-            with open(filename, "r", encoding=encoding) as fp:
-                content = fp.read()
+            with open(filename, "r", encoding=encoding) as cfp:
+                content = cfp.read()
 
         pp.parse(content, filename)
 
