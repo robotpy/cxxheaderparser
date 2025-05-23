@@ -212,10 +212,6 @@ def test_preprocessor_depfile(
     tmp_path = tmp_path / "hard path"
     tmp_path.mkdir(parents=True, exist_ok=True)
 
-    # not supported
-    if make_pp is preprocessor.make_msvc_preprocessor:
-        return
-
     h_content = '#include "t2.h"' "\n" "int x = X;\n"
     h2_content = '#include "t3.h"\n' "#define X 2\n" "int omitted = 1;\n"
     h3_content = "int h3;"

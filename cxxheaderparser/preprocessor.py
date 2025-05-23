@@ -156,6 +156,9 @@ def make_msvc_preprocessor(
     encoding: typing.Optional[str] = None,
     msvc_args: typing.List[str] = ["cl.exe"],
     print_cmd: bool = True,
+    depfile: typing.Optional[pathlib.Path] = None,
+    deptarget: typing.Optional[typing.List[str]] = None,
+    dep_prefix: typing.Optional[bytes] = None,
 ) -> PreprocessorFunction:
     """
     Creates a preprocessor function that uses cl.exe from Microsoft Visual Studio
@@ -171,6 +174,11 @@ def make_msvc_preprocessor(
     :param encoding: If specified any include files are opened with this encoding
     :param msvc_args: This is the path to cl.exe and any extra args you might want
     :param print_cmd: Prints the command as its executed
+    :param depfile: If specified, will generate a preprocessor depfile that contains
+                    a list of include files that were parsed. Must also specify deptarget
+                    and dep_prefix. Not compatible with retain_all_content
+    :param deptarget: List of targets to put in the depfile
+    :param dep_prefix: See get_msvc_dep_prefix()
 
     .. code-block:: python
 
@@ -184,8 +192,14 @@ def make_msvc_preprocessor(
     if not encoding:
         encoding = "utf-8"
 
+    if depfile and not dep_prefix:
+        dep_prefix = get_msvc_dep_prefix(msvc_args=msvc_args)
+
     def _preprocess_file(filename: str, content: typing.Optional[str]) -> str:
         cmd = msvc_args + ["/nologo", "/E", "/C"]
+
+        if dep_prefix:
+            cmd.append("/showIncludes")
 
         for p in include_paths:
             cmd.append(f"/I{p}")
@@ -195,7 +209,7 @@ def make_msvc_preprocessor(
         tfpname = None
 
         try:
-            kwargs = {"encoding": encoding}
+            kwargs = {"encoding": encoding, "check": True, "capture_output": True}
             if filename == "<str>":
                 if content is None:
                     raise PreprocessorError("no content specified for stdin")
@@ -214,9 +228,28 @@ def make_msvc_preprocessor(
             if print_cmd:
                 print("+", " ".join(cmd), file=sys.stderr)
 
-            result: str = subprocess.check_output(cmd, **kwargs)  # type: ignore
+            proc = subprocess.run(cmd, **kwargs)  # type: ignore
+            result: str = proc.stdout
             if not retain_all_content:
                 result = _msvc_filter(io.StringIO(result))
+
+            if depfile is not None:
+                deps: typing.Dict[str, bool] = {}
+
+                if not deptarget:
+                    base, _ = os.path.splitext(filename)
+                    target = f"{base}.o"
+                else:
+                    target = " ".join(deptarget)
+
+                with open(depfile, "w") as dfp:
+                    dfp.write(f"{target}:")
+                    # for dep in reversed(list(deps.keys())):
+                    #     dep = dep.replace("\\", "\\\\")
+                    #     dep = dep.replace(" ", "\\ ")
+                    #     dfp.write(f" \\\n  {dep}")
+                    dfp.write("\n")
+
         finally:
             if tfpname:
                 os.unlink(tfpname)
@@ -224,6 +257,38 @@ def make_msvc_preprocessor(
         return result
 
     return _preprocess_file
+
+
+def get_msvc_dep_prefix(*, msvc_args: typing.List[str]) -> bytes:
+    """
+    Detects the content needed to be passed to dep_prefix
+    """
+
+    #
+    # Copied from meson source code, Apache 2.0 license
+    #
+
+    with tempfile.TemporaryDirectory() as td:
+        p = pathlib.Path(td)
+        (p / "t.h").write_text("#include <stdio.h>\nint x;")
+
+        r = subprocess.run(
+            msvc_args + ["/showIncludes", "/c", "t.h"], cwd=td, capture_output=True
+        )
+
+        matchre = re.compile(rb"^(.*\s)([a-zA-Z]:[\\/]|[\\\/]).*stdio.h$")
+
+        def detect_prefix(out):
+            for line in re.split(rb"\r?\n", out):
+                match = matchre.match(line)
+                if match:
+                    return match.group(1)
+
+        result = detect_prefix(r.stdout) or detect_prefix(r.stderr)
+        if result:
+            return result
+
+        raise ValueError("Could not determine msvc dep prefix")
 
 
 #

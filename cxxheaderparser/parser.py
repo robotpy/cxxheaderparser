@@ -2361,9 +2361,13 @@ class CxxParser:
                     # special case: conversion operators such as operator bool
                     pqname_optional = True
                     break
-                pqname, _ = self._parse_pqname(
-                    tok, compound_ok=True, fn_ok=False, fund_ok=True
+                pqname, op = self._parse_pqname(
+                    tok, compound_ok=True, fn_ok=operator_ok, fund_ok=True
                 )
+                # another special case: operators
+                if op is not None:
+                    tok = get_token()
+                    break
             elif tok_type in self._parse_type_ptr_ref_paren:
                 if pqname is None:
                     raise self._parse_error(tok)
