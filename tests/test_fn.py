@@ -1196,6 +1196,59 @@ def test_auto_decltype_return() -> None:
     )
 
 
+def test_pure_virtual_trailing_return() -> None:
+    content = """
+      class C {
+      public:
+        int x;
+        virtual auto GetSelected() -> decltype(x) = 0;
+      };
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            classes=[
+                ClassScope(
+                    class_decl=ClassDecl(
+                        typename=PQName(
+                            segments=[NameSpecifier(name="C")], classkey="class"
+                        )
+                    ),
+                    fields=[
+                        Field(
+                            access="public",
+                            type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="int")]
+                                )
+                            ),
+                            name="x",
+                        )
+                    ],
+                    methods=[
+                        Method(
+                            return_type=Type(
+                                typename=PQName(
+                                    segments=[
+                                        DecltypeSpecifier(tokens=[Token(value="x")])
+                                    ]
+                                )
+                            ),
+                            name=PQName(segments=[NameSpecifier(name="GetSelected")]),
+                            parameters=[],
+                            has_trailing_return=True,
+                            pure_virtual=True,
+                            virtual=True,
+                            access="public",
+                        )
+                    ],
+                )
+            ]
+        )
+    )
+
+
 def test_fn_trailing_return_with_body() -> None:
     content = """
       auto test() -> void
