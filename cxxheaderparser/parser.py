@@ -1987,7 +1987,7 @@ class CxxParser:
                 if self.lex.token_if("{"):
                     self._discard_contents("{", "}")
                     method.has_body = True
-                break
+                    break
             elif tok_value == "throw":
                 tok = self._next_token_must_be("(")
                 method.throw = self._create_value(self._consume_balanced_tokens(tok))
