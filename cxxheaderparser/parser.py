@@ -302,6 +302,7 @@ class CxxParser:
         ] = {
             "__attribute__": self._consume_gcc_attribute,
             "__declspec": self._consume_declspec,
+            "__extension__": lambda _1, _2: None,
             "alignas": self._consume_attribute_specifier_seq,
             "extern": self._parse_extern,
             "friend": self._parse_friend_decl,

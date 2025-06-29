@@ -100,6 +100,7 @@ class PlyLexer:
         "enum",
         "explicit",
         "export",
+        "__extension__",
         "extern",
         "false",
         "final",
