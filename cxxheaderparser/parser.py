@@ -2679,6 +2679,11 @@ class CxxParser:
             # Unset the doxygen, location
             doxygen = None
 
+            tok = self.lex.token_if_in_set(self._attribute_start_tokens)
+            while tok:
+                self._consume_attribute(tok)
+                tok = self.lex.token_if_in_set(self._attribute_start_tokens)
+
             # Check for multiple declarations
             tok = self._next_token_must_be(",", ";")
             location = tok.location
