@@ -1401,8 +1401,15 @@ class CxxParser:
 
     def _parse_bitfield(self) -> int:
         # is a integral constant expression... for now, just do integers
-        tok = self._next_token_must_be("INT_CONST_DEC")
-        return int(tok.value)
+        const_expr = ''
+        while True:
+            tok = self.lex.token_if_not("=", ";")
+            if tok:
+                const_expr += tok.value
+            else:
+                break
+
+        return int(eval(const_expr))
 
     def _parse_field(
         self,
