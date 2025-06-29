@@ -231,3 +231,34 @@ def test_declspec_template() -> None:
             ]
         )
     )
+
+
+def test_multiple_attributes() -> None:
+    content = """
+      extern const unsigned short int **__ctype_b_loc (void) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__const__));
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            functions=[
+                Function(
+                    return_type=Pointer(
+                        ptr_to=Pointer(
+                            ptr_to=Type(
+                                typename=PQName(
+                                    segments=[
+                                        FundamentalSpecifier(name="unsigned short int")
+                                    ]
+                                ),
+                                const=True,
+                            )
+                        )
+                    ),
+                    name=PQName(segments=[NameSpecifier(name="__ctype_b_loc")]),
+                    parameters=[],
+                    extern=True,
+                )
+            ]
+        )
+    )

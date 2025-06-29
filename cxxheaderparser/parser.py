@@ -901,11 +901,17 @@ class CxxParser:
             raise CxxParseError("internal error")
 
     def _consume_gcc_attribute(
-        self, tok: LexToken, doxygen: typing.Optional[str] = None
+        self, tok: typing.Optional[LexToken], doxygen: typing.Optional[str] = None
     ) -> None:
-        tok1 = self._next_token_must_be("(")
-        tok2 = self._next_token_must_be("(")
-        self._consume_balanced_tokens(tok1, tok2)
+        while True:
+            tok1 = self._next_token_must_be("(")
+            tok2 = self._next_token_must_be("(")
+            self._consume_balanced_tokens(tok1, tok2)
+
+            # Apparently you can have multiple attributes chained together?
+            tok = self.lex.token_if("__attribute__")
+            if tok is None:
+                break
 
     def _consume_declspec(
         self, tok: LexToken, doxygen: typing.Optional[str] = None
@@ -2675,6 +2681,11 @@ class CxxParser:
             ):
                 # if it returns True then it handled the end of the statement
                 break
+
+            # Sometimes attributes come after a function
+            atok = self.lex.token_if("__attribute__")
+            if atok:
+                self._consume_gcc_attribute(atok)
 
             # Unset the doxygen, location
             doxygen = None
