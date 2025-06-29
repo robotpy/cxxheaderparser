@@ -879,6 +879,12 @@ class CxxParser:
             # Let the caller decide
             return tok
 
+    def _consume_asm(
+        self, doxygen: typing.Optional[str] = None
+    ) -> None:
+        tok = self._next_token_must_be("(")
+        self._consume_balanced_tokens(tok)
+
     #
     # Attributes
     #
@@ -2681,6 +2687,9 @@ class CxxParser:
 
             # Unset the doxygen, location
             doxygen = None
+
+            if self.lex.token_if("__asm"):
+                self._consume_asm()
 
             tok = self.lex.token_if_in_set(self._attribute_start_tokens)
             while tok:

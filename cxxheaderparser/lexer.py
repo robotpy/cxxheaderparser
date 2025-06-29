@@ -73,6 +73,7 @@ class PlyLexer:
         "alignas",
         "alignof",
         "asm",
+        "__asm",
         "auto",
         "bool",
         "break",
