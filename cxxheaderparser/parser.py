@@ -1791,6 +1791,9 @@ class CxxParser:
 
         dtype = self._parse_cv_ptr(parsed_type)
 
+        # optional __restrict
+        tok = self.lex.token_if("__restrict")
+
         # optional parameter pack
         if self.lex.token_if("ELLIPSIS"):
             param_pack = True
