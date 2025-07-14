@@ -883,6 +883,60 @@ def test_class_fn_pure_virtual_const() -> None:
     )
 
 
+def test_class_fn_deduce_this() -> None:
+    content = """
+      class StoneClass {
+        template<typename Self>
+        int doSelf(this Self&& self);
+      };
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            classes=[
+                ClassScope(
+                    class_decl=ClassDecl(
+                        typename=PQName(
+                            segments=[NameSpecifier(name="StoneClass")],
+                            classkey="class",
+                        )
+                    ),
+                    methods=[
+                        Method(
+                            return_type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="int")]
+                                )
+                            ),
+                            name=PQName(segments=[NameSpecifier(name="doSelf")]),
+                            parameters=[
+                                Parameter(
+                                    type=MoveReference(
+                                        moveref_to=Type(
+                                            typename=PQName(
+                                                segments=[NameSpecifier(name="Self")]
+                                            )
+                                        )
+                                    ),
+                                    name="self",
+                                    deduces_this=True,
+                                )
+                            ],
+                            template=TemplateDecl(
+                                params=[
+                                    TemplateTypeParam(typekey="typename", name="Self")
+                                ]
+                            ),
+                            access="private",
+                        ),
+                    ],
+                )
+            ]
+        )
+    )
+
+
 def test_class_fn_return_global_ns() -> None:
     content = """
       struct Avacado {
