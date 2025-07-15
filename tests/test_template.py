@@ -281,7 +281,8 @@ def test_template_dependent_nontype_default() -> None:
                                         segments=[
                                             NameSpecifier(name="T"),
                                             NameSpecifier(name="type"),
-                                        ]
+                                        ],
+                                        has_typename=True,
                                     )
                                 ),
                                 name="n",
@@ -1098,7 +1099,7 @@ def test_template_many_packs() -> None:
               void_t<decltype(((*std::declval<P>()).*std::declval<F>())(std::declval<T>()...))>>
           : std::true_type {};
       
-      template <typename T...>
+      template <typename... T>
       struct S : public T... {};
     """
     data = parse_string(content, cleandoc=True)
@@ -1636,12 +1637,9 @@ def test_template_many_packs() -> None:
                         ],
                         template=TemplateDecl(
                             params=[
-                                TemplateNonTypeParam(
-                                    type=Type(
-                                        typename=PQName(
-                                            segments=[NameSpecifier(name="T")]
-                                        )
-                                    ),
+                                TemplateTypeParam(
+                                    typekey="typename",
+                                    name="T",
                                     param_pack=True,
                                 )
                             ]
@@ -2413,6 +2411,58 @@ def test_deduction_sizeof_pack() -> None:
                             param_pack=True,
                         ),
                     ],
+                )
+            ]
+        )
+    )
+
+
+def test_template_has_typename() -> None:
+    content = """
+      template<typename T::Q value>
+      void func(typename V::U arg) {}
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            functions=[
+                Function(
+                    return_type=Type(
+                        typename=PQName(segments=[FundamentalSpecifier(name="void")])
+                    ),
+                    name=PQName(segments=[NameSpecifier(name="func")]),
+                    parameters=[
+                        Parameter(
+                            type=Type(
+                                typename=PQName(
+                                    segments=[
+                                        NameSpecifier(name="V"),
+                                        NameSpecifier(name="U"),
+                                    ],
+                                    has_typename=True,
+                                )
+                            ),
+                            name="arg",
+                        )
+                    ],
+                    has_body=True,
+                    template=TemplateDecl(
+                        params=[
+                            TemplateNonTypeParam(
+                                type=Type(
+                                    typename=PQName(
+                                        segments=[
+                                            NameSpecifier(name="T"),
+                                            NameSpecifier(name="Q"),
+                                        ],
+                                        has_typename=True,
+                                    )
+                                ),
+                                name="value",
+                            )
+                        ]
+                    ),
                 )
             ]
         )

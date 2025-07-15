@@ -607,8 +607,9 @@ class CxxParser:
                         lex.return_token(ptok)
                         param = self._parse_template_type_parameter(tok, None)
                     else:
+                        lex.return_token(ptok)
                         param, _ = self._parse_parameter(
-                            ptok,
+                            tok,
                             TemplateNonTypeParam,
                             concept_ok=False,
                             deduce_this_ok=False,
