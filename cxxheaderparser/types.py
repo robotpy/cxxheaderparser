@@ -336,25 +336,28 @@ class Pointer:
 
     const: bool = False
     volatile: bool = False
+    restrict: bool = False
 
     def format(self) -> str:
         c = " const" if self.const else ""
         v = " volatile" if self.volatile else ""
+        r = " __restrict__" if self.restrict else ""
         ptr_to = self.ptr_to
         if isinstance(ptr_to, (Array, FunctionType)):
-            return ptr_to.format_decl(f"(*{c}{v})")
+            return ptr_to.format_decl(f"(*{r}{c}{v})")
         else:
-            return f"{ptr_to.format()}*{c}{v}"
+            return f"{ptr_to.format()}*{r}{c}{v}"
 
     def format_decl(self, name: str):
         """Format as a named declaration"""
         c = " const" if self.const else ""
         v = " volatile" if self.volatile else ""
+        r = " __restrict__" if self.restrict else ""
         ptr_to = self.ptr_to
         if isinstance(ptr_to, (Array, FunctionType)):
-            return ptr_to.format_decl(f"(*{c}{v} {name})")
+            return ptr_to.format_decl(f"(*{r}{c}{v} {name})")
         else:
-            return f"{ptr_to.format()}*{c}{v} {name}"
+            return f"{ptr_to.format()}*{r}{c}{v} {name}"
 
 
 @dataclass
@@ -364,13 +367,16 @@ class Reference:
     """
 
     ref_to: typing.Union[Array, FunctionType, Pointer, Type]
+    restrict: bool = False
 
     def format(self) -> str:
         ref_to = self.ref_to
+
         if isinstance(ref_to, Array):
             return ref_to.format_decl("(&)")
         else:
-            return f"{ref_to.format()}&"
+            r = " __restrict__" if self.restrict else ""
+            return f"{ref_to.format()}&{r}"
 
     def format_decl(self, name: str):
         """Format as a named declaration"""
@@ -379,7 +385,8 @@ class Reference:
         if isinstance(ref_to, Array):
             return ref_to.format_decl(f"(& {name})")
         else:
-            return f"{ref_to.format()}& {name}"
+            r = " __restrict__" if self.restrict else ""
+            return f"{ref_to.format()}&{r} {name}"
 
 
 @dataclass

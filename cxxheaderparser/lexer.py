@@ -125,6 +125,8 @@ class PlyLexer:
         "register",
         "reinterpret_cast",
         "requires",
+        "__restrict__",
+        "restrict",
         "return",
         "short",
         "signed",
