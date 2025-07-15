@@ -2244,7 +2244,9 @@ class CxxParser:
         # nonptr_fn is for parsing function types directly in template specialization
 
         while True:
-            tok = self.lex.token_if("*", "const", "volatile", "(")
+            tok = self.lex.token_if(
+                "*", "const", "volatile", "__restrict__", "restrict", "("
+            )
             if not tok:
                 break
 
@@ -2260,6 +2262,10 @@ class CxxParser:
                 if not isinstance(dtype, (Pointer, Type)):
                     raise self._parse_error(tok)
                 dtype.volatile = True
+            elif tok.type in ("__restrict__", "restrict"):
+                if not isinstance(dtype, (Pointer, Reference)):
+                    raise self._parse_error(tok)
+                dtype.restrict = True
             elif nonptr_fn:
                 # remove any inner grouping parens
                 while True:
@@ -2331,7 +2337,7 @@ class CxxParser:
 
             # peek at the next token and see if it's a paren. If so, it might
             # be a nasty function pointer
-            if self.lex.token_peek_if("("):
+            if self.lex.token_peek_if("(", "__restrict__", "restrict"):
                 dtype = self._parse_cv_ptr_or_fn(dtype, nonptr_fn)
 
         return dtype
