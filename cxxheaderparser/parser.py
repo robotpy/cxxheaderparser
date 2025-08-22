@@ -302,6 +302,7 @@ class CxxParser:
         ] = {
             "__attribute__": self._consume_gcc_attribute,
             "__declspec": self._consume_declspec,
+            "__extension__": lambda _1, _2: None,
             "alignas": self._consume_attribute_specifier_seq,
             "extern": self._parse_extern,
             "friend": self._parse_friend_decl,
@@ -888,6 +889,12 @@ class CxxParser:
             # Let the caller decide
             return tok
 
+    def _consume_asm(
+        self, tok: LexToken, doxygen: typing.Optional[str] = None
+    ) -> None:
+        tok = self._next_token_must_be("(")
+        self._consume_balanced_tokens(tok)
+
     #
     # Attributes
     #
@@ -1409,8 +1416,15 @@ class CxxParser:
 
     def _parse_bitfield(self) -> int:
         # is a integral constant expression... for now, just do integers
-        tok = self._next_token_must_be("INT_CONST_DEC")
-        return int(tok.value)
+        const_expr = ''
+        while True:
+            tok = self.lex.token_if_not("=", ";")
+            if tok:
+                const_expr += tok.value
+            else:
+                break
+
+        return int(eval(const_expr))
 
     def _parse_field(
         self,
@@ -1810,6 +1824,9 @@ class CxxParser:
                 parsed_type.typename = PQName([AutoSpecifier()])
 
         dtype = self._parse_cv_ptr(parsed_type)
+
+        # optional __restrict
+        tok = self.lex.token_if("__restrict")
 
         # optional parameter pack
         if self.lex.token_if("ELLIPSIS"):
@@ -2723,6 +2740,15 @@ class CxxParser:
 
             # Unset the doxygen, location
             doxygen = None
+
+            tok = self.lex.token_if("__asm")
+            if tok:
+                self._consume_asm(tok)
+
+            tok = self.lex.token_if_in_set(self._attribute_start_tokens)
+            while tok:
+                self._consume_attribute(tok)
+                tok = self.lex.token_if_in_set(self._attribute_start_tokens)
 
             # Check for multiple declarations
             tok = self._next_token_must_be(",", ";")
