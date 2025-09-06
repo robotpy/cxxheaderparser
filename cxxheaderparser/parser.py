@@ -1407,10 +1407,14 @@ class CxxParser:
     # Variable parsing
     #
 
-    def _parse_bitfield(self) -> int:
-        # is a integral constant expression... for now, just do integers
-        tok = self._next_token_must_be("INT_CONST_DEC")
-        return int(tok.value)
+    def _parse_bitfield(self) -> typing.Union[int, Value]:
+        # Convert to integer for backwards compat
+        tok = self.lex.token_if("INT_CONST_DEC")
+        if tok is not None:
+            return int(tok.value)
+
+        # But also support weird things too
+        return self._create_value(self._consume_value_until([], ";"))
 
     def _parse_field(
         self,
