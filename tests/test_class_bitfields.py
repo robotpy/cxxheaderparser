@@ -9,8 +9,11 @@ from cxxheaderparser.types import (
     PQName,
     Parameter,
     Pointer,
+    Token,
     Type,
     Typedef,
+    Value,
+    Variable,
 )
 from cxxheaderparser.simple import (
     ClassScope,
@@ -174,5 +177,182 @@ def test_class_bitfield_2() -> None:
                     name="HAL_ControlWord",
                 )
             ],
+        )
+    )
+
+
+def test_class_bitfield_constexpr_1() -> None:
+    content = """
+      static constexpr int BITS = 3;
+
+      struct MyStruct {
+          int field_one: 1;
+          int field_two: BITS;
+      };
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            classes=[
+                ClassScope(
+                    class_decl=ClassDecl(
+                        typename=PQName(
+                            segments=[NameSpecifier(name="MyStruct")], classkey="struct"
+                        )
+                    ),
+                    fields=[
+                        Field(
+                            access="public",
+                            type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="int")]
+                                )
+                            ),
+                            name="field_one",
+                            bits=1,
+                        ),
+                        Field(
+                            access="public",
+                            type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="int")]
+                                )
+                            ),
+                            name="field_two",
+                            bits=Value(tokens=[Token(value="BITS")]),
+                        ),
+                    ],
+                )
+            ],
+            variables=[
+                Variable(
+                    name=PQName(segments=[NameSpecifier(name="BITS")]),
+                    type=Type(
+                        typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                    ),
+                    value=Value(tokens=[Token(value="3")]),
+                    constexpr=True,
+                    static=True,
+                )
+            ],
+        )
+    )
+
+
+def test_class_bitfield_constexpr_fn() -> None:
+    content = """
+      constexpr int f() { return sizeof("duck"); }
+
+      struct MyStruct {
+          unsigned quack : f();  // 5 bits
+      };
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            classes=[
+                ClassScope(
+                    class_decl=ClassDecl(
+                        typename=PQName(
+                            segments=[NameSpecifier(name="MyStruct")], classkey="struct"
+                        )
+                    ),
+                    fields=[
+                        Field(
+                            access="public",
+                            type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="unsigned")]
+                                )
+                            ),
+                            name="quack",
+                            bits=Value(
+                                tokens=[
+                                    Token(value="f"),
+                                    Token(value="("),
+                                    Token(value=")"),
+                                ]
+                            ),
+                        )
+                    ],
+                )
+            ],
+            functions=[
+                Function(
+                    return_type=Type(
+                        typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                    ),
+                    name=PQName(segments=[NameSpecifier(name="f")]),
+                    parameters=[],
+                    constexpr=True,
+                    has_body=True,
+                )
+            ],
+        )
+    )
+
+
+def test_class_bitfield_constexpr_expr() -> None:
+    content = """
+      struct MyStruct {
+          unsigned yes : (true && false) + 7;  // 7 bits
+          unsigned no  : (true || false);      // 1 bit
+      };
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            classes=[
+                ClassScope(
+                    class_decl=ClassDecl(
+                        typename=PQName(
+                            segments=[NameSpecifier(name="MyStruct")], classkey="struct"
+                        )
+                    ),
+                    fields=[
+                        Field(
+                            access="public",
+                            type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="unsigned")]
+                                )
+                            ),
+                            name="yes",
+                            bits=Value(
+                                tokens=[
+                                    Token(value="("),
+                                    Token(value="true"),
+                                    Token(value="&&"),
+                                    Token(value="false"),
+                                    Token(value=")"),
+                                    Token(value="+"),
+                                    Token(value="7"),
+                                ]
+                            ),
+                        ),
+                        Field(
+                            access="public",
+                            type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="unsigned")]
+                                )
+                            ),
+                            name="no",
+                            bits=Value(
+                                tokens=[
+                                    Token(value="("),
+                                    Token(value="true"),
+                                    Token(value="||"),
+                                    Token(value="false"),
+                                    Token(value=")"),
+                                ]
+                            ),
+                        ),
+                    ],
+                )
+            ]
         )
     )

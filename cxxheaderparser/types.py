@@ -862,7 +862,7 @@ class Field:
     name: typing.Optional[str] = None
 
     value: typing.Optional[Value] = None
-    bits: typing.Optional[int] = None
+    bits: typing.Union[None, int, Value] = None
 
     constexpr: bool = False
     mutable: bool = False
