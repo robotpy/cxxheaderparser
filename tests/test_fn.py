@@ -1428,3 +1428,36 @@ def test_deleted_function() -> None:
             ]
         )
     )
+
+
+def test_nullptr_t() -> None:
+    content = """
+      void f(std::nullptr_t) {}
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            functions=[
+                Function(
+                    return_type=Type(
+                        typename=PQName(segments=[FundamentalSpecifier(name="void")])
+                    ),
+                    name=PQName(segments=[NameSpecifier(name="f")]),
+                    parameters=[
+                        Parameter(
+                            type=Type(
+                                typename=PQName(
+                                    segments=[
+                                        NameSpecifier(name="std"),
+                                        FundamentalSpecifier(name="nullptr_t"),
+                                    ]
+                                )
+                            )
+                        )
+                    ],
+                    has_body=True,
+                )
+            ]
+        )
+    )

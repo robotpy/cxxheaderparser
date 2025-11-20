@@ -117,7 +117,6 @@ class PlyLexer:
         "new",
         "noexcept",
         "nullptr",
-        "nullptr_t",  # not a keyword, but makes things easier
         "operator",
         "private",
         "protected",
