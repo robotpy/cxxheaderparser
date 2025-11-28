@@ -659,6 +659,59 @@ def test_requires_compound() -> None:
     )
 
 
+def test_requires_compound_parenthesized() -> None:
+    content = """
+      template <int X>
+        requires (X == 0) || (X == 1)
+      int Fibonacci() { return X; }
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            functions=[
+                Function(
+                    return_type=Type(
+                        typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                    ),
+                    name=PQName(segments=[NameSpecifier(name="Fibonacci")]),
+                    parameters=[],
+                    has_body=True,
+                    template=TemplateDecl(
+                        params=[
+                            TemplateNonTypeParam(
+                                type=Type(
+                                    typename=PQName(
+                                        segments=[FundamentalSpecifier(name="int")]
+                                    )
+                                ),
+                                name="X",
+                            )
+                        ],
+                        raw_requires_pre=Value(
+                            tokens=[
+                                Token(value="("),
+                                Token(value="X"),
+                                Token(value="="),
+                                Token(value="="),
+                                Token(value="0"),
+                                Token(value=")"),
+                                Token(value="||"),
+                                Token(value="("),
+                                Token(value="X"),
+                                Token(value="="),
+                                Token(value="="),
+                                Token(value="1"),
+                                Token(value=")"),
+                            ]
+                        ),
+                    ),
+                )
+            ]
+        )
+    )
+
+
 def test_requires_ad_hoc() -> None:
     content = """
       template<typename T>
