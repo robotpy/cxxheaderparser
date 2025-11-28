@@ -88,6 +88,8 @@ If you find an bug, we encourage you to submit a pull request! New
 changes will only be accepted if there are tests to cover the change you
 made (and if they don’t break existing tests).
 
+It's really easy to add new tests, see the [README in the tests directory](tests/README.md).
+
 Author
 ------
 
