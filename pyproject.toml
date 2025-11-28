@@ -1,0 +1,51 @@
+[build-system]
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
+[project]
+name = "cxxheaderparser"
+dynamic = ["version"]
+description = "Modern C++ header parser"
+readme = "README.md"
+requires-python = ">=3.6"
+license = "BSD-3-Clause"
+license-files = ["LICENSE.txt"]
+authors = [
+    {name = "Dustin Spicuzza", email = "robotpy@googlegroups.com"},
+]
+maintainers = [
+    { name = "RobotPy Development Team", email = "robotpy@googlegroups.com" },
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: C++",
+    "License :: OSI Approved :: BSD License",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development",
+    "Topic :: Software Development :: Code Generators",
+    "Topic :: Software Development :: Compilers",
+]
+dependencies = [
+    "dataclasses; python_version < '3.7'",
+]
+
+[project.optional-dependencies]
+pcpp = ["pcpp~=1.30"]
+
+[project.urls]
+"Source code" = "https://github.com/robotpy/cxxheaderparser"
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.build.targets.sdist.hooks.vcs]
+version-file = "cxxheaderparser/version.py"
+
+[tool.hatch.build.targets.sdist]
+packages = ["cxxheaderparser"]
+
+[tool.black]
+target-version = ["py36"]
