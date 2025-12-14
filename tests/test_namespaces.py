@@ -195,3 +195,14 @@ def test_ns_alias_global() -> None:
             ns_alias=[NamespaceAlias(alias="ANS", names=["::", "my", "ns"])]
         )
     )
+
+
+def test_ns_attr() -> None:
+    content = """
+      namespace n __attribute__((visibility("hidden"))) {}
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(namespaces={"n": NamespaceScope(name="n")})
+    )
