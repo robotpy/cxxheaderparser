@@ -85,7 +85,7 @@ jobs:
       matrix:
         os:
         - windows-latest
-        - macos-13
+        - macos-15-intel
         - ubuntu-22.04
         python_version:
         - 3.7
@@ -97,7 +97,7 @@ jobs:
         - "3.13"
         architecture: [x86, x64]
         exclude:
-        - os: macos-13
+        - os: macos-15-intel
           architecture: x86
         - os: ubuntu-22.04
           architecture: x86
