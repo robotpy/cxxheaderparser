@@ -446,6 +446,11 @@ class CxxParser:
 
             while True:
                 names.append(tok.value)
+
+                atok = self.lex.token_if_in_set(self._attribute_start_tokens)
+                if atok:
+                    self._consume_attribute(atok)
+
                 tok = self._next_token_must_be("DBL_COLON", endtok)
                 if tok.type == endtok:
                     break
