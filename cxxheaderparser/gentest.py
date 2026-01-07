@@ -2,15 +2,16 @@ import argparse
 import dataclasses
 import inspect
 import subprocess
+import textwrap
 import typing
 
 from .errors import CxxParseError
 from .preprocessor import make_pcpp_preprocessor
 from .options import ParserOptions
-from .simple import parse_string, ParsedData
+from .simple import parse_string, parse_typename, ParsedData
 
 
-def nondefault_repr(data: ParsedData) -> str:
+def nondefault_repr(data: typing.Any) -> str:
     """
     Similar to the default dataclass repr, but exclude any
     default parameters or parameters with compare=False
@@ -50,7 +51,13 @@ def nondefault_repr(data: ParsedData) -> str:
 
 
 def gentest(
-    infile: str, name: str, outfile: str, verbose: bool, fail: bool, pcpp: bool
+    infile: str,
+    name: str,
+    outfile: str,
+    verbose: bool,
+    fail: bool,
+    pcpp: bool,
+    typename_mode: bool,
 ) -> None:
     # Goal is to allow making a unit test as easy as running this dumper
     # on a file and copy/pasting this into a test
@@ -67,46 +74,76 @@ def gentest(
         maybe_options = "options = ParserOptions(preprocessor=make_pcpp_preprocessor())"
         popt = ", options=options"
 
-    try:
-        data = parse_string(content, options=options)
-        if fail:
-            raise ValueError("did not fail")
-    except CxxParseError:
-        if not fail:
-            raise
-        # do it again, but strip the content so the error message matches
+    if typename_mode:
         try:
-            parse_string(content.strip(), options=options)
-        except CxxParseError as e2:
-            err = str(e2)
+            dtype = parse_typename(content.strip(), options=options)
+            if fail:
+                raise ValueError("did not fail")
+        except CxxParseError:
+            if not fail:
+                raise
+            try:
+                parse_typename(content.strip(), options=options)
+            except CxxParseError as e2:
+                err = str(e2)
 
-    if not fail:
-        stmt = nondefault_repr(data)
-        stmt = f"""
-            {maybe_options}
-            data = parse_string(content, cleandoc=True{popt})
+        if not fail:
+            stmt = nondefault_repr(dtype)
+            stmt = f"""
+                {maybe_options}
+                dtype = parse_typename(content.strip(){popt})
 
-            assert data == {stmt}
-        """
+                assert dtype == {stmt}
+            """
+        else:
+            stmt = f"""
+                {maybe_options}
+                err = {repr(err)}
+                with pytest.raises(CxxParseError, match=re.escape(err)):
+                    parse_typename(content.strip(){popt})
+            """
     else:
-        stmt = f"""
-            {maybe_options}
-            err = {repr(err)}
-            with pytest.raises(CxxParseError, match=re.escape(err)):
-                parse_string(content, cleandoc=True{popt})
-        """
+        try:
+            data = parse_string(content, options=options)
+            if fail:
+                raise ValueError("did not fail")
+        except CxxParseError:
+            if not fail:
+                raise
+            # do it again, but strip the content so the error message matches
+            try:
+                parse_string(content.strip(), options=options)
+            except CxxParseError as e2:
+                err = str(e2)
 
-    content = ("\n" + content.strip()).replace("\n", "\n              ")
+        if not fail:
+            stmt = nondefault_repr(data)
+            stmt = f"""
+                {maybe_options}
+                data = parse_string(content, cleandoc=True{popt})
+
+                assert data == {stmt}
+            """
+        else:
+            stmt = f"""
+                {maybe_options}
+                err = {repr(err)}
+                with pytest.raises(CxxParseError, match=re.escape(err)):
+                    parse_string(content, cleandoc=True{popt})
+            """
+
+    stmt = textwrap.dedent(stmt).strip()
+    stmt = textwrap.indent(stmt, " " * 4)
+    content = inspect.cleandoc(content)
+    content = textwrap.indent("\n" + content, " " * 8)
     content = "\n".join(l.rstrip() for l in content.splitlines())
 
-    stmt = inspect.cleandoc(
-        f'''
-        def test_{name}() -> None:
-            content = """{content}
-            """
-            {stmt.strip()}
-    '''
-    )
+    stmt = f"""def test_{name}() -> None:
+    content = \"\"\"{content}
+    \"\"\"
+
+{stmt}
+"""
 
     # format it with black
     stmt = subprocess.check_output(
@@ -125,6 +162,13 @@ if __name__ == "__main__":
     parser.add_argument("header")
     parser.add_argument("name", nargs="?", default="TODO")
     parser.add_argument("--pcpp", default=False, action="store_true")
+    parser.add_argument(
+        "--typename",
+        dest="typename_mode",
+        default=False,
+        action="store_true",
+        help="Generate tests for parse_typename",
+    )
     parser.add_argument("-v", "--verbose", default=False, action="store_true")
     parser.add_argument("-o", "--output", default="-")
     parser.add_argument(
@@ -132,4 +176,12 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    gentest(args.header, args.name, args.output, args.verbose, args.fail, args.pcpp)
+    gentest(
+        args.header,
+        args.name,
+        args.output,
+        args.verbose,
+        args.fail,
+        args.pcpp,
+        args.typename_mode,
+    )
