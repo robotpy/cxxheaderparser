@@ -36,6 +36,7 @@ from .types import (
     ClassDecl,
     Concept,
     DeductionGuide,
+    DecoratedType,
     EnumDecl,
     Field,
     ForwardDecl,
@@ -58,6 +59,7 @@ from .parserstate import (
 )
 from .parser import CxxParser
 from .options import ParserOptions
+from .visitor import null_visitor
 
 #
 # Data structure
@@ -345,6 +347,19 @@ def parse_string(
     parser.parse()
 
     return visitor.data
+
+
+def parse_typename(
+    typename: str,
+    *,
+    filename: str = "<str>",
+    options: typing.Optional[ParserOptions] = None,
+) -> DecoratedType:
+    """
+    Parse a C++ type name and return a DecoratedType.
+    """
+    parser = CxxParser(filename, f"{typename};", null_visitor, options)
+    return parser.parse_typename()
 
 
 def parse_file(

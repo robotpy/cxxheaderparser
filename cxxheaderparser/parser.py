@@ -1945,6 +1945,32 @@ class CxxParser:
 
         return dtype
 
+    def parse_typename(self) -> DecoratedType:
+        """
+        Parse a single C++ type name from the current token stream.
+        """
+        parsed_type, mods = self._parse_type(None)
+        if parsed_type is None:
+            raise CxxParseError("missing type name")
+
+        mods.validate(var_ok=False, meth_ok=False, msg="parsing type name")
+
+        dtype = self._parse_cv_ptr_or_fn(parsed_type)
+        if isinstance(dtype, FunctionType):
+            raise CxxParseError("function types are not supported")
+
+        tok = self.lex.token_if("[")
+        while tok:
+            dtype = self._parse_array_type(tok, dtype)
+            tok = self.lex.token_if("[")
+
+        self.lex.token_if(";")
+        extra = self.lex.token_eof_ok()
+        if extra is not None:
+            raise self._parse_error(extra)
+
+        return dtype
+
     def _parse_fn_end(self, fn: Function) -> None:
         """
         Consumes the various keywords after the parameters in a function
