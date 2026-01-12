@@ -1,4 +1,5 @@
 import typing
+from enum import Enum
 from dataclasses import dataclass, field
 
 from .tokfmt import tokfmt, Token
@@ -20,6 +21,41 @@ class Value:
 
     def format(self) -> str:
         return tokfmt(self.tokens)
+
+
+class AttributeStyle(Enum):
+    """
+    Indicates what style of attribute was found
+    """
+
+    #: ``[[deprecated]]``
+    CXX = "cxx"
+
+    #: ``__attribute__((deprecated))``
+    GCC = "gcc"
+
+    #: ``__declspec(deprecated)``
+    MSVC = "msvc"
+
+
+@dataclass
+class Attribute:
+    """
+    An attribute
+
+    .. code-block:: c++
+
+        [[deprecated("message")]]
+          ~~~~~~~~~  ~~~~~~~~~~~
+    """
+
+    #: Indicates what style of attribute this is
+    style: AttributeStyle
+
+    name: str
+
+    #: Portion of the attribute inside the parens
+    value: typing.Optional[Value] = None
 
 
 @dataclass
@@ -427,6 +463,9 @@ class Enumerator:
     #: Documentation if present
     doxygen: typing.Optional[str] = None
 
+    #: Any attributes attached to this enumerator
+    attributes: typing.List[Attribute] = field(default_factory=list)
+
 
 @dataclass
 class EnumDecl:
@@ -442,6 +481,8 @@ class EnumDecl:
 
     #: Documentation if present
     doxygen: typing.Optional[str] = None
+    #: Any attributes attached to this enum declaration
+    attributes: typing.List[Attribute] = field(default_factory=list)
 
     #: If within a class, the access level for this decl
     access: typing.Optional[str] = None
@@ -610,6 +651,8 @@ class ForwardDecl:
     typename: PQName
     template: TemplateDeclTypeVar = None
     doxygen: typing.Optional[str] = None
+    #: Any attributes attached to this forward declaration
+    attributes: typing.List[Attribute] = field(default_factory=list)
 
     #: Set if this is a forward declaration of an enum and it has a base
     enum_base: typing.Optional[PQName] = None
@@ -635,6 +678,8 @@ class BaseClass:
 
     #: Contains a ``...``
     param_pack: bool = False
+    #: Any attributes attached to this base specifier
+    attributes: typing.List[Attribute] = field(default_factory=list)
 
 
 @dataclass
@@ -652,6 +697,8 @@ class ClassDecl:
     final: bool = False
 
     doxygen: typing.Optional[str] = None
+    #: Any attributes attached to this class declaration
+    attributes: typing.List[Attribute] = field(default_factory=list)
 
     #: If within a class, the access level for this decl
     access: typing.Optional[str] = None
@@ -701,6 +748,8 @@ class Function:
     vararg: bool = False
 
     doxygen: typing.Optional[str] = None
+    #: Any attributes attached to this function declaration
+    attributes: typing.List[Attribute] = field(default_factory=list)
 
     constexpr: bool = False
     extern: typing.Union[bool, str] = False
@@ -825,6 +874,8 @@ class Typedef:
 
     #: If within a class, the access level for this decl
     access: typing.Optional[str] = None
+    #: Any attributes attached to this typedef
+    attributes: typing.List[Attribute] = field(default_factory=list)
 
 
 @dataclass
@@ -847,6 +898,8 @@ class Variable:
     template: typing.Optional[TemplateDecl] = None
 
     doxygen: typing.Optional[str] = None
+    #: Any attributes attached to this variable
+    attributes: typing.List[Attribute] = field(default_factory=list)
 
 
 @dataclass
@@ -870,6 +923,8 @@ class Field:
     inline: bool = False
 
     doxygen: typing.Optional[str] = None
+    #: Any attributes attached to this field
+    attributes: typing.List[Attribute] = field(default_factory=list)
 
 
 @dataclass
