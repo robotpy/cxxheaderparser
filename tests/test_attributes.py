@@ -1,7 +1,9 @@
 # Note: testcases generated via `python -m cxxheaderparser.gentest`
 
 from cxxheaderparser.types import (
+    AttributeStyle,
     ClassDecl,
+    Attribute,
     EnumDecl,
     Enumerator,
     Field,
@@ -55,7 +57,10 @@ def test_attributes_everywhere() -> None:
                     class_decl=ClassDecl(
                         typename=PQName(
                             segments=[NameSpecifier(name="S")], classkey="struct"
-                        )
+                        ),
+                        attributes=[
+                            Attribute(style=AttributeStyle.CXX, name="deprecated")
+                        ],
                     )
                 ),
                 ClassScope(
@@ -73,6 +78,9 @@ def test_attributes_everywhere() -> None:
                                 )
                             ),
                             name="n",
+                            attributes=[
+                                Attribute(style=AttributeStyle.CXX, name="deprecated")
+                            ],
                         )
                     ],
                 ),
@@ -80,7 +88,14 @@ def test_attributes_everywhere() -> None:
                     class_decl=ClassDecl(
                         typename=PQName(
                             segments=[NameSpecifier(name="AS")], classkey="struct"
-                        )
+                        ),
+                        attributes=[
+                            Attribute(
+                                style=AttributeStyle.CXX,
+                                name="alignas",
+                                value=Value(tokens=[Token(value="8")]),
+                            )
+                        ],
                     )
                 ),
             ],
@@ -90,9 +105,21 @@ def test_attributes_everywhere() -> None:
                         segments=[NameSpecifier(name="E")], classkey="enum"
                     ),
                     values=[
-                        Enumerator(name="A"),
-                        Enumerator(name="B", value=Value(tokens=[Token(value="42")])),
+                        Enumerator(
+                            name="A",
+                            attributes=[
+                                Attribute(style=AttributeStyle.CXX, name="deprecated")
+                            ],
+                        ),
+                        Enumerator(
+                            name="B",
+                            value=Value(tokens=[Token(value="42")]),
+                            attributes=[
+                                Attribute(style=AttributeStyle.CXX, name="deprecated")
+                            ],
+                        ),
                     ],
+                    attributes=[Attribute(style=AttributeStyle.CXX, name="deprecated")],
                 )
             ],
             functions=[
@@ -102,6 +129,7 @@ def test_attributes_everywhere() -> None:
                     ),
                     name=PQName(segments=[NameSpecifier(name="f")]),
                     parameters=[],
+                    attributes=[Attribute(style=AttributeStyle.CXX, name="deprecated")],
                 )
             ],
             typedefs=[
@@ -110,6 +138,7 @@ def test_attributes_everywhere() -> None:
                         ptr_to=Type(typename=PQName(segments=[NameSpecifier(name="S")]))
                     ),
                     name="PS",
+                    attributes=[Attribute(style=AttributeStyle.CXX, name="deprecated")],
                 )
             ],
             variables=[
@@ -118,6 +147,7 @@ def test_attributes_everywhere() -> None:
                     type=Type(
                         typename=PQName(segments=[FundamentalSpecifier(name="int")])
                     ),
+                    attributes=[Attribute(style=AttributeStyle.CXX, name="deprecated")],
                 )
             ],
         )
@@ -146,6 +176,7 @@ def test_attributes_gcc_enum_packed() -> None:
                         Enumerator(name="w2"),
                         Enumerator(name="w3"),
                     ],
+                    attributes=[Attribute(style=AttributeStyle.GCC, name="packed")],
                 )
             ]
         )
@@ -180,6 +211,11 @@ def test_friendly_declspec() -> None:
                                 ),
                                 name=PQName(segments=[NameSpecifier(name="my_friend")]),
                                 parameters=[],
+                                attributes=[
+                                    Attribute(
+                                        style=AttributeStyle.MSVC, name="dllexport"
+                                    )
+                                ],
                                 access="public",
                             )
                         )
@@ -195,6 +231,9 @@ def test_friendly_declspec() -> None:
                                 segments=[NameSpecifier(name="static_declspec")]
                             ),
                             parameters=[],
+                            attributes=[
+                                Attribute(style=AttributeStyle.MSVC, name="dllexport")
+                            ],
                             static=True,
                             access="public",
                         )
@@ -222,11 +261,110 @@ def test_declspec_template() -> None:
                     ),
                     name=PQName(segments=[NameSpecifier(name="fn")]),
                     parameters=[],
+                    attributes=[
+                        Attribute(
+                            style=AttributeStyle.MSVC,
+                            name="deprecated",
+                            value=Value(tokens=[Token(value='"message"')]),
+                        )
+                    ],
                     static=True,
                     has_body=True,
                     template=TemplateDecl(
                         params=[TemplateTypeParam(typekey="class", name="T2")]
                     ),
+                )
+            ]
+        )
+    )
+
+
+def test_deprecated_messages() -> None:
+    content = """
+      class [[deprecated("Dont use this class")]] MyDeprecatedClass {
+      public:
+        [[deprecated("Dont use this function")]]
+        void deprecatedFunction();
+
+        [[deprecated(
+              "Dont use this function "
+              "and here's a really long explanation why"
+        )]]
+        void multilineDeprecatedFunction();
+      };
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            classes=[
+                ClassScope(
+                    class_decl=ClassDecl(
+                        typename=PQName(
+                            segments=[NameSpecifier(name="MyDeprecatedClass")],
+                            classkey="class",
+                        ),
+                        attributes=[
+                            Attribute(
+                                style=AttributeStyle.CXX,
+                                name="deprecated",
+                                value=Value(
+                                    tokens=[Token(value='"Dont use this class"')]
+                                ),
+                            )
+                        ],
+                    ),
+                    methods=[
+                        Method(
+                            return_type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="void")]
+                                )
+                            ),
+                            name=PQName(
+                                segments=[NameSpecifier(name="deprecatedFunction")]
+                            ),
+                            parameters=[],
+                            access="public",
+                            attributes=[
+                                Attribute(
+                                    style=AttributeStyle.CXX,
+                                    name="deprecated",
+                                    value=Value(
+                                        tokens=[Token(value='"Dont use this function"')]
+                                    ),
+                                )
+                            ],
+                        ),
+                        Method(
+                            return_type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="void")]
+                                )
+                            ),
+                            name=PQName(
+                                segments=[
+                                    NameSpecifier(name="multilineDeprecatedFunction")
+                                ]
+                            ),
+                            parameters=[],
+                            access="public",
+                            attributes=[
+                                Attribute(
+                                    style=AttributeStyle.CXX,
+                                    name="deprecated",
+                                    value=Value(
+                                        tokens=[
+                                            Token(value='"Dont use this function "'),
+                                            Token(
+                                                value='"and here\'s a really long explanation why"'
+                                            ),
+                                        ]
+                                    ),
+                                )
+                            ],
+                        ),
+                    ],
                 )
             ]
         )
@@ -257,6 +395,11 @@ def test_multiple_attributes() -> None:
                     ),
                     name=PQName(segments=[NameSpecifier(name="__ctype_b_loc")]),
                     parameters=[],
+                    attributes=[
+                        Attribute(style=AttributeStyle.GCC, name="__nothrow__"),
+                        Attribute(style=AttributeStyle.GCC, name="__leaf__"),
+                        Attribute(style=AttributeStyle.GCC, name="__const__"),
+                    ],
                     extern=True,
                 )
             ]

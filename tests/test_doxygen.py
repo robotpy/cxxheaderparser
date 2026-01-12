@@ -3,6 +3,8 @@
 from cxxheaderparser.types import (
     AnonymousName,
     Array,
+    Attribute,
+    AttributeStyle,
     BaseClass,
     ClassDecl,
     EnumDecl,
@@ -409,6 +411,7 @@ def test_doxygen_declspec() -> None:
                     ),
                     value=Value(tokens=[Token(value="1")]),
                     doxygen="/// declspec comment",
+                    attributes=[Attribute(style=AttributeStyle.MSVC, name="thread")],
                 )
             ]
         )
@@ -433,6 +436,7 @@ def test_doxygen_attribute() -> None:
                     name=PQName(segments=[NameSpecifier(name="hasattr")]),
                     parameters=[],
                     doxygen="/// hasattr comment",
+                    attributes=[Attribute(style=AttributeStyle.CXX, name="nodiscard")],
                 )
             ]
         )

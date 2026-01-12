@@ -1,5 +1,6 @@
 import argparse
 import dataclasses
+import enum
 import inspect
 import subprocess
 import textwrap
@@ -44,6 +45,8 @@ def nondefault_repr(data: typing.Any) -> str:
             for k, v in o.items():
                 vals.append(f'"{k}": {_inner_repr(v)}')
             return "{" + ",".join(vals) + "}"
+        elif isinstance(o, enum.Enum):
+            return f"{o.__class__.__qualname__}.{o.name}"
         else:
             return repr(o)
 
