@@ -150,6 +150,9 @@ class NameSpecifier:
 
     specialization: typing.Optional["TemplateSpecialization"] = None
 
+    #: Line number where this identifier was found (if available)
+    lineno: typing.Optional[int] = None
+
     def format(self) -> str:
         if self.specialization:
             return f"{self.name}{self.specialization.format()}"
