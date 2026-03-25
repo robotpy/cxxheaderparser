@@ -76,6 +76,8 @@ class NamespaceAlias:
     #: refers to, but does not include any parent namespace names. It may
     #: include a leading "::", but does not include a following :: string.
     names: typing.List[str]
+    #: Line number where this alias was found (if available)
+    lineno: typing.Optional[int] = None
 
 
 @dataclass
@@ -489,6 +491,8 @@ class EnumDecl:
 
     #: If within a class, the access level for this decl
     access: typing.Optional[str] = None
+    #: Line number where this enum decl was found (if available)
+    lineno: typing.Optional[int] = None
 
 
 @dataclass
@@ -618,6 +622,8 @@ class TemplateInst:
     typename: PQName
     extern: bool
     doxygen: typing.Optional[str] = None
+    #: Line number where this explicit template instantiation was found
+    lineno: typing.Optional[int] = None
 
 
 @dataclass
@@ -643,6 +649,8 @@ class Concept:
     raw_constraint: Value
 
     doxygen: typing.Optional[str] = None
+    #: Line number where this concept was found (if available)
+    lineno: typing.Optional[int] = None
 
 
 @dataclass
@@ -662,6 +670,8 @@ class ForwardDecl:
 
     #: If within a class, the access level for this decl
     access: typing.Optional[str] = None
+    #: Line number where this forward declaration was found (if available)
+    lineno: typing.Optional[int] = None
 
 
 @dataclass
@@ -801,6 +811,8 @@ class Function:
     #:
     #: template <typename T> int main() requires ...
     raw_requires: typing.Optional[Value] = None
+    #: Line number where this function was found (if available)
+    lineno: typing.Optional[int] = None
 
 
 @dataclass
@@ -834,6 +846,8 @@ class Method(Function):
     virtual: bool = False
     final: bool = False
     override: bool = False
+    #: Line number where this method was found (if available)
+    lineno: typing.Optional[int] = None
 
 
 @dataclass
@@ -845,6 +859,8 @@ class FriendDecl:
     cls: typing.Optional[ForwardDecl] = None
 
     fn: typing.Optional[Function] = None
+    #: Line number where this friend declaration was found (if available)
+    lineno: typing.Optional[int] = None
 
 
 @dataclass
@@ -879,6 +895,8 @@ class Typedef:
     access: typing.Optional[str] = None
     #: Any attributes attached to this typedef
     attributes: typing.List[Attribute] = field(default_factory=list)
+    #: Line number where this typedef was found (if available)
+    lineno: typing.Optional[int] = None
 
 
 @dataclass
@@ -903,6 +921,8 @@ class Variable:
     doxygen: typing.Optional[str] = None
     #: Any attributes attached to this variable
     attributes: typing.List[Attribute] = field(default_factory=list)
+    #: Line number where this variable was found (if available)
+    lineno: typing.Optional[int] = None
 
 
 @dataclass
@@ -928,6 +948,8 @@ class Field:
     doxygen: typing.Optional[str] = None
     #: Any attributes attached to this field
     attributes: typing.List[Attribute] = field(default_factory=list)
+    #: Line number where this field was found (if available)
+    lineno: typing.Optional[int] = None
 
 
 @dataclass
@@ -945,6 +967,8 @@ class UsingDecl:
 
     #: Documentation if present
     doxygen: typing.Optional[str] = None
+    #: Line number where this using declaration was found (if available)
+    lineno: typing.Optional[int] = None
 
 
 @dataclass
@@ -969,6 +993,8 @@ class UsingAlias:
 
     #: Documentation if present
     doxygen: typing.Optional[str] = None
+    #: Line number where this using alias was found (if available)
+    lineno: typing.Optional[int] = None
 
 
 @dataclass

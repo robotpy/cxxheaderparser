@@ -86,6 +86,8 @@ class ClassScope:
     forward_decls: typing.List[ForwardDecl] = field(default_factory=list)
     using: typing.List[UsingDecl] = field(default_factory=list)
     using_alias: typing.List[UsingAlias] = field(default_factory=list)
+    #: Line number where this scope was found (if available)
+    lineno: typing.Optional[int] = None
 
 
 @dataclass
@@ -136,17 +138,23 @@ Block = typing.Union[ClassScope, NamespaceScope]
 @dataclass
 class Pragma:
     content: Value
+    #: Line number where this pragma was found (if available)
+    lineno: typing.Optional[int] = None
 
 
 @dataclass
 class Include:
     #: The filename includes the surrounding ``<>`` or ``"``
     filename: str
+    #: Line number where this include was found (if available)
+    lineno: typing.Optional[int] = None
 
 
 @dataclass
 class UsingNamespace:
     ns: str
+    #: Line number where this using-namespace was found (if available)
+    lineno: typing.Optional[int] = None
 
 
 @dataclass
