@@ -5,13 +5,17 @@ if typing.TYPE_CHECKING:
 
 from .errors import CxxParseError
 from .lexer import LexToken, Location
-from .types import ClassDecl, NamespaceDecl
+from .types import ClassDecl, NamespaceDecl, Value
 
 
 class ParsedTypeModifiers(typing.NamedTuple):
     vars: typing.Dict[str, LexToken]  # only found on variables
     both: typing.Dict[str, LexToken]  # found on either variables or functions
     meths: typing.Dict[str, LexToken]  # only found on methods
+    #: For C++20 ``explicit(<expr>)``: the constant expression inside the
+    #: parens (omitting the parens themselves). ``None`` if absent or if
+    #: ``explicit`` was used as a bare keyword.
+    explicit_value: typing.Optional[Value] = None
 
     def validate(self, *, var_ok: bool, meth_ok: bool, msg: str) -> None:
         # Almost there! Do any checks the caller asked for

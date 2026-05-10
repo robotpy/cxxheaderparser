@@ -2308,6 +2308,106 @@ def test_class_fn_explicit_constructors() -> None:
     )
 
 
+def test_class_fn_explicit_bool_constructor() -> None:
+    # C++20: explicit(<bool-constant-expression>)
+    content = """
+      struct Clazz {
+        explicit(false) Clazz();
+        explicit(sizeof(int) == 4) Clazz(int a);
+        template<class U>
+        explicit(!std::is_convertible_v<U, Clazz>)
+        Clazz(U const& u);
+      };
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            classes=[
+                ClassScope(
+                    class_decl=ClassDecl(
+                        typename=PQName(
+                            segments=[NameSpecifier(name="Clazz")], classkey="struct"
+                        )
+                    ),
+                    methods=[
+                        Method(
+                            return_type=None,
+                            name=PQName(segments=[NameSpecifier(name="Clazz")]),
+                            parameters=[],
+                            access="public",
+                            constructor=True,
+                            explicit=Value(tokens=[Token(value="false")]),
+                        ),
+                        Method(
+                            return_type=None,
+                            name=PQName(segments=[NameSpecifier(name="Clazz")]),
+                            parameters=[
+                                Parameter(
+                                    type=Type(
+                                        typename=PQName(
+                                            segments=[FundamentalSpecifier(name="int")]
+                                        )
+                                    ),
+                                    name="a",
+                                )
+                            ],
+                            access="public",
+                            constructor=True,
+                            explicit=Value(
+                                tokens=[
+                                    Token(value="sizeof"),
+                                    Token(value="("),
+                                    Token(value="int"),
+                                    Token(value=")"),
+                                    Token(value="="),
+                                    Token(value="="),
+                                    Token(value="4"),
+                                ]
+                            ),
+                        ),
+                        Method(
+                            return_type=None,
+                            name=PQName(segments=[NameSpecifier(name="Clazz")]),
+                            parameters=[
+                                Parameter(
+                                    type=Reference(
+                                        ref_to=Type(
+                                            typename=PQName(
+                                                segments=[NameSpecifier(name="U")]
+                                            ),
+                                            const=True,
+                                        )
+                                    ),
+                                    name="u",
+                                )
+                            ],
+                            access="public",
+                            constructor=True,
+                            template=TemplateDecl(
+                                params=[TemplateTypeParam(typekey="class", name="U")]
+                            ),
+                            explicit=Value(
+                                tokens=[
+                                    Token(value="!"),
+                                    Token(value="std"),
+                                    Token(value="::"),
+                                    Token(value="is_convertible_v"),
+                                    Token(value="<"),
+                                    Token(value="U"),
+                                    Token(value=","),
+                                    Token(value="Clazz"),
+                                    Token(value=">"),
+                                ]
+                            ),
+                        ),
+                    ],
+                )
+            ]
+        )
+    )
+
+
 def test_class_fn_default_constructor() -> None:
     content = """
       class DefaultConstDest {

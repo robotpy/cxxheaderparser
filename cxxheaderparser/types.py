@@ -822,7 +822,11 @@ class Method(Function):
     ref_qualifier: typing.Optional[str] = None
 
     constructor: bool = False
-    explicit: bool = False
+
+    #: True if the method was declared ``explicit``. For C++20
+    #: ``explicit(<expr>)``, this holds the expression as a Value (omitting
+    #: the outer parentheses).
+    explicit: typing.Union[bool, Value] = False
     default: bool = False
 
     destructor: bool = False
