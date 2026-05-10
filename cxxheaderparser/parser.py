@@ -2268,6 +2268,8 @@ class CxxParser:
 
         if (is_class_block or multiple_name_segments) and not is_typedef:
             props.update(dict.fromkeys(mods.meths.keys(), True))
+            if mods.explicit_value is not None:
+                props["explicit"] = mods.explicit_value
 
             if attributes is None:
                 attributes = []
@@ -2562,6 +2564,7 @@ class CxxParser:
         vars: typing.Dict[str, LexToken] = {}  # only found on variables
         both: typing.Dict[str, LexToken] = {}  # found on either
         meths: typing.Dict[str, LexToken] = {}  # only found on methods
+        explicit_value: typing.Optional[Value] = None
 
         get_token = self.lex.token
 
@@ -2601,6 +2604,13 @@ class CxxParser:
                 both[tok_type] = tok
             elif tok_type in self._type_kwd_meth:
                 meths[tok_type] = tok
+                if tok_type == "explicit":
+                    # C++20: explicit(<bool-constant-expression>)
+                    otok = self.lex.token_if("(")
+                    if otok:
+                        explicit_value = self._create_value(
+                            self._consume_balanced_tokens(otok)[1:-1]
+                        )
             elif tok_type == "mutable":
                 vars["mutable"] = tok
             elif tok_type == "volatile":
@@ -2625,7 +2635,7 @@ class CxxParser:
         self.lex.return_token(tok)
 
         # Always return the modifiers
-        mods = ParsedTypeModifiers(vars, both, meths)
+        mods = ParsedTypeModifiers(vars, both, meths, explicit_value)
         return parsed_type, mods
 
     def _parse_decl(
