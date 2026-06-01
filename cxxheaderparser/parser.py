@@ -2573,6 +2573,7 @@ class CxxParser:
 
         pqname: typing.Optional[PQName] = None
         pqname_optional = False
+        friend_tok: typing.Optional[LexToken] = None
 
         _pqname_start_tokens = self._pqname_start_tokens
         _attribute_start = self._attribute_start_tokens
@@ -2597,6 +2598,8 @@ class CxxParser:
                 break
             elif tok_type == "const":
                 const = True
+            elif tok_type == "friend" and pqname is None:
+                friend_tok = tok
             elif tok_type in self._type_kwd_both:
                 if tok_type == "extern":
                     # TODO: store linkage
@@ -2635,7 +2638,7 @@ class CxxParser:
         self.lex.return_token(tok)
 
         # Always return the modifiers
-        mods = ParsedTypeModifiers(vars, both, meths, explicit_value)
+        mods = ParsedTypeModifiers(vars, both, meths, explicit_value, friend_tok)
         return parsed_type, mods
 
     def _parse_decl(
@@ -2870,6 +2873,12 @@ class CxxParser:
         # Almost always starts out with some kind of type name or a modifier
         parsed_type, mods = self._parse_type(tok, operator_ok=True)
         attributes.extend(self._take_pending_attributes())
+
+        if mods.friend is not None:
+            if is_friend or is_typedef or not isinstance(self.state, ClassBlockState):
+                raise self._parse_error(mods.friend)
+            is_friend = True
+            mods = mods._replace(friend=None)
 
         # Check to see if this might be a class/enum declaration
         if (
