@@ -1,6 +1,7 @@
 # Note: testcases generated via `python -m cxxheaderparser.gentest`
 
 from cxxheaderparser.types import (
+    AutoSpecifier,
     ClassDecl,
     Field,
     ForwardDecl,
@@ -372,6 +373,45 @@ def test_friend_with_impl() -> None:
                                         name="a",
                                     )
                                 ],
+                                has_body=True,
+                                access="public",
+                            )
+                        )
+                    ],
+                )
+            ]
+        )
+    )
+
+
+def test_constexpr_friend_decl_order() -> None:
+    content = """
+      struct friend_constexpr_test {
+        constexpr friend auto foo() {
+        }
+      };
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            classes=[
+                ClassScope(
+                    class_decl=ClassDecl(
+                        typename=PQName(
+                            segments=[NameSpecifier(name="friend_constexpr_test")],
+                            classkey="struct",
+                        )
+                    ),
+                    friends=[
+                        FriendDecl(
+                            fn=Method(
+                                return_type=Type(
+                                    typename=PQName(segments=[AutoSpecifier()])
+                                ),
+                                name=PQName(segments=[NameSpecifier(name="foo")]),
+                                parameters=[],
+                                constexpr=True,
                                 has_body=True,
                                 access="public",
                             )

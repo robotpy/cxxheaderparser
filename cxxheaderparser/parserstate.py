@@ -16,8 +16,12 @@ class ParsedTypeModifiers(typing.NamedTuple):
     #: parens (omitting the parens themselves). ``None`` if absent or if
     #: ``explicit`` was used as a bare keyword.
     explicit_value: typing.Optional[Value] = None
+    #: ``friend`` if encountered while parsing declaration specifiers.
+    friend: typing.Optional[LexToken] = None
 
-    def validate(self, *, var_ok: bool, meth_ok: bool, msg: str) -> None:
+    def validate(
+        self, *, var_ok: bool, meth_ok: bool, msg: str, friend_ok: bool = False
+    ) -> None:
         # Almost there! Do any checks the caller asked for
         if not var_ok and self.vars:
             for tok in self.vars.values():
@@ -30,6 +34,9 @@ class ParsedTypeModifiers(typing.NamedTuple):
         if not meth_ok and not var_ok and self.both:
             for tok in self.both.values():
                 raise CxxParseError(f"{msg}: unexpected '{tok.value}'")
+
+        if not friend_ok and self.friend is not None:
+            raise CxxParseError(f"{msg}: unexpected '{self.friend.value}'")
 
 
 #: custom user data for this state type
