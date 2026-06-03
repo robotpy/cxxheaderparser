@@ -239,7 +239,7 @@ def test_fn_pointer_params() -> None:
                         )
                     ],
                 ),
-	        Function(
+                Function(
                     return_type=Type(
                         typename=PQName(segments=[FundamentalSpecifier(name="int")])
                     ),
