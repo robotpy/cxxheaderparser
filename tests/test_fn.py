@@ -141,6 +141,7 @@ def test_fn_pointer_params() -> None:
       int fn3(int(*p));
       int fn4(int* __restrict__ p);
       int fn5(int& __restrict__ p);
+      int fn6(int* __restrict p);
     """
     data = parse_string(content, cleandoc=True)
 
@@ -229,6 +230,25 @@ def test_fn_pointer_params() -> None:
                             name="p",
                             type=Reference(
                                 ref_to=Type(
+                                    typename=PQName(
+                                        segments=[FundamentalSpecifier(name="int")]
+                                    )
+                                ),
+                                restrict=True,
+                            ),
+                        )
+                    ],
+                ),
+	        Function(
+                    return_type=Type(
+                        typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                    ),
+                    name=PQName(segments=[NameSpecifier(name="fn6")]),
+                    parameters=[
+                        Parameter(
+                            name="p",
+                            type=Pointer(
+                                ptr_to=Type(
                                     typename=PQName(
                                         segments=[FundamentalSpecifier(name="int")]
                                     )
