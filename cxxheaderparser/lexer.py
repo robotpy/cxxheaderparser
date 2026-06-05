@@ -125,6 +125,7 @@ class PlyLexer:
         "reinterpret_cast",
         "requires",
         "__restrict__",
+        "__restrict",
         "restrict",
         "return",
         "short",

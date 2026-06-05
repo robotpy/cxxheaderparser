@@ -2432,7 +2432,7 @@ class CxxParser:
 
         while True:
             tok = self.lex.token_if(
-                "*", "const", "volatile", "__restrict__", "restrict", "("
+                "*", "const", "volatile", "__restrict__", "__restrict", "restrict", "("
             )
             if not tok:
                 break
@@ -2449,7 +2449,7 @@ class CxxParser:
                 if not isinstance(dtype, (Pointer, Type)):
                     raise self._parse_error(tok)
                 dtype.volatile = True
-            elif tok.type in ("__restrict__", "restrict"):
+            elif tok.type in ("__restrict__", "__restrict", "restrict"):
                 if not isinstance(dtype, (Pointer, Reference)):
                     raise self._parse_error(tok)
                 dtype.restrict = True
@@ -2524,7 +2524,7 @@ class CxxParser:
 
             # peek at the next token and see if it's a paren. If so, it might
             # be a nasty function pointer
-            if self.lex.token_peek_if("(", "__restrict__", "restrict"):
+            if self.lex.token_peek_if("(", "__restrict__", "__restrict", "restrict"):
                 dtype = self._parse_cv_ptr_or_fn(dtype, nonptr_fn)
 
         return dtype
