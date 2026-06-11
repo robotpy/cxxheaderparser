@@ -601,6 +601,54 @@ def test_var_ns_3() -> None:
     )
 
 
+def test_var_direct_initializer_parens() -> None:
+    content = """
+      const string FOO("foo");
+      int BAR(static_cast<int>(1));
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            variables=[
+                Variable(
+                    name=PQName(segments=[NameSpecifier(name="FOO")]),
+                    type=Type(
+                        typename=PQName(segments=[NameSpecifier(name="string")]),
+                        const=True,
+                    ),
+                    value=Value(
+                        tokens=[
+                            Token(value="("),
+                            Token(value='"foo"'),
+                            Token(value=")"),
+                        ]
+                    ),
+                ),
+                Variable(
+                    name=PQName(segments=[NameSpecifier(name="BAR")]),
+                    type=Type(
+                        typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                    ),
+                    value=Value(
+                        tokens=[
+                            Token(value="("),
+                            Token(value="static_cast"),
+                            Token(value="<"),
+                            Token(value="int"),
+                            Token(value=">"),
+                            Token(value="("),
+                            Token(value="1"),
+                            Token(value=")"),
+                            Token(value=")"),
+                        ]
+                    ),
+                ),
+            ]
+        )
+    )
+
+
 def test_var_static_struct() -> None:
     content = """
       constexpr static struct SS {} s;
