@@ -33,6 +33,35 @@ from cxxheaderparser.simple import (
 )
 
 
+def test_fn_grouped_declarator() -> None:
+    content = """
+      void ((fn))(int);
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            functions=[
+                Function(
+                    return_type=Type(
+                        typename=PQName(segments=[FundamentalSpecifier(name="void")])
+                    ),
+                    name=PQName(segments=[NameSpecifier(name="fn")]),
+                    parameters=[
+                        Parameter(
+                            type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="int")]
+                                )
+                            )
+                        )
+                    ],
+                )
+            ]
+        )
+    )
+
+
 def test_fn_parameter_named_function_declarator() -> None:
     content = """
       template <typename T> void RemoveIf(bool predicate(const T& key));
