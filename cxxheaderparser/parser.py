@@ -273,6 +273,40 @@ class CxxParser:
             if next_end:
                 match_stack.append(next_end)
 
+    def _consume_balanced_tokens_with_inner(
+        self,
+        *init_tokens: LexToken,
+        token_map: typing.Optional[typing.Dict[str, str]] = None,
+    ) -> typing.Tuple[LexTokenList, LexTokenList]:
+        toks = self._consume_balanced_tokens(*init_tokens, token_map=token_map)
+        inner_toks = toks[1:-1]
+
+        # Redundant declarator grouping is valid: int ((*p))(int),
+        # int ((*p))[3], and void ((f))(int). Strip only parens that
+        # enclose the whole inner token list.
+        while (
+            len(inner_toks) >= 2
+            and inner_toks[0].type == "("
+            and inner_toks[-1].type == ")"
+        ):
+            depth = 0
+            encloses_all = True
+            for i, itok in enumerate(inner_toks):
+                if itok.type == "(":
+                    depth += 1
+                elif itok.type == ")":
+                    depth -= 1
+                    if depth == 0 and i != len(inner_toks) - 1:
+                        encloses_all = False
+                        break
+
+            if not encloses_all or depth != 0:
+                break
+
+            inner_toks = inner_toks[1:-1]
+
+        return toks, inner_toks
+
     def _discard_contents(self, start_type: str, end_type: str) -> None:
         # use this instead of consume_balanced_tokens because
         # we don't care at all about the internals
@@ -2472,8 +2506,8 @@ class CxxParser:
                     if not gtok:
                         break
 
-                    toks = self._consume_balanced_tokens(gtok)
-                    self.lex.return_tokens(toks[1:-1])
+                    _, inner_toks = self._consume_balanced_tokens_with_inner(gtok)
+                    self.lex.return_tokens(inner_toks)
 
                 fn_params, vararg, _ = self._parse_parameters(False, False)
 
@@ -2490,13 +2524,13 @@ class CxxParser:
                 if msvc_convention_tok:
                     msvc_convention = msvc_convention_tok.value
 
-                # Check to see if this is a grouping paren or something else
-                if not self.lex.token_peek_if("*", "&"):
-                    self.lex.return_token(tok)
-                    break
+                # this might be a grouping paren, so consume it and inspect it
+                toks, inner_toks = self._consume_balanced_tokens_with_inner(tok)
 
-                # this is a grouping paren, so consume it
-                toks = self._consume_balanced_tokens(tok)
+                # Check to see if this is a grouping paren or something else
+                if not (inner_toks and inner_toks[0].type in ("*", "&")):
+                    self.lex.return_tokens(toks)
+                    break
 
                 # Now check to see if we have either an array or a function pointer
                 aptok = self.lex.token_if("[", "(")
@@ -2521,7 +2555,7 @@ class CxxParser:
                 # return the inner toks and recurse
                 # -> this could return some weird results for invalid code, but
                 #    we don't support that anyways so it's fine?
-                self.lex.return_tokens(toks[1:-1])
+                self.lex.return_tokens(inner_toks)
                 dtype = self._parse_cv_ptr_or_fn(dtype, nonptr_fn)
                 break
 
@@ -2680,7 +2714,7 @@ class CxxParser:
         is_friend: bool,
         attributes: typing.List[Attribute],
     ) -> bool:
-        toks = []
+        toks: LexTokenList = []
 
         # On entry we only have the base type, decorate it
         dtype: typing.Optional[DecoratedType]
@@ -2742,7 +2776,7 @@ class CxxParser:
             if dtype:
                 # if it's not a constructor/destructor, it could be a
                 # grouping paren like "void (name(int x));"
-                toks = self._consume_balanced_tokens(tok)
+                toks, inner_toks = self._consume_balanced_tokens_with_inner(tok)
 
                 # check to see if the next token is an arrow, and thus a trailing return
                 if self.lex.token_peek_if("ARROW"):
@@ -2752,7 +2786,7 @@ class CxxParser:
                     is_guide = True
                 else:
                     # .. not sure what it's grouping, so put it back?
-                    self.lex.return_tokens(toks[1:-1])
+                    self.lex.return_tokens(inner_toks)
 
         if dtype:
             msvc_convention = self.lex.token_if_val(*self._msvc_conventions)

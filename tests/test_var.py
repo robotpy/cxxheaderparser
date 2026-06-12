@@ -329,6 +329,95 @@ def test_var_fnptr_voidstar() -> None:
     )
 
 
+def test_var_fnptr_grouped_declarator() -> None:
+    content = """
+      int ((*funcPtr))(int);
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            variables=[
+                Variable(
+                    name=PQName(segments=[NameSpecifier(name="funcPtr")]),
+                    type=Pointer(
+                        ptr_to=FunctionType(
+                            return_type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="int")]
+                                )
+                            ),
+                            parameters=[
+                                Parameter(
+                                    type=Type(
+                                        typename=PQName(
+                                            segments=[FundamentalSpecifier(name="int")]
+                                        )
+                                    )
+                                )
+                            ],
+                        )
+                    ),
+                )
+            ]
+        )
+    )
+
+
+def test_var_ptr_to_array_grouped_declarator() -> None:
+    content = """
+      int ((*arrayPtr))[3];
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            variables=[
+                Variable(
+                    name=PQName(segments=[NameSpecifier(name="arrayPtr")]),
+                    type=Pointer(
+                        ptr_to=Array(
+                            array_of=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="int")]
+                                )
+                            ),
+                            size=Value(tokens=[Token(value="3")]),
+                        )
+                    ),
+                )
+            ]
+        )
+    )
+
+
+def test_var_ref_to_array_grouped_declarator() -> None:
+    content = """
+      int ((&arrayRef))[3];
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            variables=[
+                Variable(
+                    name=PQName(segments=[NameSpecifier(name="arrayRef")]),
+                    type=Reference(
+                        ref_to=Array(
+                            array_of=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="int")]
+                                )
+                            ),
+                            size=Value(tokens=[Token(value="3")]),
+                        )
+                    ),
+                )
+            ]
+        )
+    )
+
+
 def test_var_fnptr_moreparens() -> None:
     content = """
       void (*x)(int(p1), int);
