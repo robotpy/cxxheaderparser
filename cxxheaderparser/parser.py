@@ -1606,7 +1606,7 @@ class CxxParser:
 
         else:
             # default value initializer
-            tok = self.lex.token_if("{")
+            tok = self.lex.token_if("{", "(")
             if tok:
                 if is_typedef:
                     raise self._parse_error(tok)
@@ -2537,6 +2537,22 @@ class CxxParser:
 
     _parse_type_ptr_ref_paren = {"*", "&", "DBL_AMP", "("}
 
+    _parameter_start_tokens = (
+        _pqname_start_tokens
+        | _attribute_start_tokens
+        | _type_kwd_both
+        | _type_kwd_meth
+        | {
+            "volatile",
+            "mutable",
+            "__inline",
+            "__forceinline",
+            "this",
+            "ELLIPSIS",
+            ")",
+        }
+    )
+
     def _parse_type(
         self,
         tok: typing.Optional[LexToken],
@@ -2735,29 +2751,34 @@ class CxxParser:
 
         # TODO: "type fn(x);" is ambiguous here. Because this is a header
         # parser, we assume it's a function, not a variable declaration
-        # calling a constructor
+        # calling a constructor, unless the token after ( cannot start a
+        # parameter declaration.
 
-        # if ( then it's a function/method
-        if self.lex.token_if("("):
+        # if ( then it's usually a function/method
+        tok = self.lex.token_if("(")
+        if tok:
             if not pqname:
                 raise self._parse_error(None)
 
-            return self._parse_function(
-                mods,
-                dtype,
-                pqname,
-                op,
-                template,
-                doxygen,
-                location,
-                constructor,
-                destructor,
-                is_friend,
-                is_typedef,
-                msvc_convention,
-                is_guide,
-                attributes,
-            )
+            if not self.lex.token_peek_if(*self._parameter_start_tokens):
+                self.lex.return_token(tok)
+            else:
+                return self._parse_function(
+                    mods,
+                    dtype,
+                    pqname,
+                    op,
+                    template,
+                    doxygen,
+                    location,
+                    constructor,
+                    destructor,
+                    is_friend,
+                    is_typedef,
+                    msvc_convention,
+                    is_guide,
+                    attributes,
+                )
         elif msvc_convention:
             raise self._parse_error(msvc_convention)
 
