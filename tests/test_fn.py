@@ -33,6 +33,58 @@ from cxxheaderparser.simple import (
 )
 
 
+def test_fn_parameter_named_function_declarator() -> None:
+    content = """
+      template <typename T> void RemoveIf(bool predicate(const T& key));
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            functions=[
+                Function(
+                    return_type=Type(
+                        typename=PQName(segments=[FundamentalSpecifier(name="void")])
+                    ),
+                    name=PQName(segments=[NameSpecifier(name="RemoveIf")]),
+                    parameters=[
+                        Parameter(
+                            type=Pointer(
+                                ptr_to=FunctionType(
+                                    return_type=Type(
+                                        typename=PQName(
+                                            segments=[FundamentalSpecifier(name="bool")]
+                                        )
+                                    ),
+                                    parameters=[
+                                        Parameter(
+                                            type=Reference(
+                                                ref_to=Type(
+                                                    typename=PQName(
+                                                        segments=[
+                                                            NameSpecifier(name="T")
+                                                        ]
+                                                    ),
+                                                    const=True,
+                                                )
+                                            ),
+                                            name="key",
+                                        )
+                                    ],
+                                )
+                            ),
+                            name="predicate",
+                        )
+                    ],
+                    template=TemplateDecl(
+                        params=[TemplateTypeParam(typekey="typename", name="T")]
+                    ),
+                )
+            ]
+        )
+    )
+
+
 def test_fn_returns_class() -> None:
     content = """
       class X *fn1();
