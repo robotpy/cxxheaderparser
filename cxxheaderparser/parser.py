@@ -1967,6 +1967,14 @@ class CxxParser:
         if tok:
             param_name = tok.value
 
+        # Function parameter declarations can use function declarator syntax,
+        # e.g. ``bool predicate(const T&)``. In parameter lists, function types
+        # are adjusted to pointers to functions, matching the explicit
+        # ``bool (*predicate)(const T&)`` spelling.
+        if param_name and self.lex.token_if("("):
+            fn_params, vararg, _ = self._parse_parameters(False, False)
+            dtype = Pointer(FunctionType(dtype, fn_params, vararg))
+
         # optional array parameter
         tok = self.lex.token_if("[")
         if tok:
