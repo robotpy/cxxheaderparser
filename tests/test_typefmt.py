@@ -205,6 +205,36 @@ from cxxheaderparser.types import (
             "int (* name)(int)",
         ),
         (
+            Pointer(
+                ptr_to=FunctionType(
+                    return_type=Type(
+                        typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                    ),
+                    parameters=[
+                        Parameter(
+                            type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="char")]
+                                )
+                            ),
+                            name="x",
+                        ),
+                        Parameter(
+                            type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="float")]
+                                )
+                            ),
+                            name="y",
+                        ),
+                    ],
+                    classname=PQName(segments=[NameSpecifier(name="Fred")]),
+                )
+            ),
+            "int (Fred::*)(char x, float y)",
+            "int (Fred::* name)(char x, float y)",
+        ),
+        (
             Type(
                 typename=PQName(
                     segments=[

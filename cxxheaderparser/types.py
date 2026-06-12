@@ -272,9 +272,6 @@ class FunctionType:
     return_type: "DecoratedType"
     parameters: typing.List["Parameter"]
 
-    #: If a member function pointer
-    # TODO classname: typing.Optional[PQName]
-
     #: Set to True if ends with ``...``
     vararg: bool = False
 
@@ -292,6 +289,9 @@ class FunctionType:
     #:            use a preprocessor to transform it to the appropriate
     #:            calling convention
     msvc_convention: typing.Optional[str] = None
+
+    #: If a member function pointer, the class that owns the member function.
+    classname: typing.Optional[PQName] = None
 
     def format(self) -> str:
         vararg = "..." if self.vararg else ""
@@ -379,7 +379,9 @@ class Pointer:
         v = " volatile" if self.volatile else ""
         r = " __restrict__" if self.restrict else ""
         ptr_to = self.ptr_to
-        if isinstance(ptr_to, (Array, FunctionType)):
+        if isinstance(ptr_to, FunctionType) and ptr_to.classname:
+            return ptr_to.format_decl(f"({ptr_to.classname.format()}::*{r}{c}{v})")
+        elif isinstance(ptr_to, (Array, FunctionType)):
             return ptr_to.format_decl(f"(*{r}{c}{v})")
         else:
             return f"{ptr_to.format()}*{r}{c}{v}"
@@ -390,7 +392,11 @@ class Pointer:
         v = " volatile" if self.volatile else ""
         r = " __restrict__" if self.restrict else ""
         ptr_to = self.ptr_to
-        if isinstance(ptr_to, (Array, FunctionType)):
+        if isinstance(ptr_to, FunctionType) and ptr_to.classname:
+            return ptr_to.format_decl(
+                f"({ptr_to.classname.format()}::*{r}{c}{v} {name})"
+            )
+        elif isinstance(ptr_to, (Array, FunctionType)):
             return ptr_to.format_decl(f"(*{r}{c}{v} {name})")
         else:
             return f"{ptr_to.format()}*{r}{c}{v} {name}"

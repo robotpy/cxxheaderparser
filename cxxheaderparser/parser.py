@@ -2526,9 +2526,21 @@ class CxxParser:
 
                 # this might be a grouping paren, so consume it and inspect it
                 toks, inner_toks = self._consume_balanced_tokens_with_inner(tok)
+                member_ptr_idx = next(
+                    (
+                        i
+                        for i, itok in enumerate(inner_toks)
+                        if itok.type == "*"
+                        and i > 0
+                        and inner_toks[i - 1].type == "DBL_COLON"
+                    ),
+                    None,
+                )
 
                 # Check to see if this is a grouping paren or something else
-                if not (inner_toks and inner_toks[0].type in ("*", "&")):
+                if not inner_toks or (
+                    inner_toks[0].type not in ("*", "&") and member_ptr_idx is None
+                ):
                     self.lex.return_tokens(toks)
                     break
 
@@ -2548,9 +2560,25 @@ class CxxParser:
                             dtype, fn_params, vararg, msvc_convention=msvc_convention
                         )
 
-                        # the inner tokens must either be a * or a pqname that ends
-                        # with ::* (member function pointer)
-                        # ... TODO member function pointer :(
+                if isinstance(dtype, FunctionType) and member_ptr_idx is not None:
+                    # Keep the * and declarator name for the normal pointer/name
+                    # parsing below, and store the qualified class name on the
+                    # function type.
+                    class_toks = inner_toks[: member_ptr_idx - 1] + [PhonyEnding]
+                    old_lex = self.lex
+                    try:
+                        self.lex = lexer.BoundedTokenStream(class_toks)
+                        classname, _ = self._parse_pqname(
+                            None, compound_ok=False, fn_ok=False, fund_ok=False
+                        )
+                        self._next_token_must_be(PhonyEnding.type)
+                    finally:
+                        self.lex = old_lex
+
+                    dtype.classname = classname
+                    inner_toks = [inner_toks[member_ptr_idx]] + inner_toks[
+                        member_ptr_idx + 1 :
+                    ]
 
                 # return the inner toks and recurse
                 # -> this could return some weird results for invalid code, but
