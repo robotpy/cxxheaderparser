@@ -418,6 +418,52 @@ def test_var_ref_to_array_grouped_declarator() -> None:
     )
 
 
+def test_var_member_fnptr_with_initializer() -> None:
+    content = """
+      int (Calculator::*funcPtr)(int) = &Calculator::multiply;
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            variables=[
+                Variable(
+                    name=PQName(segments=[NameSpecifier(name="funcPtr")]),
+                    type=Pointer(
+                        ptr_to=FunctionType(
+                            return_type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="int")]
+                                )
+                            ),
+                            parameters=[
+                                Parameter(
+                                    type=Type(
+                                        typename=PQName(
+                                            segments=[FundamentalSpecifier(name="int")]
+                                        )
+                                    )
+                                )
+                            ],
+                            classname=PQName(
+                                segments=[NameSpecifier(name="Calculator")]
+                            ),
+                        )
+                    ),
+                    value=Value(
+                        tokens=[
+                            Token(value="&"),
+                            Token(value="Calculator"),
+                            Token(value="::"),
+                            Token(value="multiply"),
+                        ]
+                    ),
+                )
+            ]
+        )
+    )
+
+
 def test_var_fnptr_moreparens() -> None:
     content = """
       void (*x)(int(p1), int);

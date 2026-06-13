@@ -18,6 +18,7 @@ from cxxheaderparser.types import Token
         "void * (*)()",
         "void (*)(void * buf, int buflen)",
         "void (* fnType)(void * buf, int buflen)",
+        "int (Fred::* FredMemFn)(char x, float y)",
         "TypeName<int, void>& x",
         "vector<string>&",
         "std::vector<Pointer *> *",

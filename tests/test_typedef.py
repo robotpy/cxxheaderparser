@@ -606,6 +606,53 @@ def test_typedef_fnptr() -> None:
     )
 
 
+def test_typedef_member_fnptr() -> None:
+    content = """
+      typedef int (Fred::*FredMemFn)(char x, float y);
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            typedefs=[
+                Typedef(
+                    type=Pointer(
+                        ptr_to=FunctionType(
+                            return_type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="int")]
+                                )
+                            ),
+                            parameters=[
+                                Parameter(
+                                    type=Type(
+                                        typename=PQName(
+                                            segments=[FundamentalSpecifier(name="char")]
+                                        )
+                                    ),
+                                    name="x",
+                                ),
+                                Parameter(
+                                    type=Type(
+                                        typename=PQName(
+                                            segments=[
+                                                FundamentalSpecifier(name="float")
+                                            ]
+                                        )
+                                    ),
+                                    name="y",
+                                ),
+                            ],
+                            classname=PQName(segments=[NameSpecifier(name="Fred")]),
+                        )
+                    ),
+                    name="FredMemFn",
+                )
+            ]
+        )
+    )
+
+
 def test_typedef_const() -> None:
     content = """
       typedef int theint, *const ptheint;
