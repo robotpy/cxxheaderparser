@@ -1925,10 +1925,23 @@ class CxxParser:
                     break
 
             # If no more segments, we're done
-            if not self.lex.token_if("DBL_COLON"):
+            tok = self.lex.token_if("DBL_COLON")
+            if not tok:
                 break
 
-            tok = self._next_token_must_be("NAME", "operator", "template", "decltype")
+            next_tok = self._next_token_must_be(
+                "NAME", "operator", "template", "decltype"
+            )
+            if next_tok.type == "operator" and not fn_ok:
+                # Qualified conversion operators (for example,
+                # ``Foo::operator int()``) do not have a leading return type.
+                # When parsing what might be a type, stop before the operator
+                # so declaration parsing can consume the qualified operator as
+                # the function name and parse the conversion type separately.
+                self.lex.return_tokens([tok, next_tok])
+                break
+
+            tok = next_tok
 
         pqname = PQName(segments, classkey, has_typename)
 
@@ -2898,6 +2911,7 @@ class CxxParser:
         is_typedef: bool,
         is_friend: bool,
         attributes: typing.List[Attribute],
+        parsed_type: typing.Optional[Type] = None,
     ) -> None:
         tok = self._next_token_must_be("operator")
 
@@ -2917,9 +2931,17 @@ class CxxParser:
         # then this must be a method
         self._next_token_must_be("(")
 
-        # make our own pqname/op here
-        segments: typing.List[PQNameSegment] = [NameSpecifier("operator")]
-        pqname = PQName(segments)
+        # if parsed_type is present, then create the pqname from it and apply
+        # any modifiers also
+        if parsed_type:
+            ctype.const = ctype.const or parsed_type.const
+            ctype.volatile = ctype.volatile or parsed_type.volatile
+            pqname = PQName([*parsed_type.typename.segments, NameSpecifier("operator")])
+        else:
+            # make our own pqname/op here
+            segments: typing.List[PQNameSegment] = [NameSpecifier("operator")]
+            pqname = PQName(segments)
+
         op = "conversion"
 
         if self._parse_function(
@@ -3023,6 +3045,25 @@ class CxxParser:
                 mods, location, doxygen, template, is_typedef, is_friend, attributes
             )
             return
+
+        qtok = self.lex.token_if("DBL_COLON")
+        if qtok:
+            otok = self.lex.token_if("operator")
+            if otok:
+                self.lex.return_tokens([qtok, otok])
+                self._next_token_must_be("DBL_COLON")
+                self._parse_operator_conversion(
+                    mods,
+                    location,
+                    doxygen,
+                    template,
+                    is_typedef,
+                    is_friend,
+                    attributes,
+                    parsed_type,
+                )
+                return
+            self.lex.return_token(qtok)
 
         # Ok, dealing with a variable or function/method
         while True:
