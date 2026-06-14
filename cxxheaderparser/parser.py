@@ -328,13 +328,15 @@ class CxxParser:
     # Parsing begins here
     #
 
-    def parse(self) -> None:
-        """
-        Parse the header contents
+    def _parse_token(self, tok: LexToken, doxygen: typing.Optional[str]) -> bool:
+        """Parse a single token from the current parser state.
+
+        Returns True if the caller should keep the current doxygen comment for
+        the next token.
         """
 
         # non-ambiguous parsing functions for each token type
-        _translation_unit_tokens: typing.Dict[
+        translation_unit_tokens: typing.Dict[
             str, typing.Callable[[LexToken, typing.Optional[str]], typing.Any]
         ] = {
             "__attribute__": self._consume_gcc_attribute,
@@ -359,7 +361,21 @@ class CxxParser:
             ";": lambda _1, _2: None,
         }
 
-        _keep_doxygen = {"__declspec", "alignas", "__attribute__", "DBL_LBRACKET"}
+        keep_doxygen = {"__declspec", "alignas", "__attribute__", "DBL_LBRACKET"}
+
+        fn = translation_unit_tokens.get(tok.type)
+        if fn:
+            fn(tok, doxygen)
+            return tok.type in keep_doxygen
+
+        # this processes ambiguous declarations
+        self._parse_declarations(tok, doxygen)
+        return False
+
+    def parse(self) -> None:
+        """
+        Parse the header contents
+        """
 
         tok = None
 
@@ -377,15 +393,7 @@ class CxxParser:
                 if not tok:
                     break
 
-                fn = _translation_unit_tokens.get(tok.type)
-                if fn:
-                    fn(tok, doxygen)
-
-                    if tok.type not in _keep_doxygen:
-                        doxygen = None
-                else:
-                    # this processes ambiguous declarations
-                    self._parse_declarations(tok, doxygen)
+                if not self._parse_token(tok, doxygen):
                     doxygen = None
 
         except Exception as e:
@@ -1223,25 +1231,10 @@ class CxxParser:
             doxygen = self.lex.get_doxygen()
             tok = self.lex.token()
 
-            if tok.type == "}":
-                if self.state is class_state:
-                    self._pop_state()
-                else:
-                    self._on_block_end(tok, doxygen)
-            elif tok.type in ("private", "protected", "public"):
-                self._process_access_specifier(tok, doxygen)
-            elif tok.type == "template":
-                self._parse_template(tok, doxygen)
-            elif tok.type == "typedef":
-                self._parse_typedef(tok, doxygen)
-            elif tok.type == "using":
-                self._parse_using(tok, doxygen)
-            elif tok.type == "static_assert":
-                self._consume_static_assert(tok, doxygen)
-            elif tok.type == ";":
-                pass
+            if tok.type == "}" and self.state is class_state:
+                self._pop_state()
             else:
-                self._parse_declarations(tok, doxygen)
+                self._parse_token(tok, doxygen)
 
     def _parse_using(
         self,
