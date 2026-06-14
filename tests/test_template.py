@@ -1,5 +1,8 @@
 # Note: testcases generated via `python -m cxxheaderparser.gentest`
 
+import pytest
+
+from cxxheaderparser.errors import CxxParseError
 from cxxheaderparser.types import (
     Array,
     BaseClass,
@@ -1814,6 +1817,82 @@ def test_template_specialized_fn_typename_template() -> None:
             ]
         )
     )
+
+
+def test_template_function_instantiation() -> None:
+    content = """
+      template <typename T> T tFunction(T val);
+      template <typename T> T tFunction(T val) { return val; }
+      template bool tFunction(bool val);
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            functions=[
+                Function(
+                    return_type=Type(
+                        typename=PQName(segments=[NameSpecifier(name="T")])
+                    ),
+                    name=PQName(segments=[NameSpecifier(name="tFunction")]),
+                    parameters=[
+                        Parameter(
+                            type=Type(
+                                typename=PQName(segments=[NameSpecifier(name="T")])
+                            ),
+                            name="val",
+                        )
+                    ],
+                    template=TemplateDecl(
+                        params=[TemplateTypeParam(typekey="typename", name="T")]
+                    ),
+                ),
+                Function(
+                    return_type=Type(
+                        typename=PQName(segments=[NameSpecifier(name="T")])
+                    ),
+                    name=PQName(segments=[NameSpecifier(name="tFunction")]),
+                    parameters=[
+                        Parameter(
+                            type=Type(
+                                typename=PQName(segments=[NameSpecifier(name="T")])
+                            ),
+                            name="val",
+                        )
+                    ],
+                    has_body=True,
+                    template=TemplateDecl(
+                        params=[TemplateTypeParam(typekey="typename", name="T")]
+                    ),
+                ),
+                Function(
+                    return_type=Type(
+                        typename=PQName(segments=[FundamentalSpecifier(name="bool")])
+                    ),
+                    name=PQName(segments=[NameSpecifier(name="tFunction")]),
+                    parameters=[
+                        Parameter(
+                            type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="bool")]
+                                )
+                            ),
+                            name="val",
+                        )
+                    ],
+                    template=TemplateDecl(),
+                ),
+            ]
+        )
+    )
+
+
+def test_template_rejects_variable_instantiation() -> None:
+    with pytest.raises(CxxParseError):
+        parse_string("template int x;")
+
+    with pytest.raises(CxxParseError):
+        parse_string("template int (x);")
 
 
 def test_template_instantiation() -> None:

@@ -795,7 +795,9 @@ class CxxParser:
 
         tok = self.lex.token_if("class", "struct")
         if not tok:
-            raise self._parse_error(tok)
+            tok = self.lex.token()
+            self._parse_declarations(tok, doxygen, TemplateDecl(), allow_fields=False)
+            return
 
         atok = self.lex.token_if_in_set(self._attribute_start_tokens)
         if atok:
@@ -2754,6 +2756,7 @@ class CxxParser:
         is_typedef: bool,
         is_friend: bool,
         attributes: typing.List[Attribute],
+        allow_fields: bool = True,
     ) -> bool:
         toks: LexTokenList = []
 
@@ -2894,6 +2897,9 @@ class CxxParser:
         if not dtype:
             raise CxxParseError("appear to be parsing a field without a type")
 
+        if not allow_fields:
+            raise self._parse_error(None)
+
         if isinstance(template, list):
             raise CxxParseError("multiple template declarations on a field")
 
@@ -2975,6 +2981,7 @@ class CxxParser:
         template: TemplateDeclTypeVar = None,
         is_typedef: bool = False,
         is_friend: bool = False,
+        allow_fields: bool = True,
     ) -> None:
         """
         Parses a sequence of declarations
@@ -3076,6 +3083,7 @@ class CxxParser:
                 is_typedef,
                 is_friend,
                 attributes,
+                allow_fields,
             ):
                 # if it returns True then it handled the end of the statement
                 break
