@@ -1188,11 +1188,60 @@ class CxxParser:
 
         mods.validate(var_ok=False, meth_ok=False, msg="parsing typealias")
 
-        dtype = self._parse_cv_ptr(parsed_type)
+        if parsed_type.typename.classkey in ("class", "struct", "union"):
+            tok = self.lex.token_if_in_set(self._class_enum_stage2)
+            if tok:
+                self._parse_class_decl(
+                    parsed_type.typename,
+                    tok,
+                    doxygen,
+                    template,
+                    False,
+                    tok.location,
+                    mods,
+                    [],
+                )
+                self._parse_typealias_class_body()
+
+        dtype = self._parse_cv_ptr_or_fn(parsed_type, nonptr_fn=True)
+
+        tok = self.lex.token_if("[")
+        while tok:
+            if isinstance(dtype, FunctionType):
+                raise CxxParseError("arrays of functions are illegal", tok)
+            dtype = self._parse_array_type(tok, dtype)
+            tok = self.lex.token_if("[")
 
         alias = UsingAlias(id_tok.value, dtype, template, self._current_access, doxygen)
 
         self.visitor.on_using_alias(self.state, alias)
+
+    def _parse_typealias_class_body(self) -> None:
+        class_state = self.state
+
+        while self.state is not class_state.parent:
+            doxygen = self.lex.get_doxygen()
+            tok = self.lex.token()
+
+            if tok.type == "}":
+                if self.state is class_state:
+                    self._pop_state()
+                else:
+                    self._on_block_end(tok, doxygen)
+            elif tok.type in ("private", "protected", "public"):
+                self._process_access_specifier(tok, doxygen)
+            elif tok.type == "template":
+                self._parse_template(tok, doxygen)
+            elif tok.type == "typedef":
+                self._parse_typedef(tok, doxygen)
+            elif tok.type == "using":
+                self._parse_using(tok, doxygen)
+            elif tok.type == "static_assert":
+                self._consume_static_assert(tok, doxygen)
+            elif tok.type == ";":
+                pass
+            else:
+                self._parse_declarations(tok, doxygen)
 
     def _parse_using(
         self,
