@@ -758,7 +758,7 @@ class Function:
     attributes: typing.List[Attribute] = field(default_factory=list)
 
     constexpr: bool = False
-    extern: typing.Union[bool, str] = False
+    extern: bool = False
     static: bool = False
     inline: bool = False
     deleted: bool = False
@@ -900,7 +900,7 @@ class Variable:
     value: typing.Optional[Value] = None
 
     constexpr: bool = False
-    extern: typing.Union[bool, str] = False
+    extern: bool = False
     static: bool = False
     inline: bool = False
 
