@@ -665,7 +665,32 @@ class TokenStream:
 class LexerTokenStream(TokenStream):
     """
     Provides tokens from using PlyLexer on the given input text
+
+    This class also handles C++ digraphs (ISO C++ §2.6 [lex.digraph]), which
+    are two-character alternative representations for certain tokens::
+
+        <%   ->  {
+        %>   ->  }
+        <:   ->  [
+        :>   ->  ]
+        %:   ->  #  (preprocessor; rejected later as unsupported)
+
+    Digraph recognition happens here, after the PLY tokenizer emits individual
+    characters, so the rest of the parser sees only the canonical tokens.
     """
+
+    # Maps (first_token_type, second_token_value) -> replacement_token_type
+    # Only two-token digraph pairs that the PLY lexer will split are listed.
+    # The PLY lexer emits '<', '%', and ':' as literal tokens (single chars),
+    # so each digraph arrives as two consecutive tokens.
+    _digraph_map: typing.Dict[typing.Tuple[str, str], str] = {
+        ("%", ">"): "}",  # %> -> }
+        ("<", "%"): "{",  # <% -> {
+        ("<", ":"): "[",  # <: -> [
+        (":", ">"): "]",  # :> -> ]
+        # %: -> # would produce a PP_DIRECTIVE; we leave it for the existing
+        # preprocessor-directive error path rather than silently mangling it.
+    }
 
     _user_defined_literal_start = {
         "FLOAT_CONST",
@@ -702,9 +727,36 @@ class LexerTokenStream(TokenStream):
             return False
 
         udl_start = self._user_defined_literal_start
+        digraph_map = self._digraph_map
 
         while True:
             tok.location = self._lex.current_location()
+
+            # Detect C++ digraphs: two consecutive literal tokens that together
+            # form an alternative representation of a single token (ISO C++ §2.6).
+            # We peek at the next token; if the pair is a known digraph we merge
+            # them into the canonical single-character token *before* appending
+            # to the buffer, so the rest of the parser never sees the raw digraph.
+            if tok.type in ("<", "%", ":"):
+                tok2 = get_token()
+                if tok2 is not None:
+                    replacement = digraph_map.get((tok.type, tok2.value))
+                    if replacement is not None:
+                        # Reuse tok, replace its type/value with the canonical token.
+                        tok.type = replacement
+                        tok.value = replacement
+                        tokbuf.append(tok)
+                        tok = get_token()
+                        if tok is None:
+                            break
+                        continue
+                    else:
+                        # Not a digraph — process tok normally and re-queue tok2.
+                        tokbuf.append(tok)
+                        tok = tok2
+                        continue
+                # tok2 is None (EOF): fall through to append tok and return.
+
             tokbuf.append(tok)
 
             if tok.type == "NEWLINE":
