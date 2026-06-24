@@ -920,3 +920,4 @@ if __name__ == "__main__":  # pragma: no cover
         lex.runmain(lexer=PlyLexer(None))
     except EOFError:
         pass
+        
