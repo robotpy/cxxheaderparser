@@ -211,4 +211,3 @@ public:
     method_names = [m.name.segments[-1].name for m in cls.methods]
     assert "MyClass" in method_names
     assert "getValue" in method_names
-    
