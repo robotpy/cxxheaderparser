@@ -194,6 +194,12 @@ class PlyLexer:
         "ELLIPSIS",
         "DBL_LBRACKET",
         "DBL_RBRACKET",
+        "DIGRAPH_DBL_LBRACKET",
+        "DIGRAPH_DBL_RBRACKET",
+        "DIGRAPH_LBRACKET",
+        "DIGRAPH_RBRACKET",
+        "DIGRAPH_LBRACE",
+        "DIGRAPH_RBRACE",
         "DBL_COLON",
         "DBL_AMP",
         "DBL_PIPE",
@@ -475,6 +481,42 @@ class PlyLexer:
             + " directives, please use a C++ preprocessor first",
             t,
         )
+
+    @TOKEN(r"<:<:")
+    def t_DIGRAPH_DBL_LBRACKET(self, t: LexToken) -> LexToken:
+        t.type = "DBL_LBRACKET"
+        t.value = "[["
+        return t
+
+    @TOKEN(r":>:>")
+    def t_DIGRAPH_DBL_RBRACKET(self, t: LexToken) -> LexToken:
+        t.type = "DBL_RBRACKET"
+        t.value = "]]"
+        return t
+
+    @TOKEN(r"<:(?!:[^:>])")
+    def t_DIGRAPH_LBRACKET(self, t: LexToken) -> LexToken:
+        t.type = "["
+        t.value = "["
+        return t
+
+    @TOKEN(r":>")
+    def t_DIGRAPH_RBRACKET(self, t: LexToken) -> LexToken:
+        t.type = "]"
+        t.value = "]"
+        return t
+
+    @TOKEN(r"<%")
+    def t_DIGRAPH_LBRACE(self, t: LexToken) -> LexToken:
+        t.type = "{"
+        t.value = "{"
+        return t
+
+    @TOKEN(r"%>")
+    def t_DIGRAPH_RBRACE(self, t: LexToken) -> LexToken:
+        t.type = "}"
+        t.value = "}"
+        return t
 
     t_DIVIDE = r"/(?!/)"
     t_ELLIPSIS = r"\.\.\."
