@@ -1572,6 +1572,15 @@ class CxxParser:
     # Variable parsing
     #
 
+    def _make_extern_value(
+        self, mods: ParsedTypeModifiers, include_block_linkage: bool = True
+    ) -> typing.Union[bool, str]:
+        if mods.extern_linkage is not None:
+            return mods.extern_linkage
+        if include_block_linkage and self.state.extern_linkage is not None:
+            return self.state.extern_linkage
+        return mods.extern is not None
+
     def _parse_bitfield(self) -> typing.Union[int, Value]:
         # Convert to integer for backwards compat
         tok = self.lex.token_if("INT_CONST_DEC")
@@ -1687,7 +1696,7 @@ class CxxParser:
                     template=template,
                     attributes=attributes,
                     constexpr=mods.constexpr is not None,
-                    extern=mods.extern is not None,
+                    extern=self._make_extern_value(mods),
                     static=mods.static is not None,
                     inline=mods.inline is not None,
                 )
@@ -2312,6 +2321,7 @@ class CxxParser:
         state = self.state
         state.location = location
         is_class_block = isinstance(state, ClassBlockState)
+        extern = self._make_extern_value(mods, include_block_linkage=not is_class_block)
 
         params, vararg, at_params = self._parse_parameters(
             True, deduce_this_ok=is_class_block
@@ -2352,7 +2362,7 @@ class CxxParser:
                 operator=op,
                 access=self._current_access,
                 constexpr=mods.constexpr is not None,
-                extern=mods.extern is not None,
+                extern=extern,
                 static=mods.static is not None,
                 inline=mods.inline is not None,
                 msvc_convention=msvc_convention_value,
@@ -2411,7 +2421,7 @@ class CxxParser:
                 template=template,
                 operator=op,
                 constexpr=mods.constexpr is not None,
-                extern=mods.extern is not None,
+                extern=extern,
                 static=mods.static is not None,
                 inline=mods.inline is not None,
                 msvc_convention=msvc_convention_value,
@@ -2717,8 +2727,9 @@ class CxxParser:
             elif tok_type == "constexpr":
                 mods.constexpr = tok
             elif tok_type == "extern":
-                # TODO: store linkage
-                self.lex.token_if("STRING_LITERAL")
+                linkage_tok = self.lex.token_if("STRING_LITERAL")
+                if linkage_tok:
+                    mods.extern_linkage = linkage_tok.value
                 mods.extern = tok
             elif tok_type in ("__inline", "__forceinline", "inline"):
                 mods.inline = tok

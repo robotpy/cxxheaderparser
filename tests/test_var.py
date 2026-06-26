@@ -658,8 +658,7 @@ def test_var_extern_c() -> None:
                     type=Type(
                         typename=PQName(segments=[FundamentalSpecifier(name="int")])
                     ),
-                    # TODO: store linkage
-                    extern=True,
+                    extern='"C"',
                 )
             ]
         )
