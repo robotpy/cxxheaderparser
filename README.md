@@ -104,9 +104,9 @@ Credit
 * Portions of the lexer grammar and other ideas were derived from pycparser
 * The source code is liberally sprinkled with comments containing C++ parsing
   grammar mostly derived from the [Hyperlinked C++ BNF Grammar](https://www.nongnu.org/hcb/)
-* cppreference.com has been invaluable for understanding many of the weird
+* [cppreference.com](https://cppreference.com) has been invaluable for understanding many of the weird
   quirks of C++, and some of the unit tests use examples from there
-* [Compiler Explorer](godbolt.org) has been invaluable for validating my 
+* [Compiler Explorer](https://godbolt.org) has been invaluable for validating my 
   understanding of C++ by allowing me to quickly type in quirky C++
   constructs to see if they actually compile
 
