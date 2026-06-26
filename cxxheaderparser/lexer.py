@@ -18,6 +18,7 @@ else:
     Protocol = object
 
 _line_re = re.compile(r'^\#[\t ]*(line)? (\d+) "(.*)"')
+_pp_directive_prefix = r"(?:\#|%:)"
 _multicomment_re = re.compile("\n[\\s]+\\*")
 
 
@@ -194,6 +195,12 @@ class PlyLexer:
         "ELLIPSIS",
         "DBL_LBRACKET",
         "DBL_RBRACKET",
+        "DIGRAPH_DBL_LBRACKET",
+        "DIGRAPH_DBL_RBRACKET",
+        "DIGRAPH_LBRACKET",
+        "DIGRAPH_RBRACKET",
+        "DIGRAPH_LBRACE",
+        "DIGRAPH_RBRACE",
         "DBL_COLON",
         "DBL_AMP",
         "DBL_PIPE",
@@ -446,16 +453,17 @@ class PlyLexer:
             t.type = t.value
         return t
 
-    @TOKEN(r"\#[\t ]*pragma")
+    @TOKEN(_pp_directive_prefix + r"[\t ]*pragma")
     def t_PRAGMA_DIRECTIVE(self, t: LexToken) -> LexToken:
-        return t
+        return self._normalize_pp_directive(t)
 
-    @TOKEN(r"\#[\t ]*include (.*)")
+    @TOKEN(_pp_directive_prefix + r"[\t ]*include (.*)")
     def t_INCLUDE_DIRECTIVE(self, t: LexToken) -> LexToken:
-        return t
+        return self._normalize_pp_directive(t)
 
-    @TOKEN(r"\#(.*)")
+    @TOKEN(_pp_directive_prefix + r"(.*)")
     def t_PP_DIRECTIVE(self, t: LexToken):
+        t = self._normalize_pp_directive(t)
         # handle line macros
         m = _line_re.match(t.value)
         if m:
@@ -475,6 +483,47 @@ class PlyLexer:
             + " directives, please use a C++ preprocessor first",
             t,
         )
+
+    def _normalize_pp_directive(self, t: LexToken) -> LexToken:
+        if t.value.startswith("%:"):
+            t.value = "#" + t.value[2:]
+        return t
+
+    @TOKEN(r"<:<:")
+    def t_DIGRAPH_DBL_LBRACKET(self, t: LexToken) -> LexToken:
+        t.type = "DBL_LBRACKET"
+        t.value = "[["
+        return t
+
+    @TOKEN(r":>:>")
+    def t_DIGRAPH_DBL_RBRACKET(self, t: LexToken) -> LexToken:
+        t.type = "DBL_RBRACKET"
+        t.value = "]]"
+        return t
+
+    @TOKEN(r"<:(?!:[^:>])")
+    def t_DIGRAPH_LBRACKET(self, t: LexToken) -> LexToken:
+        t.type = "["
+        t.value = "["
+        return t
+
+    @TOKEN(r":>")
+    def t_DIGRAPH_RBRACKET(self, t: LexToken) -> LexToken:
+        t.type = "]"
+        t.value = "]"
+        return t
+
+    @TOKEN(r"<%")
+    def t_DIGRAPH_LBRACE(self, t: LexToken) -> LexToken:
+        t.type = "{"
+        t.value = "{"
+        return t
+
+    @TOKEN(r"%>")
+    def t_DIGRAPH_RBRACE(self, t: LexToken) -> LexToken:
+        t.type = "}"
+        t.value = "}"
+        return t
 
     t_DIVIDE = r"/(?!/)"
     t_ELLIPSIS = r"\.\.\."
