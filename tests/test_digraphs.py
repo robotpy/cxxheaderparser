@@ -74,3 +74,9 @@ def test_digraph_include_directive_is_normalized() -> None:
     assert parse_string("%:include <vector>") == ParsedData(
         namespace=NamespaceScope(), includes=[Include(filename="<vector>")]
     )
+
+
+def test_digraph_line_directive_is_normalized_for_locations() -> None:
+    data = parse_string('%: 42 "generated.hpp"\nint value;')
+
+    assert data == parse_string('# 42 "generated.hpp"\nint value;')
