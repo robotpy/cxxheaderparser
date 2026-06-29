@@ -1,8 +1,11 @@
 # Note: testcases generated via `python -m cxxheaderparser.gentest`
 
 from cxxheaderparser.types import (
+    AnonymousName,
+    Array,
     BaseClass,
     ClassDecl,
+    Field,
     Function,
     FunctionType,
     FundamentalSpecifier,
@@ -20,6 +23,7 @@ from cxxheaderparser.types import (
     Type,
     UsingAlias,
     UsingDecl,
+    Value,
 )
 from cxxheaderparser.simple import (
     ClassScope,
@@ -747,6 +751,631 @@ def test_using_enum_global() -> None:
         )
     )
 
+
+def test_alias_declaration_array_type() -> None:
+    content = """
+        using aType = int[4];
+    """
+
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            using_alias=[
+                UsingAlias(
+                    alias="aType",
+                    type=Array(
+                        array_of=Type(
+                            typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                        ),
+                        size=Value(tokens=[Token(value="4")]),
+                    ),
+                )
+            ]
+        )
+    )
+
+
+def test_alias_declaration_function_type() -> None:
+    content = """
+        using fType = void(int);
+    """
+
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            using_alias=[
+                UsingAlias(
+                    alias="fType",
+                    type=FunctionType(
+                        return_type=Type(
+                            typename=PQName(
+                                segments=[FundamentalSpecifier(name="void")]
+                            )
+                        ),
+                        parameters=[
+                            Parameter(
+                                type=Type(
+                                    typename=PQName(
+                                        segments=[FundamentalSpecifier(name="int")]
+                                    )
+                                )
+                            )
+                        ],
+                    ),
+                )
+            ]
+        )
+    )
+
+
+def test_alias_declaration_anonymous_struct_type() -> None:
+    content = """
+        using lType = struct {int x;int y;int z;int t;};
+    """
+
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            classes=[
+                ClassScope(
+                    class_decl=ClassDecl(
+                        typename=PQName(
+                            segments=[AnonymousName(id=1)], classkey="struct"
+                        )
+                    ),
+                    fields=[
+                        Field(
+                            access="public",
+                            type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="int")]
+                                )
+                            ),
+                            name="x",
+                        ),
+                        Field(
+                            access="public",
+                            type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="int")]
+                                )
+                            ),
+                            name="y",
+                        ),
+                        Field(
+                            access="public",
+                            type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="int")]
+                                )
+                            ),
+                            name="z",
+                        ),
+                        Field(
+                            access="public",
+                            type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="int")]
+                                )
+                            ),
+                            name="t",
+                        ),
+                    ],
+                )
+            ],
+            using_alias=[
+                UsingAlias(
+                    alias="lType",
+                    type=Type(
+                        typename=PQName(
+                            segments=[AnonymousName(id=1)], classkey="struct"
+                        )
+                    ),
+                )
+            ],
+        )
+    )
+
+
+def test_alias_declaration_named_struct_type() -> None:
+    content = """
+        using sType = struct l{int x;int y;int z;int t;};
+    """
+
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            classes=[
+                ClassScope(
+                    class_decl=ClassDecl(
+                        typename=PQName(
+                            segments=[NameSpecifier(name="l")], classkey="struct"
+                        )
+                    ),
+                    fields=[
+                        Field(
+                            access="public",
+                            type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="int")]
+                                )
+                            ),
+                            name="x",
+                        ),
+                        Field(
+                            access="public",
+                            type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="int")]
+                                )
+                            ),
+                            name="y",
+                        ),
+                        Field(
+                            access="public",
+                            type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="int")]
+                                )
+                            ),
+                            name="z",
+                        ),
+                        Field(
+                            access="public",
+                            type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="int")]
+                                )
+                            ),
+                            name="t",
+                        ),
+                    ],
+                )
+            ],
+            using_alias=[
+                UsingAlias(
+                    alias="sType",
+                    type=Type(
+                        typename=PQName(
+                            segments=[NameSpecifier(name="l")], classkey="struct"
+                        )
+                    ),
+                )
+            ],
+        )
+    )
+
+
+def test_alias_declaration_anonymous_union_type() -> None:
+    content = """
+        using vType = union {int x;int y;int z;int t;};
+    """
+
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            classes=[
+                ClassScope(
+                    class_decl=ClassDecl(
+                        typename=PQName(
+                            segments=[AnonymousName(id=1)], classkey="union"
+                        )
+                    ),
+                    fields=[
+                        Field(
+                            access="public",
+                            type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="int")]
+                                )
+                            ),
+                            name="x",
+                        ),
+                        Field(
+                            access="public",
+                            type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="int")]
+                                )
+                            ),
+                            name="y",
+                        ),
+                        Field(
+                            access="public",
+                            type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="int")]
+                                )
+                            ),
+                            name="z",
+                        ),
+                        Field(
+                            access="public",
+                            type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="int")]
+                                )
+                            ),
+                            name="t",
+                        ),
+                    ],
+                )
+            ],
+            using_alias=[
+                UsingAlias(
+                    alias="vType",
+                    type=Type(
+                        typename=PQName(
+                            segments=[AnonymousName(id=1)], classkey="union"
+                        )
+                    ),
+                )
+            ],
+        )
+    )
+
+
+def test_alias_declaration_named_union_type() -> None:
+    content = """
+        using uType = union v{int x;int y;int z;int t;};
+    """
+
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            classes=[
+                ClassScope(
+                    class_decl=ClassDecl(
+                        typename=PQName(
+                            segments=[NameSpecifier(name="v")], classkey="union"
+                        )
+                    ),
+                    fields=[
+                        Field(
+                            access="public",
+                            type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="int")]
+                                )
+                            ),
+                            name="x",
+                        ),
+                        Field(
+                            access="public",
+                            type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="int")]
+                                )
+                            ),
+                            name="y",
+                        ),
+                        Field(
+                            access="public",
+                            type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="int")]
+                                )
+                            ),
+                            name="z",
+                        ),
+                        Field(
+                            access="public",
+                            type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="int")]
+                                )
+                            ),
+                            name="t",
+                        ),
+                    ],
+                )
+            ],
+            using_alias=[
+                UsingAlias(
+                    alias="uType",
+                    type=Type(
+                        typename=PQName(
+                            segments=[NameSpecifier(name="v")], classkey="union"
+                        )
+                    ),
+                )
+            ],
+        )
+    )
+
+
+def test_alias_declaration_anonymous_struct_reference_type() -> None:
+    content = """
+        using lrefType = struct {int x;int y;int z;int t;}&;
+    """
+
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            classes=[
+                ClassScope(
+                    class_decl=ClassDecl(
+                        typename=PQName(
+                            segments=[AnonymousName(id=1)], classkey="struct"
+                        )
+                    ),
+                    fields=[
+                        Field(
+                            access="public",
+                            type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="int")]
+                                )
+                            ),
+                            name="x",
+                        ),
+                        Field(
+                            access="public",
+                            type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="int")]
+                                )
+                            ),
+                            name="y",
+                        ),
+                        Field(
+                            access="public",
+                            type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="int")]
+                                )
+                            ),
+                            name="z",
+                        ),
+                        Field(
+                            access="public",
+                            type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="int")]
+                                )
+                            ),
+                            name="t",
+                        ),
+                    ],
+                )
+            ],
+            using_alias=[
+                UsingAlias(
+                    alias="lrefType",
+                    type=Reference(
+                        ref_to=Type(
+                            typename=PQName(
+                                segments=[AnonymousName(id=1)], classkey="struct"
+                            )
+                        )
+                    ),
+                )
+            ],
+        )
+    )
+
+
+def test_alias_declaration_anonymous_union_reference_type() -> None:
+    content = """
+        using vrefType = union {int x;int y;int z;int t;}&;
+    """
+
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            classes=[
+                ClassScope(
+                    class_decl=ClassDecl(
+                        typename=PQName(
+                            segments=[AnonymousName(id=1)], classkey="union"
+                        )
+                    ),
+                    fields=[
+                        Field(
+                            access="public",
+                            type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="int")]
+                                )
+                            ),
+                            name="x",
+                        ),
+                        Field(
+                            access="public",
+                            type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="int")]
+                                )
+                            ),
+                            name="y",
+                        ),
+                        Field(
+                            access="public",
+                            type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="int")]
+                                )
+                            ),
+                            name="z",
+                        ),
+                        Field(
+                            access="public",
+                            type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="int")]
+                                )
+                            ),
+                            name="t",
+                        ),
+                    ],
+                )
+            ],
+            using_alias=[
+                UsingAlias(
+                    alias="vrefType",
+                    type=Reference(
+                        ref_to=Type(
+                            typename=PQName(
+                                segments=[AnonymousName(id=1)], classkey="union"
+                            )
+                        )
+                    ),
+                )
+            ],
+        )
+    )
+
+
+def test_alias_declaration_anonymous_struct_pointer_type() -> None:
+    content = """
+        using lptrType = struct {int x;int y;int z;int t;}*;
+    """
+
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            classes=[
+                ClassScope(
+                    class_decl=ClassDecl(
+                        typename=PQName(
+                            segments=[AnonymousName(id=1)], classkey="struct"
+                        )
+                    ),
+                    fields=[
+                        Field(
+                            access="public",
+                            type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="int")]
+                                )
+                            ),
+                            name="x",
+                        ),
+                        Field(
+                            access="public",
+                            type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="int")]
+                                )
+                            ),
+                            name="y",
+                        ),
+                        Field(
+                            access="public",
+                            type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="int")]
+                                )
+                            ),
+                            name="z",
+                        ),
+                        Field(
+                            access="public",
+                            type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="int")]
+                                )
+                            ),
+                            name="t",
+                        ),
+                    ],
+                )
+            ],
+            using_alias=[
+                UsingAlias(
+                    alias="lptrType",
+                    type=Pointer(
+                        ptr_to=Type(
+                            typename=PQName(
+                                segments=[AnonymousName(id=1)], classkey="struct"
+                            )
+                        )
+                    ),
+                )
+            ],
+        )
+    )
+
+
+def test_alias_declaration_anonymous_union_pointer_type() -> None:
+    content = """
+        using vptrType = union {int x;int y;int z;int t;}*;
+    """
+
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            classes=[
+                ClassScope(
+                    class_decl=ClassDecl(
+                        typename=PQName(
+                            segments=[AnonymousName(id=1)], classkey="union"
+                        )
+                    ),
+                    fields=[
+                        Field(
+                            access="public",
+                            type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="int")]
+                                )
+                            ),
+                            name="x",
+                        ),
+                        Field(
+                            access="public",
+                            type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="int")]
+                                )
+                            ),
+                            name="y",
+                        ),
+                        Field(
+                            access="public",
+                            type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="int")]
+                                )
+                            ),
+                            name="z",
+                        ),
+                        Field(
+                            access="public",
+                            type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="int")]
+                                )
+                            ),
+                            name="t",
+                        ),
+                    ],
+                )
+            ],
+            using_alias=[
+                UsingAlias(
+                    alias="vptrType",
+                    type=Pointer(
+                        ptr_to=Type(
+                            typename=PQName(
+                                segments=[AnonymousName(id=1)], classkey="union"
+                            )
+                        )
+                    ),
+                )
+            ],
+        )
+    )
 
 def test_using_enum_in_struct() -> None:
     content = """
