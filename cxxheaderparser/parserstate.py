@@ -30,6 +30,8 @@ class ParsedTypeModifiers:
     explicit_value: typing.Optional[Value] = None
     #: ``friend`` if encountered while parsing declaration specifiers.
     friend: typing.Optional[LexToken] = None
+    #: Linkage from an ``extern "..."`` declaration specifier, if present.
+    extern_linkage: typing.Optional[str] = None
 
     def validate(
         self, *, var_ok: bool, meth_ok: bool, msg: str, friend_ok: bool = False
@@ -72,12 +74,16 @@ class BaseState(typing.Generic[T, PT]):
     #: Approximate location that the parsed element was found at
     location: Location
 
+    #: Effective extern linkage for this state, if any
+    extern_linkage: typing.Optional[str]
+
     #: internal detail used by parser
     _prior_visitor: "CxxVisitor"
 
     def __init__(self, parent: typing.Optional["State"], location: Location) -> None:
         self.parent = parent
         self.location = location
+        self.extern_linkage = parent.extern_linkage if parent else None
 
     def _finish(self, visitor: "CxxVisitor") -> None:
         pass
@@ -94,6 +100,7 @@ class ExternBlockState(BaseState[T, PT]):
     ) -> None:
         super().__init__(parent, location)
         self.linkage = linkage
+        self.extern_linkage = linkage
 
     def _finish(self, visitor: "CxxVisitor") -> None:
         visitor.on_extern_block_end(self)
