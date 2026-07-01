@@ -132,6 +132,7 @@ def test_extern_c() -> None:
                     type=Type(
                         typename=PQName(segments=[FundamentalSpecifier(name="int")])
                     ),
+                    extern='"C"',
                 ),
                 Variable(
                     name=PQName(segments=[NameSpecifier(name="y")]),
@@ -173,6 +174,7 @@ def test_misc_extern_inline() -> None:
                             name="handle",
                         )
                     ],
+                    extern='"C++"',
                     inline=True,
                     has_body=True,
                 )
