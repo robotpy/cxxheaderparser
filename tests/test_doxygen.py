@@ -491,3 +491,238 @@ def test_doxygen_using_alias() -> None:
             ]
         )
     )
+
+
+def test_doxygen_oneline_variables() -> None:
+    content = """
+        int v0; /** v0 */ int v1; /** v1 */
+    """
+
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            variables=[
+                Variable(
+                    name=PQName(segments=[NameSpecifier(name="v0")]),
+                    type=Type(
+                        typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                    ),
+                    doxygen="/** v0 */",
+                ),
+                Variable(
+                    name=PQName(segments=[NameSpecifier(name="v1")]),
+                    type=Type(
+                        typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                    ),
+                    doxygen="/** v1 */",
+                ),
+            ]
+        )
+    )
+
+
+def test_doxygen_oneline_class_fields() -> None:
+    content = """
+        class C { int f0; /** f0 */ int f1; /** f1 */ };
+    """
+
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            classes=[
+                ClassScope(
+                    class_decl=ClassDecl(
+                        typename=PQName(
+                            segments=[NameSpecifier(name="C")], classkey="class"
+                        )
+                    ),
+                    fields=[
+                        Field(
+                            access="private",
+                            type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="int")]
+                                )
+                            ),
+                            name="f0",
+                            doxygen="/** f0 */",
+                        ),
+                        Field(
+                            access="private",
+                            type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="int")]
+                                )
+                            ),
+                            name="f1",
+                            doxygen="/** f1 */",
+                        ),
+                    ],
+                )
+            ]
+        )
+    )
+
+
+def test_doxygen_oneline_comma_decls() -> None:
+    content = """
+        int c0, /** c0 */ c1; /** c1 */
+    """
+
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            variables=[
+                Variable(
+                    name=PQName(segments=[NameSpecifier(name="c0")]),
+                    type=Type(
+                        typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                    ),
+                    doxygen="/** c0 */",
+                ),
+                Variable(
+                    name=PQName(segments=[NameSpecifier(name="c1")]),
+                    type=Type(
+                        typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                    ),
+                    doxygen="/** c1 */",
+                ),
+            ]
+        )
+    )
+
+
+def test_doxygen_oneline_enum_values() -> None:
+    content = """
+        enum E { E0, /** E0 */ E1 /** E1 */ };
+    """
+
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            enums=[
+                EnumDecl(
+                    typename=PQName(
+                        segments=[NameSpecifier(name="E")], classkey="enum"
+                    ),
+                    values=[
+                        Enumerator(name="E0", doxygen="/** E0 */"),
+                        Enumerator(name="E1", doxygen="/** E1 */"),
+                    ],
+                )
+            ]
+        )
+    )
+
+
+def test_doxygen_enum_value_with_template_comma() -> None:
+    content = """
+        enum E { E0 = Foo<int, int>::value, /** E0 */ E1 };
+    """
+
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            enums=[
+                EnumDecl(
+                    typename=PQName(
+                        segments=[NameSpecifier(name="E")], classkey="enum"
+                    ),
+                    values=[
+                        Enumerator(
+                            name="E0",
+                            value=Value(
+                                tokens=[
+                                    Token(value="Foo"),
+                                    Token(value="<"),
+                                    Token(value="int"),
+                                    Token(value=","),
+                                    Token(value="int"),
+                                    Token(value=">"),
+                                    Token(value="::"),
+                                    Token(value="value"),
+                                ]
+                            ),
+                            doxygen="/** E0 */",
+                        ),
+                        Enumerator(name="E1"),
+                    ],
+                )
+            ]
+        )
+    )
+
+
+def test_doxygen_enum_value_with_less_than_expression() -> None:
+    content = """
+        enum E { E0 = (1 < 2), /** E0 */ E1 };
+    """
+
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            enums=[
+                EnumDecl(
+                    typename=PQName(
+                        segments=[NameSpecifier(name="E")], classkey="enum"
+                    ),
+                    values=[
+                        Enumerator(
+                            name="E0",
+                            value=Value(
+                                tokens=[
+                                    Token(value="("),
+                                    Token(value="1"),
+                                    Token(value="<"),
+                                    Token(value="2"),
+                                    Token(value=")"),
+                                ]
+                            ),
+                            doxygen="/** E0 */",
+                        ),
+                        Enumerator(name="E1"),
+                    ],
+                )
+            ]
+        )
+    )
+
+
+def test_doxygen_enum_value_with_greater_than_expression() -> None:
+    content = """
+        enum E { E0 = 2 > 1, /** E0 */ E1 };
+    """
+
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            enums=[
+                EnumDecl(
+                    typename=PQName(
+                        segments=[NameSpecifier(name="E")], classkey="enum"
+                    ),
+                    values=[
+                        Enumerator(
+                            name="E0",
+                            value=Value(
+                                tokens=[
+                                    Token(value="2"),
+                                    Token(value=">"),
+                                    Token(value="1"),
+                                ]
+                            ),
+                            doxygen="/** E0 */",
+                        ),
+                        Enumerator(name="E1"),
+                    ],
+                )
+            ]
+        )
+    )
