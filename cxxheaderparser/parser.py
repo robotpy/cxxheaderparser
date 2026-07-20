@@ -1324,21 +1324,27 @@ class CxxParser:
             if name_tok.value == "}":
                 break
 
-            if doxygen is None:
-                doxygen = self.lex.get_doxygen_after()
-
             name = name_tok.value
             value = None
             attributes = []
 
-            tok = self._next_token_must_be("}", ",", "=", "DBL_LBRACKET")
-            if tok.type == "DBL_LBRACKET":
-                attributes = self._consume_attribute_specifier_seq(tok, record=False)
-                tok = self._next_token_must_be("}", ",", "=")
+            if doxygen is None:
+                doxygen = self.lex.get_doxygen_after()
 
-            if tok.type == "=":
+            tok = self.lex.token_if("DBL_LBRACKET")
+            if tok:
+                attributes = self._consume_attribute_specifier_seq(tok, record=False)
+
+            if doxygen is None:
+                doxygen = self.lex.get_doxygen_after()
+
+            if self.lex.token_if("="):
                 value = self._create_value(self._consume_value_until([], ",", "}"))
-                tok = self._next_token_must_be("}", ",")
+
+            if doxygen is None:
+                doxygen = self.lex.get_doxygen_after()
+
+            tok = self._next_token_must_be("}", ",")
 
             values.append(Enumerator(name, value, doxygen, attributes))
 

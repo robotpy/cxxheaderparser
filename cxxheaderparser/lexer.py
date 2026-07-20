@@ -832,26 +832,35 @@ class LexerTokenStream(TokenStream):
         if not tokbuf:
             return None
 
-        # retrieve comments after non-discard elements
+        # retrieve comments after the current declaration boundary. Only scan
+        # the immediate delimiter/comment region; callers must consume any
+        # initializer/expression before asking for trailing comments.
         comments: typing.List[LexToken] = []
-        new_tokbuf = typing.Deque[LexToken]()
+        restore = typing.Deque[LexToken]()
+        seen_boundary = False
 
-        # This is different: we only extract tokens here
         while tokbuf:
             tok = tokbuf.popleft()
-            if tok.type == "NEWLINE":
+            tok_type = tok.type
+            if tok_type == "NEWLINE":
                 break
-            elif tok.type == "WHITESPACE":
-                new_tokbuf.append(tok)
-            elif tok.type in ("COMMENT_SINGLELINE", "COMMENT_MULTILINE"):
+            elif tok_type == "WHITESPACE":
+                restore.append(tok)
+                continue
+            elif tok_type in ("COMMENT_SINGLELINE", "COMMENT_MULTILINE"):
                 comments.append(tok)
-            else:
-                new_tokbuf.append(tok)
-                if comments:
-                    break
+                continue
+            elif comments or seen_boundary:
+                restore.append(tok)
+                break
 
-        new_tokbuf.extend(tokbuf)
-        self.tokbuf = new_tokbuf
+            restore.append(tok)
+            if tok_type in (",", ";", "}"):
+                seen_boundary = True
+            else:
+                break
+
+        tokbuf.extendleft(reversed(restore))
 
         if comments:
             return self._extract_comments(comments)
