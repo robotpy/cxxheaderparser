@@ -328,13 +328,15 @@ class CxxParser:
     # Parsing begins here
     #
 
-    def parse(self) -> None:
-        """
-        Parse the header contents
+    def _parse_token(self, tok: LexToken, doxygen: typing.Optional[str]) -> bool:
+        """Parse a single token from the current parser state.
+
+        Returns True if the caller should keep the current doxygen comment for
+        the next token.
         """
 
         # non-ambiguous parsing functions for each token type
-        _translation_unit_tokens: typing.Dict[
+        translation_unit_tokens: typing.Dict[
             str, typing.Callable[[LexToken, typing.Optional[str]], typing.Any]
         ] = {
             "__attribute__": self._consume_gcc_attribute,
@@ -359,7 +361,21 @@ class CxxParser:
             ";": lambda _1, _2: None,
         }
 
-        _keep_doxygen = {"__declspec", "alignas", "__attribute__", "DBL_LBRACKET"}
+        keep_doxygen = {"__declspec", "alignas", "__attribute__", "DBL_LBRACKET"}
+
+        fn = translation_unit_tokens.get(tok.type)
+        if fn:
+            fn(tok, doxygen)
+            return tok.type in keep_doxygen
+
+        # this processes ambiguous declarations
+        self._parse_declarations(tok, doxygen)
+        return False
+
+    def parse(self) -> None:
+        """
+        Parse the header contents
+        """
 
         tok = None
 
@@ -377,15 +393,7 @@ class CxxParser:
                 if not tok:
                     break
 
-                fn = _translation_unit_tokens.get(tok.type)
-                if fn:
-                    fn(tok, doxygen)
-
-                    if tok.type not in _keep_doxygen:
-                        doxygen = None
-                else:
-                    # this processes ambiguous declarations
-                    self._parse_declarations(tok, doxygen)
+                if not self._parse_token(tok, doxygen):
                     doxygen = None
 
         except Exception as e:
@@ -1188,11 +1196,45 @@ class CxxParser:
 
         mods.validate(var_ok=False, meth_ok=False, msg="parsing typealias")
 
-        dtype = self._parse_cv_ptr(parsed_type)
+        if parsed_type.typename.classkey in ("class", "struct", "union"):
+            tok = self.lex.token_if_in_set(self._class_enum_stage2)
+            if tok:
+                self._parse_class_decl(
+                    parsed_type.typename,
+                    tok,
+                    doxygen,
+                    template,
+                    False,
+                    tok.location,
+                    mods,
+                    [],
+                )
+                self._parse_typealias_class_body()
+
+        dtype = self._parse_cv_ptr_or_fn(parsed_type, nonptr_fn=True)
+
+        tok = self.lex.token_if("[")
+        while tok:
+            if isinstance(dtype, FunctionType):
+                raise CxxParseError("arrays of functions are illegal", tok)
+            dtype = self._parse_array_type(tok, dtype)
+            tok = self.lex.token_if("[")
 
         alias = UsingAlias(id_tok.value, dtype, template, self._current_access, doxygen)
 
         self.visitor.on_using_alias(self.state, alias)
+
+    def _parse_typealias_class_body(self) -> None:
+        class_state = self.state
+
+        while self.state is not class_state.parent:
+            doxygen = self.lex.get_doxygen()
+            tok = self.lex.token()
+
+            if tok.type == "}" and self.state is class_state:
+                self._pop_state()
+            else:
+                self._parse_token(tok, doxygen)
 
     def _parse_using(
         self,

@@ -967,7 +967,7 @@ class UsingAlias:
     """
 
     alias: str
-    type: DecoratedType
+    type: typing.Union[DecoratedType, FunctionType]
 
     template: typing.Optional[TemplateDecl] = None
 
