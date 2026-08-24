@@ -10,6 +10,7 @@ from cxxheaderparser.types import (
     FunctionType,
     FundamentalSpecifier,
     Method,
+    MemberPointer,
     MoveReference,
     NameSpecifier,
     PQName,
@@ -58,6 +59,68 @@ def test_fn_grouped_declarator() -> None:
                     ],
                 )
             ]
+        )
+    )
+
+
+def test_abstract_grouped_member_function_pointer_parameter() -> None:
+    content = """
+        struct C {};
+        struct Arg {};
+        void g(int ((C::*)(Arg)));
+    """
+
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            classes=[
+                ClassScope(
+                    class_decl=ClassDecl(
+                        typename=PQName(
+                            segments=[NameSpecifier(name="C")], classkey="struct"
+                        )
+                    )
+                ),
+                ClassScope(
+                    class_decl=ClassDecl(
+                        typename=PQName(
+                            segments=[NameSpecifier(name="Arg")], classkey="struct"
+                        )
+                    )
+                ),
+            ],
+            functions=[
+                Function(
+                    return_type=Type(
+                        typename=PQName(segments=[FundamentalSpecifier(name="void")])
+                    ),
+                    name=PQName(segments=[NameSpecifier(name="g")]),
+                    parameters=[
+                        Parameter(
+                            type=MemberPointer(
+                                ptr_to=FunctionType(
+                                    return_type=Type(
+                                        typename=PQName(
+                                            segments=[FundamentalSpecifier(name="int")]
+                                        )
+                                    ),
+                                    parameters=[
+                                        Parameter(
+                                            type=Type(
+                                                typename=PQName(
+                                                    segments=[NameSpecifier(name="Arg")]
+                                                )
+                                            )
+                                        )
+                                    ],
+                                ),
+                                classname=PQName(segments=[NameSpecifier(name="C")]),
+                            )
+                        )
+                    ],
+                )
+            ],
         )
     )
 
@@ -1504,6 +1567,259 @@ def test_msvc_inline() -> None:
                     inline=True,
                     has_body=True,
                 ),
+            ]
+        )
+    )
+
+
+def test_abstract_function_parameter_adjustment() -> None:
+    content = """
+        void named(int callback(double));
+        void abstract(int(double));
+    """
+
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            functions=[
+                Function(
+                    return_type=Type(
+                        typename=PQName(segments=[FundamentalSpecifier(name="void")])
+                    ),
+                    name=PQName(segments=[NameSpecifier(name="named")]),
+                    parameters=[
+                        Parameter(
+                            type=Pointer(
+                                ptr_to=FunctionType(
+                                    return_type=Type(
+                                        typename=PQName(
+                                            segments=[FundamentalSpecifier(name="int")]
+                                        )
+                                    ),
+                                    parameters=[
+                                        Parameter(
+                                            type=Type(
+                                                typename=PQName(
+                                                    segments=[
+                                                        FundamentalSpecifier(
+                                                            name="double"
+                                                        )
+                                                    ]
+                                                )
+                                            )
+                                        )
+                                    ],
+                                )
+                            ),
+                            name="callback",
+                        )
+                    ],
+                ),
+                Function(
+                    return_type=Type(
+                        typename=PQName(segments=[FundamentalSpecifier(name="void")])
+                    ),
+                    name=PQName(segments=[NameSpecifier(name="abstract")]),
+                    parameters=[
+                        Parameter(
+                            type=Pointer(
+                                ptr_to=FunctionType(
+                                    return_type=Type(
+                                        typename=PQName(
+                                            segments=[FundamentalSpecifier(name="int")]
+                                        )
+                                    ),
+                                    parameters=[
+                                        Parameter(
+                                            type=Type(
+                                                typename=PQName(
+                                                    segments=[
+                                                        FundamentalSpecifier(
+                                                            name="double"
+                                                        )
+                                                    ]
+                                                )
+                                            )
+                                        )
+                                    ],
+                                )
+                            )
+                        )
+                    ],
+                ),
+            ]
+        )
+    )
+
+
+def test_nested_parameter_template_argument_classification() -> None:
+    content = """
+        void named(void callback(H<int(T)>));
+        void abstract(void(H<int(T)>));
+    """
+
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            functions=[
+                Function(
+                    return_type=Type(
+                        typename=PQName(segments=[FundamentalSpecifier(name="void")])
+                    ),
+                    name=PQName(segments=[NameSpecifier(name="named")]),
+                    parameters=[
+                        Parameter(
+                            type=Pointer(
+                                ptr_to=FunctionType(
+                                    return_type=Type(
+                                        typename=PQName(
+                                            segments=[FundamentalSpecifier(name="void")]
+                                        )
+                                    ),
+                                    parameters=[
+                                        Parameter(
+                                            type=Type(
+                                                typename=PQName(
+                                                    segments=[
+                                                        NameSpecifier(
+                                                            name="H",
+                                                            specialization=TemplateSpecialization(
+                                                                args=[
+                                                                    TemplateArgument(
+                                                                        arg=FunctionType(
+                                                                            return_type=Type(
+                                                                                typename=PQName(
+                                                                                    segments=[
+                                                                                        FundamentalSpecifier(
+                                                                                            name="int"
+                                                                                        )
+                                                                                    ]
+                                                                                )
+                                                                            ),
+                                                                            parameters=[
+                                                                                Parameter(
+                                                                                    type=Type(
+                                                                                        typename=PQName(
+                                                                                            segments=[
+                                                                                                NameSpecifier(
+                                                                                                    name="T"
+                                                                                                )
+                                                                                            ]
+                                                                                        )
+                                                                                    )
+                                                                                )
+                                                                            ],
+                                                                        )
+                                                                    )
+                                                                ]
+                                                            ),
+                                                        )
+                                                    ]
+                                                )
+                                            )
+                                        )
+                                    ],
+                                )
+                            ),
+                            name="callback",
+                        )
+                    ],
+                ),
+                Function(
+                    return_type=Type(
+                        typename=PQName(segments=[FundamentalSpecifier(name="void")])
+                    ),
+                    name=PQName(segments=[NameSpecifier(name="abstract")]),
+                    parameters=[
+                        Parameter(
+                            type=Pointer(
+                                ptr_to=FunctionType(
+                                    return_type=Type(
+                                        typename=PQName(
+                                            segments=[FundamentalSpecifier(name="void")]
+                                        )
+                                    ),
+                                    parameters=[
+                                        Parameter(
+                                            type=Type(
+                                                typename=PQName(
+                                                    segments=[
+                                                        NameSpecifier(
+                                                            name="H",
+                                                            specialization=TemplateSpecialization(
+                                                                args=[
+                                                                    TemplateArgument(
+                                                                        arg=FunctionType(
+                                                                            return_type=Type(
+                                                                                typename=PQName(
+                                                                                    segments=[
+                                                                                        FundamentalSpecifier(
+                                                                                            name="int"
+                                                                                        )
+                                                                                    ]
+                                                                                )
+                                                                            ),
+                                                                            parameters=[
+                                                                                Parameter(
+                                                                                    type=Type(
+                                                                                        typename=PQName(
+                                                                                            segments=[
+                                                                                                NameSpecifier(
+                                                                                                    name="T"
+                                                                                                )
+                                                                                            ]
+                                                                                        )
+                                                                                    )
+                                                                                )
+                                                                            ],
+                                                                        )
+                                                                    )
+                                                                ]
+                                                            ),
+                                                        )
+                                                    ]
+                                                )
+                                            )
+                                        )
+                                    ],
+                                )
+                            )
+                        )
+                    ],
+                ),
+            ]
+        )
+    )
+
+
+def test_grouped_parameter_name() -> None:
+    content = """
+        void f(int ((name)));
+    """
+
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            functions=[
+                Function(
+                    return_type=Type(
+                        typename=PQName(segments=[FundamentalSpecifier(name="void")])
+                    ),
+                    name=PQName(segments=[NameSpecifier(name="f")]),
+                    parameters=[
+                        Parameter(
+                            type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="int")]
+                                )
+                            ),
+                            name="name",
+                        )
+                    ],
+                )
             ]
         )
     )

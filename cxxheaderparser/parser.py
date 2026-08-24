@@ -2019,7 +2019,11 @@ class CxxParser:
                 at_type = Type(parsed_type.typename)
                 parsed_type.typename = PQName([AutoSpecifier()])
 
-        dtype = self._parse_cv_ptr(parsed_type)
+        dtype = self._parse_cv_ptr_or_fn(
+            parsed_type, nonptr_fn=True, grouped_parameter_name_ok=True
+        )
+        if isinstance(dtype, FunctionType):
+            dtype = Pointer(dtype)
 
         # optional parameter pack
         if self.lex.token_if("ELLIPSIS"):
