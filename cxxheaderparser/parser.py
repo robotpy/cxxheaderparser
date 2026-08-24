@@ -56,6 +56,7 @@ from .types import (
     TemplateTypeParam,
     Token,
     Type,
+    TypeId,
     Typedef,
     UsingAlias,
     UsingDecl,
@@ -2514,11 +2515,9 @@ class CxxParser:
 
     def _parse_cv_ptr_or_fn(
         self,
-        dtype: typing.Union[
-            Array, Pointer, MoveReference, Reference, Type, FunctionType
-        ],
+        dtype: TypeId,
         nonptr_fn: bool = False,
-    ) -> typing.Union[Array, Pointer, MoveReference, Reference, Type, FunctionType]:
+    ) -> TypeId:
         # nonptr_fn is for parsing function types directly in template specialization
 
         while True:
