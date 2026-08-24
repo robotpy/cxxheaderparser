@@ -1,5 +1,8 @@
 # Note: testcases generated via `python -m cxxheaderparser.gentest`
 
+import pytest
+
+from cxxheaderparser.errors import CxxParseError
 from cxxheaderparser.types import (
     Array,
     AutoSpecifier,
@@ -982,6 +985,58 @@ def test_fn_trailing_return_simple() -> None:
                     parameters=[],
                     has_trailing_return=True,
                 )
+            ]
+        )
+    )
+
+
+@pytest.mark.parametrize("return_type", ["int[3]", "int()"])
+def test_fn_rejects_invalid_trailing_return_type(return_type: str) -> None:
+    with pytest.raises(CxxParseError):
+        parse_string(f"auto fn() -> {return_type};")
+
+
+def test_trailing_return_wrapped_types() -> None:
+    content = """
+        auto pointer_return() -> int (*)();
+        auto reference_return() -> int (&)();
+    """
+
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            functions=[
+                Function(
+                    return_type=Pointer(
+                        ptr_to=FunctionType(
+                            return_type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="int")]
+                                )
+                            ),
+                            parameters=[],
+                        )
+                    ),
+                    name=PQName(segments=[NameSpecifier(name="pointer_return")]),
+                    parameters=[],
+                    has_trailing_return=True,
+                ),
+                Function(
+                    return_type=Reference(
+                        ref_to=FunctionType(
+                            return_type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="int")]
+                                )
+                            ),
+                            parameters=[],
+                        )
+                    ),
+                    name=PQName(segments=[NameSpecifier(name="reference_return")]),
+                    parameters=[],
+                    has_trailing_return=True,
+                ),
             ]
         )
     )

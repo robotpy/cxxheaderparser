@@ -2144,14 +2144,13 @@ class CxxParser:
                 f"function with trailing return type must specify return type of 'auto', not {return_type}"
             )
 
-        parsed_type, mods = self._parse_type(None)
-        if parsed_type is None:
+        dtype = self._parse_type_id(None, "parsing trailing return type")
+        # Bare arrays and functions are invalid return types, but wrapped forms
+        # are DecoratedType instances and remain valid.
+        if isinstance(dtype, Array):
             raise self._parse_error(None)
-
-        mods.validate(var_ok=False, meth_ok=False, msg="parsing trailing return type")
-
-        dtype = self._parse_cv_ptr(parsed_type)
-
+        if isinstance(dtype, FunctionType):
+            raise self._parse_error(None)
         return dtype
 
     def _parse_type_id(self, tok: typing.Optional[LexToken], msg: str) -> TypeId:
