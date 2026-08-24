@@ -37,6 +37,7 @@ from .types import (
     FunctionType,
     FundamentalSpecifier,
     Method,
+    MemberPointer,
     MoveReference,
     NameSpecifier,
     NamespaceAlias,
@@ -2544,11 +2545,13 @@ class CxxParser:
             fntype.has_trailing_return = True
         return fntype
 
-    def _parse_array_type(self, tok: LexToken, dtype: DecoratedType) -> Array:
+    def _parse_array_type(self, tok: LexToken, dtype: TypeId) -> Array:
         assert tok.type == "["
 
         if isinstance(dtype, (Reference, MoveReference)):
             raise CxxParseError("arrays of references are illegal", tok)
+        if isinstance(dtype, FunctionType):
+            raise self._parse_error(tok)
 
         toks = self._consume_balanced_tokens(tok)
         otok = self.lex.token_if("[")
@@ -2564,6 +2567,110 @@ class CxxParser:
 
         return Array(dtype, size)
 
+    def _parse_member_pointer_classname(self, toks: LexTokenList) -> PQName:
+        class_toks = toks + [PhonyEnding]
+        old_lex = self.lex
+        try:
+            self.lex = lexer.BoundedTokenStream(class_toks)
+            classname, _ = self._parse_pqname(
+                None, compound_ok=False, fn_ok=False, fund_ok=False
+            )
+            self._next_token_must_be(PhonyEnding.type)
+        finally:
+            self.lex = old_lex
+
+        return classname
+
+    def _is_grouped_declarator(
+        self, toks: LexTokenList, grouped_parameter_name_ok: bool = False
+    ) -> bool:
+        if not toks:
+            return False
+        if (
+            grouped_parameter_name_ok
+            and len(toks) == 1
+            and toks[0].type in ("NAME", "final")
+        ):
+            return True
+        if toks[0].type in ("*", "&", "DBL_AMP"):
+            return True
+
+        if toks[0].type == "(":
+            old_lex = self.lex
+            try:
+                self.lex = lexer.BoundedTokenStream(toks + [PhonyEnding])
+                otok = self._next_token_must_be("(")
+                _, inner_toks = self._consume_balanced_tokens_with_inner(otok)
+            finally:
+                self.lex = old_lex
+            return self._is_grouped_declarator(inner_toks, grouped_parameter_name_ok)
+
+        old_lex = self.lex
+        try:
+            self.lex = lexer.BoundedTokenStream(toks + [PhonyEnding])
+            return self._parse_member_pointer_operator_info() is not None
+        finally:
+            self.lex = old_lex
+
+    def _parse_member_pointer_operator_info(
+        self,
+    ) -> typing.Optional[typing.Tuple[PQName, LexToken]]:
+        toks: LexTokenList = []
+        tok = self.lex.token_if("NAME", "final", "decltype", "DBL_COLON")
+        if not tok:
+            return None
+        toks.append(tok)
+
+        if tok.type == "DBL_COLON":
+            tok = self.lex.token_if("NAME", "final", "decltype")
+            if not tok:
+                self.lex.return_tokens(toks)
+                return None
+            toks.append(tok)
+
+        while True:
+            if tok.type == "decltype":
+                ptok = self.lex.token_if("(")
+                if not ptok:
+                    self.lex.return_tokens(toks)
+                    return None
+                toks.extend(self._consume_balanced_tokens(ptok))
+            else:
+                ltok = self.lex.token_if("<")
+                if ltok:
+                    toks.extend(self._consume_balanced_tokens(ltok))
+
+            colon = self.lex.token_if("DBL_COLON")
+            if not colon:
+                self.lex.return_tokens(toks)
+                return None
+
+            star = self.lex.token_if("*")
+            if star:
+                return self._parse_member_pointer_classname(toks), star
+
+            toks.append(colon)
+            template_tok = self.lex.token_if("template")
+            if template_tok:
+                toks.append(template_tok)
+
+            tok = self.lex.token_if("NAME", "final", "decltype")
+            if not tok:
+                self.lex.return_tokens(toks)
+                return None
+            toks.append(tok)
+
+    def _parse_member_pointer_operator(
+        self, dtype: TypeId
+    ) -> typing.Optional[MemberPointer]:
+        info = self._parse_member_pointer_operator_info()
+        if info is None:
+            return None
+        classname, star = info
+        if isinstance(dtype, (Reference, MoveReference)):
+            raise self._parse_error(star)
+        return MemberPointer(dtype, classname)
+
     def _parse_cv_ptr(
         self,
         dtype: DecoratedType,
@@ -2577,33 +2684,53 @@ class CxxParser:
         self,
         dtype: TypeId,
         nonptr_fn: bool = False,
+        grouped_parameter_name_ok: bool = False,
     ) -> TypeId:
         # nonptr_fn is for parsing function types directly in template specialization
 
         while True:
+            member_pointer = self._parse_member_pointer_operator(dtype)
+            if member_pointer:
+                dtype = member_pointer
+                continue
+
             tok = self.lex.token_if(
                 "*", "const", "volatile", "__restrict__", "__restrict", "restrict", "("
             )
             if not tok:
                 break
 
+            grouped_declarator = False
+            if tok.type == "(" and nonptr_fn:
+                toks, inner_toks = self._consume_balanced_tokens_with_inner(tok)
+                classifier_toks = inner_toks
+                if (
+                    classifier_toks
+                    and classifier_toks[0].value in self._msvc_conventions
+                ):
+                    classifier_toks = classifier_toks[1:]
+                grouped_declarator = self._is_grouped_declarator(
+                    classifier_toks, grouped_parameter_name_ok
+                )
+                self.lex.return_tokens(toks[1:])
+
             if tok.type == "*":
                 if isinstance(dtype, (Reference, MoveReference)):
                     raise self._parse_error(tok)
                 dtype = Pointer(dtype)
             elif tok.type == "const":
-                if not isinstance(dtype, (Pointer, Type)):
+                if not isinstance(dtype, (Pointer, MemberPointer, Type)):
                     raise self._parse_error(tok)
                 dtype.const = True
             elif tok.type == "volatile":
-                if not isinstance(dtype, (Pointer, Type)):
+                if not isinstance(dtype, (Pointer, MemberPointer, Type)):
                     raise self._parse_error(tok)
                 dtype.volatile = True
             elif tok.type in ("__restrict__", "__restrict", "restrict"):
-                if not isinstance(dtype, (Pointer, Reference)):
+                if not isinstance(dtype, (Pointer, MemberPointer, Reference)):
                     raise self._parse_error(tok)
                 dtype.restrict = True
-            elif nonptr_fn:
+            elif nonptr_fn and not grouped_declarator:
                 # remove any inner grouping parens
                 while True:
                     gtok = self.lex.token_if("(")
@@ -2624,20 +2751,10 @@ class CxxParser:
 
                 # this might be a grouping paren, so consume it and inspect it
                 toks, inner_toks = self._consume_balanced_tokens_with_inner(tok)
-                member_ptr_idx = next(
-                    (
-                        i
-                        for i, itok in enumerate(inner_toks)
-                        if itok.type == "*"
-                        and i > 0
-                        and inner_toks[i - 1].type == "DBL_COLON"
-                    ),
-                    None,
-                )
 
                 # Check to see if this is a grouping paren or something else
-                if not inner_toks or (
-                    inner_toks[0].type not in ("*", "&") and member_ptr_idx is None
+                if not self._is_grouped_declarator(
+                    inner_toks, grouped_parameter_name_ok
                 ):
                     self.lex.return_tokens(toks)
                     break
@@ -2653,31 +2770,13 @@ class CxxParser:
                         assert not isinstance(dtype, FunctionType)
                         dtype = self._parse_function_type(dtype, msvc_convention)
 
-                if isinstance(dtype, FunctionType) and member_ptr_idx is not None:
-                    # Keep the * and declarator name for the normal pointer/name
-                    # parsing below, and store the qualified class name on the
-                    # function type.
-                    class_toks = inner_toks[: member_ptr_idx - 1] + [PhonyEnding]
-                    old_lex = self.lex
-                    try:
-                        self.lex = lexer.BoundedTokenStream(class_toks)
-                        classname, _ = self._parse_pqname(
-                            None, compound_ok=False, fn_ok=False, fund_ok=False
-                        )
-                        self._next_token_must_be(PhonyEnding.type)
-                    finally:
-                        self.lex = old_lex
-
-                    dtype.classname = classname
-                    inner_toks = [inner_toks[member_ptr_idx]] + inner_toks[
-                        member_ptr_idx + 1 :
-                    ]
-
                 # return the inner toks and recurse
                 # -> this could return some weird results for invalid code, but
                 #    we don't support that anyways so it's fine?
                 self.lex.return_tokens(inner_toks)
-                dtype = self._parse_cv_ptr_or_fn(dtype, nonptr_fn)
+                dtype = self._parse_cv_ptr_or_fn(
+                    dtype, nonptr_fn, grouped_parameter_name_ok
+                )
                 break
 
         tok = self.lex.token_if("&", "DBL_AMP")
@@ -2692,7 +2791,9 @@ class CxxParser:
             # peek at the next token and see if it's a paren. If so, it might
             # be a nasty function pointer
             if self.lex.token_peek_if("(", "__restrict__", "__restrict", "restrict"):
-                dtype = self._parse_cv_ptr_or_fn(dtype, nonptr_fn)
+                dtype = self._parse_cv_ptr_or_fn(
+                    dtype, nonptr_fn, grouped_parameter_name_ok
+                )
 
         return dtype
 
@@ -2908,6 +3009,7 @@ class CxxParser:
                 else:
                     # .. not sure what it's grouping, so put it back?
                     self.lex.return_tokens(inner_toks)
+                    dtype = self._parse_cv_ptr(dtype)
 
         if dtype:
             msvc_convention = self.lex.token_if_val(*self._msvc_conventions)

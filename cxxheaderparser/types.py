@@ -303,9 +303,6 @@ class FunctionType:
     #:            calling convention
     msvc_convention: typing.Optional[str] = None
 
-    # Kept temporarily while parser construction migrates to MemberPointer.
-    classname: typing.Optional[PQName] = None
-
     const: bool = False
     volatile: bool = False
 
@@ -416,11 +413,7 @@ class Pointer:
         c = " const" if self.const else ""
         v = " volatile" if self.volatile else ""
         r = " __restrict__" if self.restrict else ""
-        if isinstance(self.ptr_to, FunctionType) and self.ptr_to.classname:
-            prefix = f"{self.ptr_to.classname.format()}::*{r}{c}{v}"
-        else:
-            prefix = f"*{r}{c}{v}"
-        return _format_prefixed_type(self.ptr_to, prefix, name)
+        return _format_prefixed_type(self.ptr_to, f"*{r}{c}{v}", name)
 
 
 @dataclass

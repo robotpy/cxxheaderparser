@@ -11,6 +11,7 @@ from cxxheaderparser.types import (
     Field,
     FunctionType,
     FundamentalSpecifier,
+    MemberPointer,
     NameSpecifier,
     PQName,
     Parameter,
@@ -616,7 +617,7 @@ def test_typedef_member_fnptr() -> None:
         namespace=NamespaceScope(
             typedefs=[
                 Typedef(
-                    type=Pointer(
+                    type=MemberPointer(
                         ptr_to=FunctionType(
                             return_type=Type(
                                 typename=PQName(
@@ -643,8 +644,8 @@ def test_typedef_member_fnptr() -> None:
                                     name="y",
                                 ),
                             ],
-                            classname=PQName(segments=[NameSpecifier(name="Fred")]),
-                        )
+                        ),
+                        classname=PQName(segments=[NameSpecifier(name="Fred")]),
                     ),
                     name="FredMemFn",
                 )
