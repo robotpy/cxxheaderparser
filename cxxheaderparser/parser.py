@@ -71,6 +71,13 @@ T = typing.TypeVar("T")
 PT = typing.TypeVar("PT", Parameter, TemplateNonTypeParam)
 
 
+class _FunctionTypeQualifiers(typing.NamedTuple):
+    const: bool
+    volatile: bool
+    ref_qualifier: typing.Optional[str]
+    noexcept: typing.Optional[Value]
+
+
 class CxxParser:
     """
     Single-use parser object
@@ -2044,8 +2051,7 @@ class CxxParser:
         # are adjusted to pointers to functions, matching the explicit
         # ``bool (*predicate)(const T&)`` spelling.
         if param_name and self.lex.token_if("("):
-            fn_params, vararg, _ = self._parse_parameters(False, False)
-            dtype = Pointer(FunctionType(dtype, fn_params, vararg))
+            dtype = Pointer(self._parse_function_type(dtype))
 
         # optional array parameter
         tok = self.lex.token_if("[")
@@ -2433,6 +2439,8 @@ class CxxParser:
                 inline=mods.inline is not None,
                 msvc_convention=msvc_convention_value,
             )
+            if is_typedef:
+                fntype_qualifiers = self._parse_function_type_qualifiers()
             self._parse_fn_end(fn)
 
             if is_typedef:
@@ -2466,8 +2474,11 @@ class CxxParser:
                     fn.parameters,
                     fn.vararg,
                     fn.has_trailing_return,
-                    noexcept=fn.noexcept,
+                    noexcept=fntype_qualifiers.noexcept,
                     msvc_convention=fn.msvc_convention,
+                    const=fntype_qualifiers.const,
+                    volatile=fntype_qualifiers.volatile,
+                    ref_qualifier=fntype_qualifiers.ref_qualifier,
                 )
 
                 typedef = Typedef(fntype, name, self._current_access, attributes or [])
@@ -2483,6 +2494,55 @@ class CxxParser:
     #
     # Decorated type parsing
     #
+
+    def _parse_function_type_qualifiers(self) -> _FunctionTypeQualifiers:
+        const = False
+        volatile = False
+        while True:
+            tok = self.lex.token_if("const", "volatile")
+            if not tok:
+                break
+            if tok.type == "const":
+                const = True
+            else:
+                volatile = True
+
+        tok = self.lex.token_if("&", "DBL_AMP")
+        ref_qualifier = None
+        if tok:
+            ref_qualifier = "&" if tok.type == "&" else "&&"
+
+        noexcept = None
+        if self.lex.token_if("noexcept"):
+            toks = []
+            otok = self.lex.token_if("(")
+            if otok:
+                toks = self._consume_balanced_tokens(otok)[1:-1]
+            noexcept = self._create_value(toks)
+
+        return _FunctionTypeQualifiers(const, volatile, ref_qualifier, noexcept)
+
+    def _parse_function_type(
+        self,
+        return_type: DecoratedType,
+        msvc_convention: typing.Optional[str] = None,
+    ) -> FunctionType:
+        parameters, vararg, _ = self._parse_parameters(False, False)
+        qualifiers = self._parse_function_type_qualifiers()
+        fntype = FunctionType(
+            return_type,
+            parameters,
+            vararg,
+            noexcept=qualifiers.noexcept,
+            msvc_convention=msvc_convention,
+            const=qualifiers.const,
+            volatile=qualifiers.volatile,
+            ref_qualifier=qualifiers.ref_qualifier,
+        )
+        if self.lex.token_if("ARROW"):
+            fntype.return_type = self._parse_trailing_return_type(fntype.return_type)
+            fntype.has_trailing_return = True
+        return fntype
 
     def _parse_array_type(self, tok: LexToken, dtype: DecoratedType) -> Array:
         assert tok.type == "["
@@ -2553,14 +2613,8 @@ class CxxParser:
                     _, inner_toks = self._consume_balanced_tokens_with_inner(gtok)
                     self.lex.return_tokens(inner_toks)
 
-                fn_params, vararg, _ = self._parse_parameters(False, False)
-
                 assert not isinstance(dtype, FunctionType)
-                dtype = dtype_fn = FunctionType(dtype, fn_params, vararg)
-                if self.lex.token_if("ARROW"):
-                    return_type = self._parse_trailing_return_type(dtype_fn.return_type)
-                    dtype_fn.has_trailing_return = True
-                    dtype_fn.return_type = return_type
+                dtype = self._parse_function_type(dtype)
 
             else:
                 msvc_convention = None
@@ -2595,14 +2649,9 @@ class CxxParser:
                         assert not isinstance(dtype, FunctionType)
                         dtype = self._parse_array_type(aptok, dtype)
                     elif aptok.type == "(":
-                        fn_params, vararg, _ = self._parse_parameters(False, False)
                         # the type we already have is the return type of the function pointer
-
                         assert not isinstance(dtype, FunctionType)
-
-                        dtype = FunctionType(
-                            dtype, fn_params, vararg, msvc_convention=msvc_convention
-                        )
+                        dtype = self._parse_function_type(dtype, msvc_convention)
 
                 if isinstance(dtype, FunctionType) and member_ptr_idx is not None:
                     # Keep the * and declarator name for the normal pointer/name

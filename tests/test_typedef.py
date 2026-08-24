@@ -948,6 +948,71 @@ def test_volatile_typedef() -> None:
     )
 
 
+def test_function_type_noexcept_typedef() -> None:
+    content = """
+        typedef int T(double) noexcept;
+    """
+
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            typedefs=[
+                Typedef(
+                    type=FunctionType(
+                        return_type=Type(
+                            typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                        ),
+                        parameters=[
+                            Parameter(
+                                type=Type(
+                                    typename=PQName(
+                                        segments=[FundamentalSpecifier(name="double")]
+                                    )
+                                )
+                            )
+                        ],
+                        noexcept=Value(tokens=[]),
+                    ),
+                    name="T",
+                )
+            ]
+        )
+    )
+
+
+def test_qualified_function_typedef() -> None:
+    content = """
+      typedef int TypedefConst(double) const;
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            typedefs=[
+                Typedef(
+                    type=FunctionType(
+                        return_type=Type(
+                            typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                        ),
+                        parameters=[
+                            Parameter(
+                                type=Type(
+                                    typename=PQName(
+                                        segments=[FundamentalSpecifier(name="double")]
+                                    )
+                                )
+                            )
+                        ],
+                        const=True,
+                    ),
+                    name="TypedefConst",
+                )
+            ]
+        )
+    )
+
+
 def test_function_typedef() -> None:
     content = """
       typedef void fn(int);
