@@ -3,10 +3,13 @@
 from cxxheaderparser.types import (
     BaseClass,
     ClassDecl,
+    DecltypeSpecifier,
     Function,
     FunctionType,
     FundamentalSpecifier,
     Method,
+    MemberPointer,
+    MoveReference,
     NameSpecifier,
     PQName,
     Parameter,
@@ -20,6 +23,7 @@ from cxxheaderparser.types import (
     Type,
     UsingAlias,
     UsingDecl,
+    Value,
 )
 from cxxheaderparser.simple import (
     ClassScope,
@@ -746,6 +750,639 @@ def test_using_enum_global() -> None:
             }
         )
     )
+
+
+def test_grouped_member_function_pointer_conditional_noexcept_alias() -> None:
+    content = """
+        struct C {};
+        struct Arg {};
+        using U = int ((C::*)(Arg) noexcept(false));
+    """
+
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            classes=[
+                ClassScope(
+                    class_decl=ClassDecl(
+                        typename=PQName(
+                            segments=[NameSpecifier(name="C")], classkey="struct"
+                        )
+                    )
+                ),
+                ClassScope(
+                    class_decl=ClassDecl(
+                        typename=PQName(
+                            segments=[NameSpecifier(name="Arg")], classkey="struct"
+                        )
+                    )
+                ),
+            ],
+            using_alias=[
+                UsingAlias(
+                    alias="U",
+                    type=MemberPointer(
+                        ptr_to=FunctionType(
+                            return_type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="int")]
+                                )
+                            ),
+                            parameters=[
+                                Parameter(
+                                    type=Type(
+                                        typename=PQName(
+                                            segments=[NameSpecifier(name="Arg")]
+                                        )
+                                    )
+                                )
+                            ],
+                            noexcept=Value(tokens=[Token(value="false")]),
+                        ),
+                        classname=PQName(segments=[NameSpecifier(name="C")]),
+                    ),
+                )
+            ],
+        )
+    )
+
+
+def test_function_type_noexcept_aliases() -> None:
+    content = """
+        struct C {};
+        using F = int(double) noexcept;
+        using FE = int(double) noexcept(false);
+        using P = int (*)(double) noexcept;
+        using M = int (C::*)(double) const & noexcept;
+    """
+
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            classes=[
+                ClassScope(
+                    class_decl=ClassDecl(
+                        typename=PQName(
+                            segments=[NameSpecifier(name="C")], classkey="struct"
+                        )
+                    )
+                )
+            ],
+            using_alias=[
+                UsingAlias(
+                    alias="F",
+                    type=FunctionType(
+                        return_type=Type(
+                            typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                        ),
+                        parameters=[
+                            Parameter(
+                                type=Type(
+                                    typename=PQName(
+                                        segments=[FundamentalSpecifier(name="double")]
+                                    )
+                                )
+                            )
+                        ],
+                        noexcept=Value(tokens=[]),
+                    ),
+                ),
+                UsingAlias(
+                    alias="FE",
+                    type=FunctionType(
+                        return_type=Type(
+                            typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                        ),
+                        parameters=[
+                            Parameter(
+                                type=Type(
+                                    typename=PQName(
+                                        segments=[FundamentalSpecifier(name="double")]
+                                    )
+                                )
+                            )
+                        ],
+                        noexcept=Value(tokens=[Token(value="false")]),
+                    ),
+                ),
+                UsingAlias(
+                    alias="P",
+                    type=Pointer(
+                        ptr_to=FunctionType(
+                            return_type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="int")]
+                                )
+                            ),
+                            parameters=[
+                                Parameter(
+                                    type=Type(
+                                        typename=PQName(
+                                            segments=[
+                                                FundamentalSpecifier(name="double")
+                                            ]
+                                        )
+                                    )
+                                )
+                            ],
+                            noexcept=Value(tokens=[]),
+                        )
+                    ),
+                ),
+                UsingAlias(
+                    alias="M",
+                    type=MemberPointer(
+                        ptr_to=FunctionType(
+                            return_type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="int")]
+                                )
+                            ),
+                            parameters=[
+                                Parameter(
+                                    type=Type(
+                                        typename=PQName(
+                                            segments=[
+                                                FundamentalSpecifier(name="double")
+                                            ]
+                                        )
+                                    )
+                                )
+                            ],
+                            noexcept=Value(tokens=[]),
+                            const=True,
+                            ref_qualifier="&",
+                        ),
+                        classname=PQName(segments=[NameSpecifier(name="C")]),
+                    ),
+                ),
+            ],
+        )
+    )
+
+
+def test_qualified_function_type_aliases() -> None:
+    content = """
+        struct C {};
+        using BareConst = int(double) const;
+        using BareVolatileRvalue = int(double) volatile &&;
+        using Member = int (C::*)(double) const &;
+    """
+
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            classes=[
+                ClassScope(
+                    class_decl=ClassDecl(
+                        typename=PQName(
+                            segments=[NameSpecifier(name="C")], classkey="struct"
+                        )
+                    )
+                )
+            ],
+            using_alias=[
+                UsingAlias(
+                    alias="BareConst",
+                    type=FunctionType(
+                        return_type=Type(
+                            typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                        ),
+                        parameters=[
+                            Parameter(
+                                type=Type(
+                                    typename=PQName(
+                                        segments=[FundamentalSpecifier(name="double")]
+                                    )
+                                )
+                            )
+                        ],
+                        const=True,
+                    ),
+                ),
+                UsingAlias(
+                    alias="BareVolatileRvalue",
+                    type=FunctionType(
+                        return_type=Type(
+                            typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                        ),
+                        parameters=[
+                            Parameter(
+                                type=Type(
+                                    typename=PQName(
+                                        segments=[FundamentalSpecifier(name="double")]
+                                    )
+                                )
+                            )
+                        ],
+                        volatile=True,
+                        ref_qualifier="&&",
+                    ),
+                ),
+                UsingAlias(
+                    alias="Member",
+                    type=MemberPointer(
+                        ptr_to=FunctionType(
+                            return_type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="int")]
+                                )
+                            ),
+                            parameters=[
+                                Parameter(
+                                    type=Type(
+                                        typename=PQName(
+                                            segments=[
+                                                FundamentalSpecifier(name="double")
+                                            ]
+                                        )
+                                    )
+                                )
+                            ],
+                            const=True,
+                            ref_qualifier="&",
+                        ),
+                        classname=PQName(segments=[NameSpecifier(name="C")]),
+                    ),
+                ),
+            ],
+        )
+    )
+
+
+def test_template_function_type_with_member_pointer_parameter() -> None:
+    content = """
+        template <typename T> struct Holder {};
+        struct C {};
+        using Nested = Holder<int(void (C::*)(double))>;
+    """
+
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            classes=[
+                ClassScope(
+                    class_decl=ClassDecl(
+                        typename=PQName(
+                            segments=[NameSpecifier(name="Holder")], classkey="struct"
+                        ),
+                        template=TemplateDecl(
+                            params=[TemplateTypeParam(typekey="typename", name="T")]
+                        ),
+                    )
+                ),
+                ClassScope(
+                    class_decl=ClassDecl(
+                        typename=PQName(
+                            segments=[NameSpecifier(name="C")], classkey="struct"
+                        )
+                    )
+                ),
+            ],
+            using_alias=[
+                UsingAlias(
+                    alias="Nested",
+                    type=Type(
+                        typename=PQName(
+                            segments=[
+                                NameSpecifier(
+                                    name="Holder",
+                                    specialization=TemplateSpecialization(
+                                        args=[
+                                            TemplateArgument(
+                                                arg=FunctionType(
+                                                    return_type=Type(
+                                                        typename=PQName(
+                                                            segments=[
+                                                                FundamentalSpecifier(
+                                                                    name="int"
+                                                                )
+                                                            ]
+                                                        )
+                                                    ),
+                                                    parameters=[
+                                                        Parameter(
+                                                            type=MemberPointer(
+                                                                ptr_to=FunctionType(
+                                                                    return_type=Type(
+                                                                        typename=PQName(
+                                                                            segments=[
+                                                                                FundamentalSpecifier(
+                                                                                    name="void"
+                                                                                )
+                                                                            ]
+                                                                        )
+                                                                    ),
+                                                                    parameters=[
+                                                                        Parameter(
+                                                                            type=Type(
+                                                                                typename=PQName(
+                                                                                    segments=[
+                                                                                        FundamentalSpecifier(
+                                                                                            name="double"
+                                                                                        )
+                                                                                    ]
+                                                                                )
+                                                                            )
+                                                                        )
+                                                                    ],
+                                                                ),
+                                                                classname=PQName(
+                                                                    segments=[
+                                                                        NameSpecifier(
+                                                                            name="C"
+                                                                        )
+                                                                    ]
+                                                                ),
+                                                            )
+                                                        )
+                                                    ],
+                                                )
+                                            )
+                                        ]
+                                    ),
+                                )
+                            ]
+                        )
+                    ),
+                )
+            ],
+        )
+    )
+
+
+def test_bare_member_pointer_parameter_aliases() -> None:
+    content = """
+        struct C {};
+        template <typename T> struct Holder {};
+        using BareMemberParameter = int(int C::*);
+        using NestedBareMemberParameter = Holder<int(int C::*)>;
+    """
+
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            classes=[
+                ClassScope(
+                    class_decl=ClassDecl(
+                        typename=PQName(
+                            segments=[NameSpecifier(name="C")], classkey="struct"
+                        )
+                    )
+                ),
+                ClassScope(
+                    class_decl=ClassDecl(
+                        typename=PQName(
+                            segments=[NameSpecifier(name="Holder")], classkey="struct"
+                        ),
+                        template=TemplateDecl(
+                            params=[TemplateTypeParam(typekey="typename", name="T")]
+                        ),
+                    )
+                ),
+            ],
+            using_alias=[
+                UsingAlias(
+                    alias="BareMemberParameter",
+                    type=FunctionType(
+                        return_type=Type(
+                            typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                        ),
+                        parameters=[
+                            Parameter(
+                                type=MemberPointer(
+                                    ptr_to=Type(
+                                        typename=PQName(
+                                            segments=[FundamentalSpecifier(name="int")]
+                                        )
+                                    ),
+                                    classname=PQName(
+                                        segments=[NameSpecifier(name="C")]
+                                    ),
+                                )
+                            )
+                        ],
+                    ),
+                ),
+                UsingAlias(
+                    alias="NestedBareMemberParameter",
+                    type=Type(
+                        typename=PQName(
+                            segments=[
+                                NameSpecifier(
+                                    name="Holder",
+                                    specialization=TemplateSpecialization(
+                                        args=[
+                                            TemplateArgument(
+                                                arg=FunctionType(
+                                                    return_type=Type(
+                                                        typename=PQName(
+                                                            segments=[
+                                                                FundamentalSpecifier(
+                                                                    name="int"
+                                                                )
+                                                            ]
+                                                        )
+                                                    ),
+                                                    parameters=[
+                                                        Parameter(
+                                                            type=MemberPointer(
+                                                                ptr_to=Type(
+                                                                    typename=PQName(
+                                                                        segments=[
+                                                                            FundamentalSpecifier(
+                                                                                name="int"
+                                                                            )
+                                                                        ]
+                                                                    )
+                                                                ),
+                                                                classname=PQName(
+                                                                    segments=[
+                                                                        NameSpecifier(
+                                                                            name="C"
+                                                                        )
+                                                                    ]
+                                                                ),
+                                                            )
+                                                        )
+                                                    ],
+                                                )
+                                            )
+                                        ]
+                                    ),
+                                )
+                            ]
+                        )
+                    ),
+                ),
+            ],
+        )
+    )
+
+
+def test_relational_expression_member_pointer_alias() -> None:
+    content = """
+        struct C {};
+        using RelationalScope = int (decltype((1 < 2, C{}))::*)(double);
+    """
+
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            classes=[
+                ClassScope(
+                    class_decl=ClassDecl(
+                        typename=PQName(
+                            segments=[NameSpecifier(name="C")], classkey="struct"
+                        )
+                    )
+                )
+            ],
+            using_alias=[
+                UsingAlias(
+                    alias="RelationalScope",
+                    type=MemberPointer(
+                        ptr_to=FunctionType(
+                            return_type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="int")]
+                                )
+                            ),
+                            parameters=[
+                                Parameter(
+                                    type=Type(
+                                        typename=PQName(
+                                            segments=[
+                                                FundamentalSpecifier(name="double")
+                                            ]
+                                        )
+                                    )
+                                )
+                            ],
+                        ),
+                        classname=PQName(
+                            segments=[
+                                DecltypeSpecifier(
+                                    tokens=[
+                                        Token(value="("),
+                                        Token(value="1"),
+                                        Token(value="<"),
+                                        Token(value="2"),
+                                        Token(value=","),
+                                        Token(value="C"),
+                                        Token(value="{"),
+                                        Token(value="}"),
+                                        Token(value=")"),
+                                    ]
+                                )
+                            ]
+                        ),
+                    ),
+                )
+            ],
+        )
+    )
+
+
+def test_rvalue_function_reference_alias() -> None:
+    content = """
+        using RvalueFunctionReference = int (&&)(double);
+    """
+
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            using_alias=[
+                UsingAlias(
+                    alias="RvalueFunctionReference",
+                    type=MoveReference(
+                        moveref_to=FunctionType(
+                            return_type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="int")]
+                                )
+                            ),
+                            parameters=[
+                                Parameter(
+                                    type=Type(
+                                        typename=PQName(
+                                            segments=[
+                                                FundamentalSpecifier(name="double")
+                                            ]
+                                        )
+                                    )
+                                )
+                            ],
+                        )
+                    ),
+                )
+            ]
+        )
+    )
+
+
+def test_member_pointer_to_function_pointer() -> None:
+    content = """
+        using X = int (* C::*)();
+    """
+
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            using_alias=[
+                UsingAlias(
+                    alias="X",
+                    type=MemberPointer(
+                        ptr_to=Pointer(
+                            ptr_to=FunctionType(
+                                return_type=Type(
+                                    typename=PQName(
+                                        segments=[FundamentalSpecifier(name="int")]
+                                    )
+                                ),
+                                parameters=[],
+                            )
+                        ),
+                        classname=PQName(segments=[NameSpecifier(name="C")]),
+                    ),
+                )
+            ]
+        )
+    )
+
+
+def test_array_and_trailing_return_type_aliases() -> None:
+    content = """
+        struct C {};
+        using A = int[3];
+        using P = auto (*)() -> int;
+        using M = auto (C::*)() -> int;
+    """
+
+    data = parse_string(content, cleandoc=True)
+    aliases = {alias.alias: alias.type for alias in data.namespace.using_alias}
+
+    assert aliases["A"].format() == "int[3]"
+
+    pointer = aliases["P"]
+    assert isinstance(pointer, Pointer)
+    assert isinstance(pointer.ptr_to, FunctionType)
+    assert pointer.ptr_to.has_trailing_return
+    assert pointer.format() == "auto (*)() -> int"
+
+    member = aliases["M"]
+    assert isinstance(member, MemberPointer)
+    assert isinstance(member.ptr_to, FunctionType)
+    assert member.ptr_to.has_trailing_return
+    assert member.format() == "auto (C::*)() -> int"
 
 
 def test_using_enum_in_struct() -> None:

@@ -756,12 +756,7 @@ class CxxParser:
                     self.lex = tmp_lex
 
                     try:
-                        parsed_type, mods = self._parse_type(None)
-                        if parsed_type is None:
-                            raise self._parse_error(None)
-
-                        mods.validate(var_ok=False, meth_ok=False, msg="")
-                        dtype = self._parse_cv_ptr_or_fn(parsed_type, nonptr_fn=True)
+                        dtype = self._parse_type_id(None, "")
                         self._next_token_must_be(PhonyEnding.type)
                     except CxxParseError:
                         dtype = None
@@ -1191,13 +1186,7 @@ class CxxParser:
         alias_declaration: "using" IDENTIFIER "=" type_id ";"
         """
 
-        parsed_type, mods = self._parse_type(None)
-        if parsed_type is None:
-            raise self._parse_error(None)
-
-        mods.validate(var_ok=False, meth_ok=False, msg="parsing typealias")
-
-        dtype = self._parse_cv_ptr(parsed_type)
+        dtype = self._parse_type_id(None, "parsing typealias")
 
         alias = UsingAlias(id_tok.value, dtype, template, self._current_access, doxygen)
 
@@ -2161,24 +2150,26 @@ class CxxParser:
 
         return dtype
 
-    def parse_typename(self) -> DecoratedType:
-        """
-        Parse a single C++ type name from the current token stream.
-        """
-        parsed_type, mods = self._parse_type(None)
+    def _parse_type_id(self, tok: typing.Optional[LexToken], msg: str) -> TypeId:
+        parsed_type, mods = self._parse_type(tok)
         if parsed_type is None:
-            raise CxxParseError("missing type name")
+            raise self._parse_error(None)
 
-        mods.validate(var_ok=False, meth_ok=False, msg="parsing type name")
+        mods.validate(var_ok=False, meth_ok=False, msg=msg)
+        dtype = self._parse_cv_ptr_or_fn(parsed_type, nonptr_fn=True)
 
-        dtype = self._parse_cv_ptr_or_fn(parsed_type)
-        if isinstance(dtype, FunctionType):
-            raise CxxParseError("function types are not supported")
+        atok = self.lex.token_if("[")
+        while atok:
+            dtype = self._parse_array_type(atok, dtype)
+            atok = self.lex.token_if("[")
 
-        tok = self.lex.token_if("[")
-        while tok:
-            dtype = self._parse_array_type(tok, dtype)
-            tok = self.lex.token_if("[")
+        return dtype
+
+    def parse_typename(self) -> TypeId:
+        """
+        Parse a single C++ type-id from the current token stream.
+        """
+        dtype = self._parse_type_id(None, "parsing type name")
 
         self.lex.token_if(";")
         extra = self.lex.token_eof_ok()

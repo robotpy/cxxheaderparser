@@ -36,7 +36,6 @@ from .types import (
     ClassDecl,
     Concept,
     DeductionGuide,
-    DecoratedType,
     EnumDecl,
     Field,
     ForwardDecl,
@@ -45,6 +44,7 @@ from .types import (
     Method,
     NamespaceAlias,
     TemplateInst,
+    TypeId,
     Typedef,
     UsingAlias,
     UsingDecl,
@@ -354,9 +354,9 @@ def parse_typename(
     *,
     filename: str = "<str>",
     options: typing.Optional[ParserOptions] = None,
-) -> DecoratedType:
+) -> TypeId:
     """
-    Parse a C++ type name and return a DecoratedType.
+    Parse a C++ type name and return a TypeId.
     """
     parser = CxxParser(filename, f"{typename};", null_visitor, options)
     return parser.parse_typename()

@@ -12,6 +12,11 @@ parser types
    ``classname`` attribute identified the owning class. This is a breaking
    change to the parsed type dataclasses.
 
+   ``FunctionType`` is included in ``TypeId`` for contexts that accept a bare
+   function type, including aliases, typedefs, template arguments, and
+   ``parse_typename``. ``DecoratedType`` remains the set of object/declarator
+   types used by variables, fields, adjusted parameters, and function returns.
+
 .. automodule:: cxxheaderparser.types
    :members:
    :undoc-members:
