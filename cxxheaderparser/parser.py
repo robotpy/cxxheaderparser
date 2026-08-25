@@ -1,5 +1,6 @@
 from collections import deque
 
+import contextlib
 import inspect
 import re
 import typing
@@ -181,6 +182,23 @@ class CxxParser:
         if tok.type not in tokenTypes:
             raise self._parse_error(tok, "' or '".join(tokenTypes))
         return tok
+
+    @contextlib.contextmanager
+    def _bounded_token_stream(
+        self, toks: LexTokenList
+    ) -> typing.Iterator[lexer.BoundedTokenStream]:
+        old_lex = self.lex
+        old_pending_attributes = self._pending_attributes
+        old_anon_id = self.anon_id
+        bounded_lex = lexer.BoundedTokenStream(toks)
+        try:
+            self.lex = bounded_lex
+            self._pending_attributes = []
+            yield bounded_lex
+        finally:
+            self.lex = old_lex
+            self._pending_attributes = old_pending_attributes
+            self.anon_id = old_anon_id
 
     # def _next_token_in_set(self, tokenTypes: typing.Set[str]) -> LexToken:
     #     tok = self.lex.token()
@@ -749,12 +767,7 @@ class CxxParser:
                 # append a token to make other parsing components happy
                 raw_toks.append(PhonyEnding)
 
-                old_lex = self.lex
-                try:
-                    # set up a temporary token stream with the tokens we need to parse
-                    tmp_lex = lexer.BoundedTokenStream(raw_toks)
-                    self.lex = tmp_lex
-
+                with self._bounded_token_stream(raw_toks) as tmp_lex:
                     try:
                         dtype = self._parse_type_id(None, "")
                         self._next_token_must_be(PhonyEnding.type)
@@ -763,9 +776,6 @@ class CxxParser:
                     else:
                         if tmp_lex.has_tokens():
                             dtype = None
-
-                finally:
-                    self.lex = old_lex
 
             if self.lex.token_if("ELLIPSIS"):
                 param_pack = True
@@ -2563,15 +2573,11 @@ class CxxParser:
 
     def _parse_member_pointer_classname(self, toks: LexTokenList) -> PQName:
         class_toks = toks + [PhonyEnding]
-        old_lex = self.lex
-        try:
-            self.lex = lexer.BoundedTokenStream(class_toks)
+        with self._bounded_token_stream(class_toks):
             classname, _ = self._parse_pqname(
                 None, compound_ok=False, fn_ok=False, fund_ok=False
             )
             self._next_token_must_be(PhonyEnding.type)
-        finally:
-            self.lex = old_lex
 
         return classname
 

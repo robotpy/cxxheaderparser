@@ -24,6 +24,7 @@ from cxxheaderparser.types import (
     UsingAlias,
     UsingDecl,
     Value,
+    Variable,
 )
 from cxxheaderparser.simple import (
     ClassScope,
@@ -1355,6 +1356,57 @@ def test_member_pointer_to_function_pointer() -> None:
                     ),
                 )
             ]
+        )
+    )
+
+
+def test_bounded_type_probe_does_not_leak_attributes() -> None:
+    content = """
+        using X = Foo<int [[maybe_unused]]>;
+        int x;
+    """
+
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            variables=[
+                Variable(
+                    name=PQName(segments=[NameSpecifier(name="x")]),
+                    type=Type(
+                        typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                    ),
+                )
+            ],
+            using_alias=[
+                UsingAlias(
+                    alias="X",
+                    type=Type(
+                        typename=PQName(
+                            segments=[
+                                NameSpecifier(
+                                    name="Foo",
+                                    specialization=TemplateSpecialization(
+                                        args=[
+                                            TemplateArgument(
+                                                arg=Type(
+                                                    typename=PQName(
+                                                        segments=[
+                                                            FundamentalSpecifier(
+                                                                name="int"
+                                                            )
+                                                        ]
+                                                    )
+                                                )
+                                            )
+                                        ]
+                                    ),
+                                )
+                            ]
+                        )
+                    ),
+                )
+            ],
         )
     )
 
