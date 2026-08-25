@@ -1880,6 +1880,89 @@ def test_grouped_parameter_name() -> None:
     )
 
 
+def test_grouped_parameter_pack() -> None:
+    content = """
+        template<class... T> void f(T (...args));
+        template<class... T> void g(T ((...args)));
+        template<class... T> void h(T ...(args));
+    """
+
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            functions=[
+                Function(
+                    return_type=Type(
+                        typename=PQName(segments=[FundamentalSpecifier(name="void")])
+                    ),
+                    name=PQName(segments=[NameSpecifier(name="f")]),
+                    parameters=[
+                        Parameter(
+                            type=Type(
+                                typename=PQName(segments=[NameSpecifier(name="T")])
+                            ),
+                            name="args",
+                            param_pack=True,
+                        )
+                    ],
+                    template=TemplateDecl(
+                        params=[
+                            TemplateTypeParam(
+                                typekey="class", name="T", param_pack=True
+                            )
+                        ]
+                    ),
+                ),
+                Function(
+                    return_type=Type(
+                        typename=PQName(segments=[FundamentalSpecifier(name="void")])
+                    ),
+                    name=PQName(segments=[NameSpecifier(name="g")]),
+                    parameters=[
+                        Parameter(
+                            type=Type(
+                                typename=PQName(segments=[NameSpecifier(name="T")])
+                            ),
+                            name="args",
+                            param_pack=True,
+                        )
+                    ],
+                    template=TemplateDecl(
+                        params=[
+                            TemplateTypeParam(
+                                typekey="class", name="T", param_pack=True
+                            )
+                        ]
+                    ),
+                ),
+                Function(
+                    return_type=Type(
+                        typename=PQName(segments=[FundamentalSpecifier(name="void")])
+                    ),
+                    name=PQName(segments=[NameSpecifier(name="h")]),
+                    parameters=[
+                        Parameter(
+                            type=Type(
+                                typename=PQName(segments=[NameSpecifier(name="T")])
+                            ),
+                            name="args",
+                            param_pack=True,
+                        )
+                    ],
+                    template=TemplateDecl(
+                        params=[
+                            TemplateTypeParam(
+                                typekey="class", name="T", param_pack=True
+                            )
+                        ]
+                    ),
+                ),
+            ]
+        )
+    )
+
+
 def test_deleted_function() -> None:
     content = """
       void trim() = delete;

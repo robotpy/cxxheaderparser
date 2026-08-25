@@ -3,6 +3,8 @@
 from cxxheaderparser.errors import CxxParseError
 from cxxheaderparser.types import (
     Array,
+    Attribute,
+    AttributeStyle,
     ClassDecl,
     EnumDecl,
     Enumerator,
@@ -453,6 +455,114 @@ def test_redundant_grouped_function_pointer_declarators() -> None:
     r_type = data.namespace.variables[1].type
     assert p_type.format_decl("p") == "void (* p)(int C::*)"
     assert r_type.format_decl("r") == "void (** r)(int C::*)"
+
+
+def test_grouped_msvc_function_pointers() -> None:
+    content = """
+        void (__cdecl *p)(int);
+        void ((__cdecl *q))(double);
+    """
+
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            variables=[
+                Variable(
+                    name=PQName(segments=[NameSpecifier(name="p")]),
+                    type=Pointer(
+                        ptr_to=FunctionType(
+                            return_type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="void")]
+                                )
+                            ),
+                            parameters=[
+                                Parameter(
+                                    type=Type(
+                                        typename=PQName(
+                                            segments=[FundamentalSpecifier(name="int")]
+                                        )
+                                    )
+                                )
+                            ],
+                            msvc_convention="__cdecl",
+                        )
+                    ),
+                ),
+                Variable(
+                    name=PQName(segments=[NameSpecifier(name="q")]),
+                    type=Pointer(
+                        ptr_to=FunctionType(
+                            return_type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="void")]
+                                )
+                            ),
+                            parameters=[
+                                Parameter(
+                                    type=Type(
+                                        typename=PQName(
+                                            segments=[
+                                                FundamentalSpecifier(name="double")
+                                            ]
+                                        )
+                                    )
+                                )
+                            ],
+                            msvc_convention="__cdecl",
+                        )
+                    ),
+                ),
+            ]
+        )
+    )
+
+
+def test_grouped_function_pointer_parameter_attribute() -> None:
+    content = """
+        void ((*p)([[maybe_unused]] int));
+        int x;
+    """
+
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            variables=[
+                Variable(
+                    name=PQName(segments=[NameSpecifier(name="p")]),
+                    type=Pointer(
+                        ptr_to=FunctionType(
+                            return_type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="void")]
+                                )
+                            ),
+                            parameters=[
+                                Parameter(
+                                    type=Type(
+                                        typename=PQName(
+                                            segments=[FundamentalSpecifier(name="int")]
+                                        )
+                                    )
+                                )
+                            ],
+                        )
+                    ),
+                ),
+                Variable(
+                    name=PQName(segments=[NameSpecifier(name="x")]),
+                    type=Type(
+                        typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                    ),
+                    attributes=[
+                        Attribute(style=AttributeStyle.CXX, name="maybe_unused")
+                    ],
+                ),
+            ]
+        )
+    )
 
 
 def test_var_ptr_to_array_grouped_declarator() -> None:
