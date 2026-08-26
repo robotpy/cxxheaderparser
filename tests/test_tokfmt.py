@@ -35,6 +35,7 @@ from cxxheaderparser.types import Token
         "operator[]",
         "operator*",
         "operator>=",
+        "int x[2][3];",
     ],
 )
 def test_tokfmt(instr: str) -> None:

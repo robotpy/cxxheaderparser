@@ -3,12 +3,16 @@
 from cxxheaderparser.errors import CxxParseError
 from cxxheaderparser.types import (
     Array,
+    Attribute,
+    AttributeStyle,
     ClassDecl,
     EnumDecl,
     Enumerator,
     Field,
+    Function,
     FunctionType,
     FundamentalSpecifier,
+    MemberPointer,
     NameSpecifier,
     PQName,
     Parameter,
@@ -364,6 +368,203 @@ def test_var_fnptr_grouped_declarator() -> None:
     )
 
 
+def test_redundant_grouped_function_pointer_declarators() -> None:
+    content = """
+        class C {};
+        void ((*p)(int C::*));
+        void ((**r)(int C::*));
+    """
+
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            classes=[
+                ClassScope(
+                    class_decl=ClassDecl(
+                        typename=PQName(
+                            segments=[NameSpecifier(name="C")], classkey="class"
+                        )
+                    )
+                )
+            ],
+            variables=[
+                Variable(
+                    name=PQName(segments=[NameSpecifier(name="p")]),
+                    type=Pointer(
+                        ptr_to=FunctionType(
+                            return_type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="void")]
+                                )
+                            ),
+                            parameters=[
+                                Parameter(
+                                    type=MemberPointer(
+                                        ptr_to=Type(
+                                            typename=PQName(
+                                                segments=[
+                                                    FundamentalSpecifier(name="int")
+                                                ]
+                                            )
+                                        ),
+                                        classname=PQName(
+                                            segments=[NameSpecifier(name="C")]
+                                        ),
+                                    )
+                                )
+                            ],
+                        )
+                    ),
+                ),
+                Variable(
+                    name=PQName(segments=[NameSpecifier(name="r")]),
+                    type=Pointer(
+                        ptr_to=Pointer(
+                            ptr_to=FunctionType(
+                                return_type=Type(
+                                    typename=PQName(
+                                        segments=[FundamentalSpecifier(name="void")]
+                                    )
+                                ),
+                                parameters=[
+                                    Parameter(
+                                        type=MemberPointer(
+                                            ptr_to=Type(
+                                                typename=PQName(
+                                                    segments=[
+                                                        FundamentalSpecifier(name="int")
+                                                    ]
+                                                )
+                                            ),
+                                            classname=PQName(
+                                                segments=[NameSpecifier(name="C")]
+                                            ),
+                                        )
+                                    )
+                                ],
+                            )
+                        )
+                    ),
+                ),
+            ],
+        )
+    )
+
+    p_type = data.namespace.variables[0].type
+    r_type = data.namespace.variables[1].type
+    assert p_type.format_decl("p") == "void (* p)(int C::*)"
+    assert r_type.format_decl("r") == "void (** r)(int C::*)"
+
+
+def test_grouped_msvc_function_pointers() -> None:
+    content = """
+        void (__cdecl *p)(int);
+        void ((__cdecl *q))(double);
+    """
+
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            variables=[
+                Variable(
+                    name=PQName(segments=[NameSpecifier(name="p")]),
+                    type=Pointer(
+                        ptr_to=FunctionType(
+                            return_type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="void")]
+                                )
+                            ),
+                            parameters=[
+                                Parameter(
+                                    type=Type(
+                                        typename=PQName(
+                                            segments=[FundamentalSpecifier(name="int")]
+                                        )
+                                    )
+                                )
+                            ],
+                            msvc_convention="__cdecl",
+                        )
+                    ),
+                ),
+                Variable(
+                    name=PQName(segments=[NameSpecifier(name="q")]),
+                    type=Pointer(
+                        ptr_to=FunctionType(
+                            return_type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="void")]
+                                )
+                            ),
+                            parameters=[
+                                Parameter(
+                                    type=Type(
+                                        typename=PQName(
+                                            segments=[
+                                                FundamentalSpecifier(name="double")
+                                            ]
+                                        )
+                                    )
+                                )
+                            ],
+                            msvc_convention="__cdecl",
+                        )
+                    ),
+                ),
+            ]
+        )
+    )
+
+
+def test_grouped_function_pointer_parameter_attribute() -> None:
+    content = """
+        void ((*p)([[maybe_unused]] int));
+        int x;
+    """
+
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            variables=[
+                Variable(
+                    name=PQName(segments=[NameSpecifier(name="p")]),
+                    type=Pointer(
+                        ptr_to=FunctionType(
+                            return_type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="void")]
+                                )
+                            ),
+                            parameters=[
+                                Parameter(
+                                    type=Type(
+                                        typename=PQName(
+                                            segments=[FundamentalSpecifier(name="int")]
+                                        )
+                                    )
+                                )
+                            ],
+                        )
+                    ),
+                ),
+                Variable(
+                    name=PQName(segments=[NameSpecifier(name="x")]),
+                    type=Type(
+                        typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                    ),
+                    attributes=[
+                        Attribute(style=AttributeStyle.CXX, name="maybe_unused")
+                    ],
+                ),
+            ]
+        )
+    )
+
+
 def test_var_ptr_to_array_grouped_declarator() -> None:
     content = """
       int ((*arrayPtr))[3];
@@ -418,6 +619,261 @@ def test_var_ref_to_array_grouped_declarator() -> None:
     )
 
 
+def test_redundant_grouped_member_function_pointer() -> None:
+    content = """
+        struct C {};
+        int ((C::*p)(double));
+    """
+
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            classes=[
+                ClassScope(
+                    class_decl=ClassDecl(
+                        typename=PQName(
+                            segments=[NameSpecifier(name="C")], classkey="struct"
+                        )
+                    )
+                )
+            ],
+            variables=[
+                Variable(
+                    name=PQName(segments=[NameSpecifier(name="p")]),
+                    type=MemberPointer(
+                        ptr_to=FunctionType(
+                            return_type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="int")]
+                                )
+                            ),
+                            parameters=[
+                                Parameter(
+                                    type=Type(
+                                        typename=PQName(
+                                            segments=[
+                                                FundamentalSpecifier(name="double")
+                                            ]
+                                        )
+                                    )
+                                )
+                            ],
+                        ),
+                        classname=PQName(segments=[NameSpecifier(name="C")]),
+                    ),
+                )
+            ],
+        )
+    )
+
+
+def test_noncrossing_member_pointer_postfix() -> None:
+    content = """
+        struct C {};
+        int (C::*p[3]);
+        int (C::*f(double));
+    """
+
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            classes=[
+                ClassScope(
+                    class_decl=ClassDecl(
+                        typename=PQName(
+                            segments=[NameSpecifier(name="C")], classkey="struct"
+                        )
+                    )
+                )
+            ],
+            functions=[
+                Function(
+                    return_type=MemberPointer(
+                        ptr_to=Type(
+                            typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                        ),
+                        classname=PQName(segments=[NameSpecifier(name="C")]),
+                    ),
+                    name=PQName(segments=[NameSpecifier(name="f")]),
+                    parameters=[
+                        Parameter(
+                            type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="double")]
+                                )
+                            )
+                        )
+                    ],
+                )
+            ],
+            variables=[
+                Variable(
+                    name=PQName(segments=[NameSpecifier(name="p")]),
+                    type=Array(
+                        array_of=MemberPointer(
+                            ptr_to=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="int")]
+                                )
+                            ),
+                            classname=PQName(segments=[NameSpecifier(name="C")]),
+                        ),
+                        size=Value(tokens=[Token(value="3")]),
+                    ),
+                )
+            ],
+        )
+    )
+
+
+def test_grouped_member_pointer_mixed_precedence() -> None:
+    content = """
+        struct C {};
+        int (* (C::*p)(double))[2];
+        int ((* C::*q)());
+    """
+
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            classes=[
+                ClassScope(
+                    class_decl=ClassDecl(
+                        typename=PQName(
+                            segments=[NameSpecifier(name="C")], classkey="struct"
+                        )
+                    )
+                )
+            ],
+            variables=[
+                Variable(
+                    name=PQName(segments=[NameSpecifier(name="p")]),
+                    type=MemberPointer(
+                        ptr_to=FunctionType(
+                            return_type=Pointer(
+                                ptr_to=Array(
+                                    array_of=Type(
+                                        typename=PQName(
+                                            segments=[FundamentalSpecifier(name="int")]
+                                        )
+                                    ),
+                                    size=Value(tokens=[Token(value="2")]),
+                                )
+                            ),
+                            parameters=[
+                                Parameter(
+                                    type=Type(
+                                        typename=PQName(
+                                            segments=[
+                                                FundamentalSpecifier(name="double")
+                                            ]
+                                        )
+                                    )
+                                )
+                            ],
+                        ),
+                        classname=PQName(segments=[NameSpecifier(name="C")]),
+                    ),
+                ),
+                Variable(
+                    name=PQName(segments=[NameSpecifier(name="q")]),
+                    type=MemberPointer(
+                        ptr_to=Pointer(
+                            ptr_to=FunctionType(
+                                return_type=Type(
+                                    typename=PQName(
+                                        segments=[FundamentalSpecifier(name="int")]
+                                    )
+                                ),
+                                parameters=[],
+                            )
+                        ),
+                        classname=PQName(segments=[NameSpecifier(name="C")]),
+                    ),
+                ),
+            ],
+        )
+    )
+    p_type = data.namespace.variables[0].type
+    q_type = data.namespace.variables[1].type
+    assert p_type.format_decl("p") == "int (* (C::* p)(double))[2]"
+    assert q_type.format_decl("q") == "int (* C::* q)()"
+
+
+def test_grouped_member_pointer_suffix_context() -> None:
+    content = """
+        struct C {};
+        int ((C::*(p))(double));
+        int ((C::*q)[sizeof(double)]);
+    """
+
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            classes=[
+                ClassScope(
+                    class_decl=ClassDecl(
+                        typename=PQName(
+                            segments=[NameSpecifier(name="C")], classkey="struct"
+                        )
+                    )
+                )
+            ],
+            variables=[
+                Variable(
+                    name=PQName(segments=[NameSpecifier(name="p")]),
+                    type=MemberPointer(
+                        ptr_to=FunctionType(
+                            return_type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="int")]
+                                )
+                            ),
+                            parameters=[
+                                Parameter(
+                                    type=Type(
+                                        typename=PQName(
+                                            segments=[
+                                                FundamentalSpecifier(name="double")
+                                            ]
+                                        )
+                                    )
+                                )
+                            ],
+                        ),
+                        classname=PQName(segments=[NameSpecifier(name="C")]),
+                    ),
+                ),
+                Variable(
+                    name=PQName(segments=[NameSpecifier(name="q")]),
+                    type=MemberPointer(
+                        ptr_to=Array(
+                            array_of=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="int")]
+                                )
+                            ),
+                            size=Value(
+                                tokens=[
+                                    Token(value="sizeof"),
+                                    Token(value="("),
+                                    Token(value="double"),
+                                    Token(value=")"),
+                                ]
+                            ),
+                        ),
+                        classname=PQName(segments=[NameSpecifier(name="C")]),
+                    ),
+                ),
+            ],
+        )
+    )
+
+
 def test_var_member_fnptr_with_initializer() -> None:
     content = """
       int (Calculator::*funcPtr)(int) = &Calculator::multiply;
@@ -429,7 +885,7 @@ def test_var_member_fnptr_with_initializer() -> None:
             variables=[
                 Variable(
                     name=PQName(segments=[NameSpecifier(name="funcPtr")]),
-                    type=Pointer(
+                    type=MemberPointer(
                         ptr_to=FunctionType(
                             return_type=Type(
                                 typename=PQName(
@@ -445,10 +901,8 @@ def test_var_member_fnptr_with_initializer() -> None:
                                     )
                                 )
                             ],
-                            classname=PQName(
-                                segments=[NameSpecifier(name="Calculator")]
-                            ),
-                        )
+                        ),
+                        classname=PQName(segments=[NameSpecifier(name="Calculator")]),
                     ),
                     value=Value(
                         tokens=[
@@ -462,6 +916,205 @@ def test_var_member_fnptr_with_initializer() -> None:
             ]
         )
     )
+
+
+def test_nested_member_object_pointers() -> None:
+    content = """
+        struct A {
+            int value;
+            int A::* member;
+        };
+
+        int A::* A::* p1 = &A::member;
+
+        int A::* p2 = &A::value;
+        int A::*& ref = p2;
+    """
+
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            classes=[
+                ClassScope(
+                    class_decl=ClassDecl(
+                        typename=PQName(
+                            segments=[NameSpecifier(name="A")], classkey="struct"
+                        )
+                    ),
+                    fields=[
+                        Field(
+                            access="public",
+                            type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="int")]
+                                )
+                            ),
+                            name="value",
+                        ),
+                        Field(
+                            access="public",
+                            type=MemberPointer(
+                                ptr_to=Type(
+                                    typename=PQName(
+                                        segments=[FundamentalSpecifier(name="int")]
+                                    )
+                                ),
+                                classname=PQName(segments=[NameSpecifier(name="A")]),
+                            ),
+                            name="member",
+                        ),
+                    ],
+                )
+            ],
+            variables=[
+                Variable(
+                    name=PQName(segments=[NameSpecifier(name="p1")]),
+                    type=MemberPointer(
+                        ptr_to=MemberPointer(
+                            ptr_to=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="int")]
+                                )
+                            ),
+                            classname=PQName(segments=[NameSpecifier(name="A")]),
+                        ),
+                        classname=PQName(segments=[NameSpecifier(name="A")]),
+                    ),
+                    value=Value(
+                        tokens=[
+                            Token(value="&"),
+                            Token(value="A"),
+                            Token(value="::"),
+                            Token(value="member"),
+                        ]
+                    ),
+                ),
+                Variable(
+                    name=PQName(segments=[NameSpecifier(name="p2")]),
+                    type=MemberPointer(
+                        ptr_to=Type(
+                            typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                        ),
+                        classname=PQName(segments=[NameSpecifier(name="A")]),
+                    ),
+                    value=Value(
+                        tokens=[
+                            Token(value="&"),
+                            Token(value="A"),
+                            Token(value="::"),
+                            Token(value="value"),
+                        ]
+                    ),
+                ),
+                Variable(
+                    name=PQName(segments=[NameSpecifier(name="ref")]),
+                    type=Reference(
+                        ref_to=MemberPointer(
+                            ptr_to=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="int")]
+                                )
+                            ),
+                            classname=PQName(segments=[NameSpecifier(name="A")]),
+                        )
+                    ),
+                    value=Value(tokens=[Token(value="p2")]),
+                ),
+            ],
+        )
+    )
+
+
+def test_nested_array_dimension_order() -> None:
+    content = """
+        int x[2][3];
+    """
+
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            variables=[
+                Variable(
+                    name=PQName(segments=[NameSpecifier(name="x")]),
+                    type=Array(
+                        array_of=Array(
+                            array_of=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="int")]
+                                )
+                            ),
+                            size=Value(tokens=[Token(value="3")]),
+                        ),
+                        size=Value(tokens=[Token(value="2")]),
+                    ),
+                )
+            ]
+        )
+    )
+    dtype = data.namespace.variables[0].type
+    assert dtype.format() == "int[2][3]"
+    assert dtype.format_decl("x") == "int x[2][3]"
+
+
+def test_nested_member_pointer_array() -> None:
+    content = """
+        struct C {
+            int value;
+        };
+
+        int C::*a[2][3];
+    """
+
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            classes=[
+                ClassScope(
+                    class_decl=ClassDecl(
+                        typename=PQName(
+                            segments=[NameSpecifier(name="C")], classkey="struct"
+                        )
+                    ),
+                    fields=[
+                        Field(
+                            access="public",
+                            type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="int")]
+                                )
+                            ),
+                            name="value",
+                        )
+                    ],
+                )
+            ],
+            variables=[
+                Variable(
+                    name=PQName(segments=[NameSpecifier(name="a")]),
+                    type=Array(
+                        array_of=Array(
+                            array_of=MemberPointer(
+                                ptr_to=Type(
+                                    typename=PQName(
+                                        segments=[FundamentalSpecifier(name="int")]
+                                    )
+                                ),
+                                classname=PQName(segments=[NameSpecifier(name="C")]),
+                            ),
+                            size=Value(tokens=[Token(value="3")]),
+                        ),
+                        size=Value(tokens=[Token(value="2")]),
+                    ),
+                )
+            ],
+        )
+    )
+    dtype = data.namespace.variables[0].type
+    assert dtype.format() == "int C::*[2][3]"
+    assert dtype.format_decl("a") == "int C::* a[2][3]"
 
 
 def test_var_fnptr_moreparens() -> None:
@@ -1021,3 +1674,133 @@ def test_balanced_bad_mismatch() -> None:
     err = "<str>:1: parse error evaluating ']': unexpected ']', expected ')'"
     with pytest.raises(CxxParseError, match=re.escape(err)):
         parse_string(content, cleandoc=True)
+
+
+def test_recursive_declarator_formatting() -> None:
+    content = """
+        struct C {};
+        int (**C::*p)(double);
+        int (**C::*a[3])(double);
+        int (*(*C::*q)[3])(double);
+    """
+
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            classes=[
+                ClassScope(
+                    class_decl=ClassDecl(
+                        typename=PQName(
+                            segments=[NameSpecifier(name="C")], classkey="struct"
+                        )
+                    )
+                )
+            ],
+            variables=[
+                Variable(
+                    name=PQName(segments=[NameSpecifier(name="p")]),
+                    type=MemberPointer(
+                        ptr_to=Pointer(
+                            ptr_to=Pointer(
+                                ptr_to=FunctionType(
+                                    return_type=Type(
+                                        typename=PQName(
+                                            segments=[FundamentalSpecifier(name="int")]
+                                        )
+                                    ),
+                                    parameters=[
+                                        Parameter(
+                                            type=Type(
+                                                typename=PQName(
+                                                    segments=[
+                                                        FundamentalSpecifier(
+                                                            name="double"
+                                                        )
+                                                    ]
+                                                )
+                                            )
+                                        )
+                                    ],
+                                )
+                            )
+                        ),
+                        classname=PQName(segments=[NameSpecifier(name="C")]),
+                    ),
+                ),
+                Variable(
+                    name=PQName(segments=[NameSpecifier(name="a")]),
+                    type=Array(
+                        array_of=MemberPointer(
+                            ptr_to=Pointer(
+                                ptr_to=Pointer(
+                                    ptr_to=FunctionType(
+                                        return_type=Type(
+                                            typename=PQName(
+                                                segments=[
+                                                    FundamentalSpecifier(name="int")
+                                                ]
+                                            )
+                                        ),
+                                        parameters=[
+                                            Parameter(
+                                                type=Type(
+                                                    typename=PQName(
+                                                        segments=[
+                                                            FundamentalSpecifier(
+                                                                name="double"
+                                                            )
+                                                        ]
+                                                    )
+                                                )
+                                            )
+                                        ],
+                                    )
+                                )
+                            ),
+                            classname=PQName(segments=[NameSpecifier(name="C")]),
+                        ),
+                        size=Value(tokens=[Token(value="3")]),
+                    ),
+                ),
+                Variable(
+                    name=PQName(segments=[NameSpecifier(name="q")]),
+                    type=MemberPointer(
+                        ptr_to=Pointer(
+                            ptr_to=Array(
+                                array_of=Pointer(
+                                    ptr_to=FunctionType(
+                                        return_type=Type(
+                                            typename=PQName(
+                                                segments=[
+                                                    FundamentalSpecifier(name="int")
+                                                ]
+                                            )
+                                        ),
+                                        parameters=[
+                                            Parameter(
+                                                type=Type(
+                                                    typename=PQName(
+                                                        segments=[
+                                                            FundamentalSpecifier(
+                                                                name="double"
+                                                            )
+                                                        ]
+                                                    )
+                                                )
+                                            )
+                                        ],
+                                    )
+                                ),
+                                size=Value(tokens=[Token(value="3")]),
+                            )
+                        ),
+                        classname=PQName(segments=[NameSpecifier(name="C")]),
+                    ),
+                ),
+            ],
+        )
+    )
+
+    variables = data.namespace.variables
+    assert variables[2].type.format_decl("q") == "int (* (* C::* q)[3])(double)"

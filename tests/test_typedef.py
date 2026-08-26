@@ -11,6 +11,7 @@ from cxxheaderparser.types import (
     Field,
     FunctionType,
     FundamentalSpecifier,
+    MemberPointer,
     NameSpecifier,
     PQName,
     Parameter,
@@ -616,7 +617,7 @@ def test_typedef_member_fnptr() -> None:
         namespace=NamespaceScope(
             typedefs=[
                 Typedef(
-                    type=Pointer(
+                    type=MemberPointer(
                         ptr_to=FunctionType(
                             return_type=Type(
                                 typename=PQName(
@@ -643,8 +644,8 @@ def test_typedef_member_fnptr() -> None:
                                     name="y",
                                 ),
                             ],
-                            classname=PQName(segments=[NameSpecifier(name="Fred")]),
-                        )
+                        ),
+                        classname=PQName(segments=[NameSpecifier(name="Fred")]),
                     ),
                     name="FredMemFn",
                 )
@@ -942,6 +943,71 @@ def test_volatile_typedef() -> None:
                         volatile=True,
                     ),
                     name="vint16",
+                )
+            ]
+        )
+    )
+
+
+def test_function_type_noexcept_typedef() -> None:
+    content = """
+        typedef int T(double) noexcept;
+    """
+
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            typedefs=[
+                Typedef(
+                    type=FunctionType(
+                        return_type=Type(
+                            typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                        ),
+                        parameters=[
+                            Parameter(
+                                type=Type(
+                                    typename=PQName(
+                                        segments=[FundamentalSpecifier(name="double")]
+                                    )
+                                )
+                            )
+                        ],
+                        noexcept=Value(tokens=[]),
+                    ),
+                    name="T",
+                )
+            ]
+        )
+    )
+
+
+def test_qualified_function_typedef() -> None:
+    content = """
+      typedef int TypedefConst(double) const;
+    """
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            typedefs=[
+                Typedef(
+                    type=FunctionType(
+                        return_type=Type(
+                            typename=PQName(segments=[FundamentalSpecifier(name="int")])
+                        ),
+                        parameters=[
+                            Parameter(
+                                type=Type(
+                                    typename=PQName(
+                                        segments=[FundamentalSpecifier(name="double")]
+                                    )
+                                )
+                            )
+                        ],
+                        const=True,
+                    ),
+                    name="TypedefConst",
                 )
             ]
         )

@@ -11,6 +11,7 @@ from cxxheaderparser.types import (
     ForwardDecl,
     FundamentalSpecifier,
     Method,
+    MemberPointer,
     MoveReference,
     NameSpecifier,
     PQName,
@@ -3362,6 +3363,76 @@ def test_class_inline_static() -> None:
                             value=Value(tokens=[Token(value="1")]),
                             static=True,
                             inline=True,
+                        )
+                    ],
+                )
+            ]
+        )
+    )
+
+
+def test_class_method_object_member_pointer() -> None:
+    content = """
+        class TunableTable {
+         public:
+          template <typename T, typename Class>
+          void Publish(Class* tunable, T Class::* member) {}
+        };
+    """
+
+    data = parse_string(content, cleandoc=True)
+
+    assert data == ParsedData(
+        namespace=NamespaceScope(
+            classes=[
+                ClassScope(
+                    class_decl=ClassDecl(
+                        typename=PQName(
+                            segments=[NameSpecifier(name="TunableTable")],
+                            classkey="class",
+                        )
+                    ),
+                    methods=[
+                        Method(
+                            return_type=Type(
+                                typename=PQName(
+                                    segments=[FundamentalSpecifier(name="void")]
+                                )
+                            ),
+                            name=PQName(segments=[NameSpecifier(name="Publish")]),
+                            parameters=[
+                                Parameter(
+                                    type=Pointer(
+                                        ptr_to=Type(
+                                            typename=PQName(
+                                                segments=[NameSpecifier(name="Class")]
+                                            )
+                                        )
+                                    ),
+                                    name="tunable",
+                                ),
+                                Parameter(
+                                    type=MemberPointer(
+                                        ptr_to=Type(
+                                            typename=PQName(
+                                                segments=[NameSpecifier(name="T")]
+                                            )
+                                        ),
+                                        classname=PQName(
+                                            segments=[NameSpecifier(name="Class")]
+                                        ),
+                                    ),
+                                    name="member",
+                                ),
+                            ],
+                            has_body=True,
+                            template=TemplateDecl(
+                                params=[
+                                    TemplateTypeParam(typekey="typename", name="T"),
+                                    TemplateTypeParam(typekey="typename", name="Class"),
+                                ]
+                            ),
+                            access="public",
                         )
                     ],
                 )
