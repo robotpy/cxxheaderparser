@@ -229,9 +229,9 @@ class TemplateArgument:
 
     """
 
-    #: If this argument is a type, it is stored here as a DecoratedType,
-    #: otherwise it's stored as an unparsed set of values
-    arg: typing.Union["DecoratedType", "FunctionType", Value]
+    #: If this argument is a type, it is stored here as a TypeId, otherwise
+    #: it's stored as an unparsed set of values
+    arg: typing.Union["TypeId", Value]
 
     param_pack: bool = False
 
@@ -260,13 +260,26 @@ class TemplateSpecialization:
         return f"<{', '.join(arg.format() for arg in self.args)}>"
 
 
+def _join_prefix(prefix: str, declarator: str) -> str:
+    separator = " " if declarator and declarator[0] not in "*&[" else ""
+    return f"{prefix}{separator}{declarator}"
+
+
+def _format_prefixed_type(target: typing.Any, prefix: str, name: str) -> str:
+    declarator = _join_prefix(prefix, name)
+    if isinstance(target, (Array, FunctionType)):
+        declarator = f"({declarator})"
+    return target.format_decl(declarator)
+
+
 @dataclass
 class FunctionType:
     """
-    A function type, currently only used in a function pointer
+    A function type. It may be used bare in a TypeId or wrapped by a
+    pointer-like DecoratedType.
 
-    .. note:: There can only be one of FunctionType or Type in a DecoratedType
-              chain
+    Its return type is always a DecoratedType; functions cannot return bare
+    function types.
     """
 
     return_type: "DecoratedType"
@@ -290,25 +303,43 @@ class FunctionType:
     #:            calling convention
     msvc_convention: typing.Optional[str] = None
 
-    #: If a member function pointer, the class that owns the member function.
-    classname: typing.Optional[PQName] = None
+    const: bool = False
+    volatile: bool = False
+
+    #: Ref qualifier, either ``&`` or ``&&``.
+    ref_qualifier: typing.Optional[str] = None
+
+    def _format_qualifiers(self) -> str:
+        qualifiers = []
+        if self.const:
+            qualifiers.append("const")
+        if self.volatile:
+            qualifiers.append("volatile")
+        if self.ref_qualifier:
+            qualifiers.append(self.ref_qualifier)
+        return f" {' '.join(qualifiers)}" if qualifiers else ""
 
     def format(self) -> str:
-        vararg = "..." if self.vararg else ""
-        params = ", ".join(p.format() for p in self.parameters)
-        if self.has_trailing_return:
-            return f"auto ({params}{vararg}) -> {self.return_type.format()}"
-        else:
-            return f"{self.return_type.format()} ({params}{vararg})"
+        return self.format_decl("")
 
     def format_decl(self, name: str) -> str:
         """Format as a named declaration"""
-        vararg = "..." if self.vararg else ""
-        params = ", ".join(p.format() for p in self.parameters)
+        params = [p.format() for p in self.parameters]
+        if self.vararg:
+            params.append("...")
+        params_str = ", ".join(params)
+        qualifiers = self._format_qualifiers()
+        noexcept = ""
+        if self.noexcept is not None:
+            noexcept = " noexcept"
+            if self.noexcept.tokens:
+                noexcept += f"({self.noexcept.format()})"
         if self.has_trailing_return:
-            return f"auto {name}({params}{vararg}) -> {self.return_type.format()}"
+            return f"auto {name}({params_str}){qualifiers}{noexcept} -> {self.return_type.format()}"
         else:
-            return f"{self.return_type.format()} {name}({params}{vararg})"
+            return self.return_type.format_decl(
+                f"{name}({params_str}){qualifiers}{noexcept}"
+            )
 
 
 @dataclass
@@ -327,11 +358,12 @@ class Type:
         v = "volatile " if self.volatile else ""
         return f"{c}{v}{self.typename.format()}"
 
-    def format_decl(self, name: str):
+    def format_decl(self, name: str) -> str:
         """Format as a named declaration"""
         c = "const " if self.const else ""
         v = "volatile " if self.volatile else ""
-        return f"{c}{v}{self.typename.format()} {name}"
+        separator = " " if name and name[0] not in "*&[" else ""
+        return f"{c}{v}{self.typename.format()}{separator}{name}"
 
 
 @dataclass
@@ -342,7 +374,7 @@ class Array:
     """
 
     #: The type that this is an array of
-    array_of: typing.Union["Array", "Pointer", Type]
+    array_of: typing.Union["Array", "MemberPointer", "Pointer", Type]
 
     #: Size of the array
     #:
@@ -353,12 +385,11 @@ class Array:
     size: typing.Optional[Value]
 
     def format(self) -> str:
-        s = self.size.format() if self.size else ""
-        return f"{self.array_of.format()}[{s}]"
+        return self.format_decl("")
 
     def format_decl(self, name: str) -> str:
-        s = self.size.format() if self.size else ""
-        return f"{self.array_of.format()} {name}[{s}]"
+        size = self.size.format() if self.size else ""
+        return self.array_of.format_decl(f"{name}[{size}]")
 
 
 @dataclass
@@ -368,38 +399,50 @@ class Pointer:
     """
 
     #: Thing that this points to
-    ptr_to: typing.Union[Array, FunctionType, "Pointer", Type]
+    ptr_to: typing.Union[Array, FunctionType, "MemberPointer", "Pointer", Type]
 
     const: bool = False
     volatile: bool = False
     restrict: bool = False
 
     def format(self) -> str:
-        c = " const" if self.const else ""
-        v = " volatile" if self.volatile else ""
-        r = " __restrict__" if self.restrict else ""
-        ptr_to = self.ptr_to
-        if isinstance(ptr_to, FunctionType) and ptr_to.classname:
-            return ptr_to.format_decl(f"({ptr_to.classname.format()}::*{r}{c}{v})")
-        elif isinstance(ptr_to, (Array, FunctionType)):
-            return ptr_to.format_decl(f"(*{r}{c}{v})")
-        else:
-            return f"{ptr_to.format()}*{r}{c}{v}"
+        return self.format_decl("")
 
-    def format_decl(self, name: str):
+    def format_decl(self, name: str) -> str:
         """Format as a named declaration"""
         c = " const" if self.const else ""
         v = " volatile" if self.volatile else ""
         r = " __restrict__" if self.restrict else ""
-        ptr_to = self.ptr_to
-        if isinstance(ptr_to, FunctionType) and ptr_to.classname:
-            return ptr_to.format_decl(
-                f"({ptr_to.classname.format()}::*{r}{c}{v} {name})"
-            )
-        elif isinstance(ptr_to, (Array, FunctionType)):
-            return ptr_to.format_decl(f"(*{r}{c}{v} {name})")
-        else:
-            return f"{ptr_to.format()}*{r}{c}{v} {name}"
+        return _format_prefixed_type(self.ptr_to, f"*{r}{c}{v}", name)
+
+
+@dataclass
+class MemberPointer:
+    """
+    A pointer to a class member. The member may be an object or a function.
+    """
+
+    #: Thing that this points to
+    ptr_to: typing.Union[Array, FunctionType, "MemberPointer", Pointer, Type]
+
+    #: Class that owns the member
+    classname: PQName
+
+    const: bool = False
+    volatile: bool = False
+    restrict: bool = False
+
+    def format(self) -> str:
+        return self.format_decl("")
+
+    def format_decl(self, name: str) -> str:
+        """Format as a named declaration"""
+        c = " const" if self.const else ""
+        v = " volatile" if self.volatile else ""
+        r = " __restrict__" if self.restrict else ""
+        return _format_prefixed_type(
+            self.ptr_to, f"{self.classname.format()}::*{r}{c}{v}", name
+        )
 
 
 @dataclass
@@ -408,27 +451,16 @@ class Reference:
     A lvalue (``&``) reference
     """
 
-    ref_to: typing.Union[Array, FunctionType, Pointer, Type]
+    ref_to: typing.Union[Array, FunctionType, MemberPointer, Pointer, Type]
     restrict: bool = False
 
     def format(self) -> str:
-        ref_to = self.ref_to
+        return self.format_decl("")
 
-        if isinstance(ref_to, Array):
-            return ref_to.format_decl("(&)")
-        else:
-            r = " __restrict__" if self.restrict else ""
-            return f"{ref_to.format()}&{r}"
-
-    def format_decl(self, name: str):
+    def format_decl(self, name: str) -> str:
         """Format as a named declaration"""
-        ref_to = self.ref_to
-
-        if isinstance(ref_to, Array):
-            return ref_to.format_decl(f"(& {name})")
-        else:
-            r = " __restrict__" if self.restrict else ""
-            return f"{ref_to.format()}&{r} {name}"
+        r = " __restrict__" if self.restrict else ""
+        return _format_prefixed_type(self.ref_to, f"&{r}", name)
 
 
 @dataclass
@@ -437,21 +469,25 @@ class MoveReference:
     An rvalue (``&&``) reference
     """
 
-    moveref_to: typing.Union[Array, FunctionType, Pointer, Type]
+    moveref_to: typing.Union[Array, FunctionType, MemberPointer, Pointer, Type]
 
     def format(self) -> str:
-        return f"{self.moveref_to.format()}&&"
+        return self.format_decl("")
 
-    def format_decl(self, name: str):
+    def format_decl(self, name: str) -> str:
         """Format as a named declaration"""
-        return f"{self.moveref_to.format()}&& {name}"
+        return _format_prefixed_type(self.moveref_to, "&&", name)
 
 
-#: A type or function type that is decorated with various things
-#:
-#: .. note:: There can only be one of FunctionType or Type in a DecoratedType
-#:           chain
-DecoratedType = typing.Union[Array, Pointer, MoveReference, Reference, Type]
+#: An object/declarator type decorated with arrays, pointers, or references.
+#: FunctionType can occur as the target of a pointer-like wrapper, but is not
+#: itself a DecoratedType.
+DecoratedType = typing.Union[
+    Array, MemberPointer, Pointer, MoveReference, Reference, Type
+]
+
+#: A type-id, including a bare FunctionType in contexts that accept one.
+TypeId = typing.Union[DecoratedType, FunctionType]
 
 
 @dataclass
@@ -872,7 +908,7 @@ class Typedef:
     #:
     #:    typedef type *pname;
     #:            ~~~~~~
-    type: typing.Union[DecoratedType, FunctionType]
+    type: TypeId
 
     #: The alias introduced for the specified type
     #:
@@ -967,7 +1003,7 @@ class UsingAlias:
     """
 
     alias: str
-    type: DecoratedType
+    type: TypeId
 
     template: typing.Optional[TemplateDecl] = None
 
