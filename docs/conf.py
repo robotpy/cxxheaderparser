@@ -6,8 +6,8 @@
 
 # -- Path setup --------------------------------------------------------------
 
+import importlib.metadata
 import os
-import pkg_resources
 
 # -- Project information -----------------------------------------------------
 
@@ -16,7 +16,7 @@ copyright = "2020-2023, Dustin Spicuzza"
 author = "Dustin Spicuzza"
 
 # The full version, including alpha/beta/rc tags
-release = pkg_resources.get_distribution("cxxheaderparser").version
+release = importlib.metadata.version("cxxheaderparser")
 
 
 # -- General configuration ---------------------------------------------------
