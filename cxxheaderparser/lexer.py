@@ -424,6 +424,23 @@ class PlyLexer:
         msg = "Invalid char constant %s" % t.value
         self._error(msg, t)
 
+    # Raw strings must be recognized before NAME consumes the encoding prefix/R.
+    # Match the closing delimiter literally, allowing newlines in the body.
+    @TOKEN(
+        r'(?:u8|u|U|L)?R"(?P<raw_delimiter>[^\s()\\]{0,16})\((?s:.*?)\)(?P=raw_delimiter)"'
+    )
+    def t_RAW_STRING_LITERAL(self, t: LexToken) -> LexToken:
+        prefix = t.value[: t.value.index("R")]
+        t.type = {
+            "": "STRING_LITERAL",
+            "L": "WSTRING_LITERAL",
+            "u8": "U8STRING_LITERAL",
+            "u": "U16STRING_LITERAL",
+            "U": "U32STRING_LITERAL",
+        }[prefix]
+        t.lexer.lineno += t.value.count("\n")
+        return t
+
     @TOKEN(wstring_literal)
     def t_WSTRING_LITERAL(self, t: LexToken) -> LexToken:
         return t
