@@ -2275,7 +2275,9 @@ class CxxParser:
                     raise self._parse_error(tok, "0/delete/default")
 
                 break
-            elif tok_value in ("const", "volatile", "override", "final"):
+            elif tok.type in ("volatile", "__volatile__"):
+                method.volatile = True
+            elif tok_value in ("const", "override", "final"):
                 setattr(method, tok_value, True)
             elif tok_value in ("&", "&&"):
                 method.ref_qualifier = tok_value
@@ -2509,7 +2511,7 @@ class CxxParser:
         const = False
         volatile = False
         while True:
-            tok = self.lex.token_if("const", "volatile")
+            tok = self.lex.token_if("const", "volatile", "__volatile__")
             if not tok:
                 break
             if tok.type == "const":
@@ -2671,7 +2673,14 @@ class CxxParser:
                     continue
 
             tok = self.lex.token_if(
-                "*", "const", "volatile", "__restrict__", "__restrict", "restrict", "("
+                "*",
+                "const",
+                "volatile",
+                "__volatile__",
+                "__restrict__",
+                "__restrict",
+                "restrict",
+                "(",
             )
             if not tok:
                 break
@@ -2686,7 +2695,7 @@ class CxxParser:
                 if not isinstance(dtype, (Pointer, MemberPointer, Type)):
                     raise self._parse_error(tok)
                 dtype.const = True
-            elif tok.type == "volatile":
+            elif tok.type in ("volatile", "__volatile__"):
                 if not isinstance(dtype, (Pointer, MemberPointer, Type)):
                     raise self._parse_error(tok)
                 dtype.volatile = True
@@ -2800,6 +2809,7 @@ class CxxParser:
         | _type_kwd_meth
         | {
             "volatile",
+            "__volatile__",
             "mutable",
             "__inline",
             "__inline__",
@@ -2891,7 +2901,7 @@ class CxxParser:
                 mods.virtual = tok
             elif tok_type == "mutable":
                 mods.mutable = tok
-            elif tok_type == "volatile":
+            elif tok_type in ("volatile", "__volatile__"):
                 volatile = True
             elif tok_type in _attribute_start:
                 self._consume_attribute(tok)

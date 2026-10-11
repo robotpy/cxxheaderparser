@@ -160,6 +160,7 @@ class PlyLexer:
         "virtual",
         "void",
         "volatile",
+        "__volatile__",
         "wchar_t",
         "while",
     }
