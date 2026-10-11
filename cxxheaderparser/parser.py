@@ -2220,18 +2220,18 @@ class CxxParser:
             if otok:
                 toks = self._consume_balanced_tokens(otok)[1:-1]
             fn.noexcept = self._create_value(toks)
-        else:
-            rtok = self.lex.token_if("requires")
-            if rtok:
-                # requires on a function must always be accompanied by a template
-                if fn.template is None:
-                    raise self._parse_error(rtok)
-                fn.raw_requires = self._parse_requires(rtok)
 
         if self.lex.token_if("ARROW"):
             return_type = self._parse_trailing_return_type(fn.return_type)
             fn.has_trailing_return = True
             fn.return_type = return_type
+
+        rtok = self.lex.token_if("requires")
+        if rtok:
+            # Free-function constraints require a template.
+            if fn.template is None:
+                raise self._parse_error(rtok)
+            fn.raw_requires = self._parse_requires(rtok)
 
         extra_attrs = self._consume_decl_attributes()
         if extra_attrs:
