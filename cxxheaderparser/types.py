@@ -1025,6 +1025,9 @@ class UsingAlias:
     #: Documentation if present
     doxygen: typing.Optional[str] = None
 
+    #: Attributes attached to this alias declaration
+    attributes: typing.List[Attribute] = field(default_factory=list)
+
 
 @dataclass
 class DeductionGuide:

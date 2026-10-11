@@ -1211,9 +1211,18 @@ class CxxParser:
         alias_declaration: "using" IDENTIFIER "=" type_id ";"
         """
 
+        alias_attributes = self._take_pending_attributes()
         dtype = self._parse_type_id(None, "parsing typealias")
+        alias_attributes.extend(self._take_pending_attributes())
 
-        alias = UsingAlias(id_tok.value, dtype, template, self._current_access, doxygen)
+        alias = UsingAlias(
+            id_tok.value,
+            dtype,
+            template,
+            self._current_access,
+            doxygen,
+            alias_attributes,
+        )
 
         self.visitor.on_using_alias(self.state, alias)
 
@@ -1228,6 +1237,9 @@ class CxxParser:
         tok = self._next_token_must_be(
             "NAME", "DBL_COLON", "namespace", "typename", "enum"
         )
+
+        if tok.type == "NAME":
+            self._record_attributes(self._consume_decl_attributes())
 
         if tok.type == "namespace":
             if template:
