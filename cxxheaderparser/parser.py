@@ -724,15 +724,16 @@ class CxxParser:
             self._parse_declarations(tok, doxygen, templates)
             return
 
+        if tok.type == "requires":
+            template.raw_requires_pre = self._parse_requires(tok)
+            tok = self.lex.token()
+
         if tok.type == "using":
             self._parse_using(tok, doxygen, template)
         elif tok.type == "friend":
             self._parse_friend_decl(tok, doxygen, template)
         elif tok.type == "concept":
             self._parse_concept(tok, doxygen, template)
-        elif tok.type == "requires":
-            template.raw_requires_pre = self._parse_requires(tok)
-            self._parse_declarations(self.lex.token(), doxygen, template)
         else:
             self._parse_declarations(tok, doxygen, template)
 
