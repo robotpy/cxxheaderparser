@@ -841,6 +841,9 @@ class Function:
     #: template <typename T> int main() requires ...
     raw_requires: typing.Optional[Value] = None
 
+    #: True for an immediate function declared with ``consteval``.
+    consteval: bool = False
+
 
 @dataclass
 class Method(Function):

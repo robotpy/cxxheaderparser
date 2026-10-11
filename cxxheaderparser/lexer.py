@@ -88,6 +88,7 @@ class PlyLexer:
         "concept",
         "const",
         "constexpr",
+        "consteval",
         "const_cast",
         "continue",
         "decltype",

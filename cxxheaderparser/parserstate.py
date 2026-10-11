@@ -13,6 +13,7 @@ from .types import ClassDecl, NamespaceDecl, Value
 class ParsedTypeModifiers:
     #: Modifiers allowed on variables and functions.
     constexpr: typing.Optional[LexToken] = None
+    consteval: typing.Optional[LexToken] = None
     extern: typing.Optional[LexToken] = None
     inline: typing.Optional[LexToken] = None
     static: typing.Optional[LexToken] = None
@@ -48,7 +49,13 @@ class ParsedTypeModifiers:
                     raise CxxParseError(f"{msg}: unexpected '{tok.value}'")
 
         if not meth_ok and not var_ok:
-            for tok in (self.constexpr, self.extern, self.inline, self.static):
+            for tok in (
+                self.constexpr,
+                self.consteval,
+                self.extern,
+                self.inline,
+                self.static,
+            ):
                 if tok is not None:
                     raise CxxParseError(f"{msg}: unexpected '{tok.value}'")
 
