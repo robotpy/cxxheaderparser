@@ -359,17 +359,20 @@ class CxxParser:
         _translation_unit_tokens: typing.Dict[
             str, typing.Callable[[LexToken, typing.Optional[str]], typing.Any]
         ] = {
+            "__extension__": lambda _1, _2: None,
             "__attribute__": self._consume_gcc_attribute,
             "__declspec": self._consume_declspec,
             "alignas": self._consume_attribute_specifier_seq,
             "extern": self._parse_extern,
             "friend": self._parse_friend_decl,
             "inline": self._parse_inline,
+            "__inline__": self._parse_inline,
             "namespace": self._parse_namespace,
             "private": self._process_access_specifier,
             "protected": self._process_access_specifier,
             "public": self._process_access_specifier,
             "static_assert": self._consume_static_assert,
+            "_Static_assert": self._consume_static_assert,
             "template": self._parse_template,
             "typedef": self._parse_typedef,
             "using": self._parse_using,
@@ -381,7 +384,13 @@ class CxxParser:
             ";": lambda _1, _2: None,
         }
 
-        _keep_doxygen = {"__declspec", "alignas", "__attribute__", "DBL_LBRACKET"}
+        _keep_doxygen = {
+            "__declspec",
+            "alignas",
+            "__attribute__",
+            "DBL_LBRACKET",
+            "__extension__",
+        }
 
         tok = None
 
@@ -715,15 +724,16 @@ class CxxParser:
             self._parse_declarations(tok, doxygen, templates)
             return
 
+        if tok.type == "requires":
+            template.raw_requires_pre = self._parse_requires(tok)
+            tok = self.lex.token()
+
         if tok.type == "using":
             self._parse_using(tok, doxygen, template)
         elif tok.type == "friend":
             self._parse_friend_decl(tok, doxygen, template)
         elif tok.type == "concept":
             self._parse_concept(tok, doxygen, template)
-        elif tok.type == "requires":
-            template.raw_requires_pre = self._parse_requires(tok)
-            self._parse_declarations(self.lex.token(), doxygen, template)
         else:
             self._parse_declarations(tok, doxygen, template)
 
@@ -891,9 +901,14 @@ class CxxParser:
                 tok = self.lex.token()
             elif tok.type == "requires":
                 rawtoks.append(tok)
-                for tt in ("(", "{"):
-                    tok = self._next_token_must_be(tt)
+                tok = self._next_token_must_be("(", "{")
+                if tok.type == "(":
                     rawtoks.extend(self._consume_balanced_tokens(tok))
+                    tok = self._next_token_must_be("{")
+                rawtoks.extend(self._consume_balanced_tokens(tok))
+                tok = self.lex.token()
+            elif tok.type in ("true", "false"):
+                rawtoks.append(tok)
                 tok = self.lex.token()
             else:
                 tok = self._parse_requires_segment(tok, rawtoks)
@@ -1177,7 +1192,12 @@ class CxxParser:
         typename, _ = self._parse_pqname(
             tok, fn_ok=True, compound_ok=True, fund_ok=True
         )
-        decl = UsingDecl(typename, self._current_access, doxygen)
+        decl = UsingDecl(
+            typename,
+            self._current_access,
+            doxygen,
+            param_pack=self.lex.token_if("ELLIPSIS") is not None,
+        )
 
         self.visitor.on_using_declaration(self.state, decl)
 
@@ -1191,9 +1211,18 @@ class CxxParser:
         alias_declaration: "using" IDENTIFIER "=" type_id ";"
         """
 
+        alias_attributes = self._take_pending_attributes()
         dtype = self._parse_type_id(None, "parsing typealias")
+        alias_attributes.extend(self._take_pending_attributes())
 
-        alias = UsingAlias(id_tok.value, dtype, template, self._current_access, doxygen)
+        alias = UsingAlias(
+            id_tok.value,
+            dtype,
+            template,
+            self._current_access,
+            doxygen,
+            alias_attributes,
+        )
 
         self.visitor.on_using_alias(self.state, alias)
 
@@ -1208,6 +1237,9 @@ class CxxParser:
         tok = self._next_token_must_be(
             "NAME", "DBL_COLON", "namespace", "typename", "enum"
         )
+
+        if tok.type == "NAME":
+            self._record_attributes(self._consume_decl_attributes())
 
         if tok.type == "namespace":
             if template:
@@ -1334,9 +1366,7 @@ class CxxParser:
             if doxygen is None:
                 doxygen = self.lex.get_doxygen_after()
 
-            tok = self.lex.token_if("DBL_LBRACKET")
-            if tok:
-                attributes = self._consume_attribute_specifier_seq(tok, record=False)
+            attributes = self._consume_decl_attributes()
 
             if doxygen is None:
                 doxygen = self.lex.get_doxygen_after()
@@ -1552,6 +1582,12 @@ class CxxParser:
 
             # each initializer is either foo() or foo{}, so look for that
             while True:
+                if tok.type == "<":
+                    # Parentheses in template arguments belong to the
+                    # initializer-id, not to its argument list.
+                    self._consume_balanced_tokens(tok)
+                    tok = get_token()
+                    continue
                 if tok.type not in ("{", "("):
                     tok = get_token()
                     continue
@@ -1650,6 +1686,8 @@ class CxxParser:
 
             bits = self._parse_bitfield()
 
+        attributes.extend(self._consume_decl_attributes())
+
         # default values
         tok = self.lex.token_if("=")
         if tok:
@@ -1691,6 +1729,7 @@ class CxxParser:
                     attributes=attributes,
                     constexpr=mods.constexpr is not None,
                     mutable=mods.mutable is not None,
+                    thread_local=mods.thread_local is not None,
                     static=mods.static is not None,
                     inline=mods.inline is not None,
                 )
@@ -1706,6 +1745,7 @@ class CxxParser:
                     attributes=attributes,
                     constexpr=mods.constexpr is not None,
                     extern=self._make_extern_value(mods),
+                    thread_local=mods.thread_local is not None,
                     static=mods.static is not None,
                     inline=mods.inline is not None,
                 )
@@ -1728,20 +1768,24 @@ class CxxParser:
     _compound_fundamentals = {
         "unsigned",
         "signed",
+        "__signed__",
         "short",
         "int",
         "long",
         "float",
         "double",
+        "_Complex",
         "char",
         "__int8",
         "__int16",
         "__int32",
         "__int64",
+        "__int128",
     }
 
     _fundamentals = _compound_fundamentals | {
         "bool",
+        "char8_t",
         "char16_t",
         "char32_t",
         "nullptr_t",
@@ -1921,7 +1965,7 @@ class CxxParser:
                 segments.append(self._parse_pqname_decltype_specifier())
 
             # check for fundamentals, consume them
-            elif tok_value in _fundamentals:
+            elif tok_value in _fundamentals and (fund_ok or tok.type != "NAME"):
                 if not fund_ok:
                     raise self._parse_error(tok)
 
@@ -2116,7 +2160,11 @@ class CxxParser:
                     )
                 )
 
-            tok = self._next_token_must_be(",", ")")
+            tok = self._next_token_must_be(",", ")", "ELLIPSIS")
+            if tok.type == "ELLIPSIS":
+                vararg = True
+                self._next_token_must_be(")")
+                break
             if tok.value == ")":
                 break
 
@@ -2201,18 +2249,20 @@ class CxxParser:
             if otok:
                 toks = self._consume_balanced_tokens(otok)[1:-1]
             fn.noexcept = self._create_value(toks)
-        else:
-            rtok = self.lex.token_if("requires")
-            if rtok:
-                # requires on a function must always be accompanied by a template
-                if fn.template is None:
-                    raise self._parse_error(rtok)
-                fn.raw_requires = self._parse_requires(rtok)
+
+        fn.attributes.extend(self._consume_decl_attributes())
 
         if self.lex.token_if("ARROW"):
             return_type = self._parse_trailing_return_type(fn.return_type)
             fn.has_trailing_return = True
             fn.return_type = return_type
+
+        rtok = self.lex.token_if("requires")
+        if rtok:
+            # Free-function constraints require a template.
+            if fn.template is None:
+                raise self._parse_error(rtok)
+            fn.raw_requires = self._parse_requires(rtok)
 
         extra_attrs = self._consume_decl_attributes()
         if extra_attrs:
@@ -2264,7 +2314,9 @@ class CxxParser:
                     raise self._parse_error(tok, "0/delete/default")
 
                 break
-            elif tok_value in ("const", "volatile", "override", "final"):
+            elif tok.type in ("volatile", "__volatile__"):
+                method.volatile = True
+            elif tok_value in ("const", "override", "final"):
                 setattr(method, tok_value, True)
             elif tok_value in ("&", "&&"):
                 method.ref_qualifier = tok_value
@@ -2287,6 +2339,8 @@ class CxxParser:
                 method.noexcept = self._create_value(toks)
             elif tok_value == "requires":
                 method.raw_requires = self._parse_requires(tok)
+            elif tok.type in self._attribute_start_tokens:
+                method.attributes.extend(self._consume_attribute(tok, record=False))
             else:
                 self.lex.return_token(tok)
                 break
@@ -2373,6 +2427,7 @@ class CxxParser:
                 template=template,
                 operator=op,
                 access=self._current_access,
+                consteval=mods.consteval is not None,
                 constexpr=mods.constexpr is not None,
                 extern=extern,
                 static=mods.static is not None,
@@ -2432,6 +2487,7 @@ class CxxParser:
                 attributes=attributes,
                 template=template,
                 operator=op,
+                consteval=mods.consteval is not None,
                 constexpr=mods.constexpr is not None,
                 extern=extern,
                 static=mods.static is not None,
@@ -2453,7 +2509,7 @@ class CxxParser:
 
                 if fn.constexpr:
                     raise CxxParseError("typedef function may not be constexpr")
-                if fn.extern:
+                if mods.extern is not None:
                     raise CxxParseError("typedef function may not be extern")
                 if fn.static:
                     raise CxxParseError("typedef function may not be static")
@@ -2498,7 +2554,7 @@ class CxxParser:
         const = False
         volatile = False
         while True:
-            tok = self.lex.token_if("const", "volatile")
+            tok = self.lex.token_if("const", "volatile", "__volatile__")
             if not tok:
                 break
             if tok.type == "const":
@@ -2660,7 +2716,14 @@ class CxxParser:
                     continue
 
             tok = self.lex.token_if(
-                "*", "const", "volatile", "__restrict__", "__restrict", "restrict", "("
+                "*",
+                "const",
+                "volatile",
+                "__volatile__",
+                "__restrict__",
+                "__restrict",
+                "restrict",
+                "(",
             )
             if not tok:
                 break
@@ -2675,7 +2738,7 @@ class CxxParser:
                 if not isinstance(dtype, (Pointer, MemberPointer, Type)):
                     raise self._parse_error(tok)
                 dtype.const = True
-            elif tok.type == "volatile":
+            elif tok.type in ("volatile", "__volatile__"):
                 if not isinstance(dtype, (Pointer, MemberPointer, Type)):
                     raise self._parse_error(tok)
                 dtype.volatile = True
@@ -2775,7 +2838,16 @@ class CxxParser:
         return dtype
 
     # Applies to variables and return values
-    _type_kwd_both = {"const", "constexpr", "extern", "inline", "static"}
+    _type_kwd_both = {
+        "const",
+        "constexpr",
+        "consteval",
+        "extern",
+        "inline",
+        "static",
+        "thread_local",
+        "__thread",
+    }
 
     # Only found on methods
     _type_kwd_meth = {"explicit", "virtual"}
@@ -2789,8 +2861,10 @@ class CxxParser:
         | _type_kwd_meth
         | {
             "volatile",
+            "__volatile__",
             "mutable",
             "__inline",
+            "__inline__",
             "__forceinline",
             "this",
             "ELLIPSIS",
@@ -2854,16 +2928,20 @@ class CxxParser:
                 break
             elif tok_type == "const":
                 const = True
-            elif tok_type == "friend" and pqname is None:
+            elif tok_type == "friend":
                 mods.friend = tok
             elif tok_type == "constexpr":
                 mods.constexpr = tok
+            elif tok_type == "consteval":
+                mods.consteval = tok
+            elif tok_type in ("thread_local", "__thread"):
+                mods.thread_local = tok
             elif tok_type == "extern":
                 linkage_tok = self.lex.token_if("STRING_LITERAL")
                 if linkage_tok:
                     mods.extern_linkage = linkage_tok.value
                 mods.extern = tok
-            elif tok_type in ("__inline", "__forceinline", "inline"):
+            elif tok_type in ("__inline", "__inline__", "__forceinline", "inline"):
                 mods.inline = tok
             elif tok_type == "static":
                 mods.static = tok
@@ -2879,7 +2957,7 @@ class CxxParser:
                 mods.virtual = tok
             elif tok_type == "mutable":
                 mods.mutable = tok
-            elif tok_type == "volatile":
+            elif tok_type in ("volatile", "__volatile__"):
                 volatile = True
             elif tok_type in _attribute_start:
                 self._consume_attribute(tok)

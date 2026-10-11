@@ -13,12 +13,14 @@ from .types import ClassDecl, NamespaceDecl, Value
 class ParsedTypeModifiers:
     #: Modifiers allowed on variables and functions.
     constexpr: typing.Optional[LexToken] = None
+    consteval: typing.Optional[LexToken] = None
     extern: typing.Optional[LexToken] = None
     inline: typing.Optional[LexToken] = None
     static: typing.Optional[LexToken] = None
 
     #: Modifiers only allowed on variables/fields.
     mutable: typing.Optional[LexToken] = None
+    thread_local: typing.Optional[LexToken] = None
 
     #: Modifiers only allowed on methods.
     explicit: typing.Optional[LexToken] = None
@@ -38,7 +40,7 @@ class ParsedTypeModifiers:
     ) -> None:
         # Almost there! Do any checks the caller asked for
         if not var_ok:
-            for tok in (self.mutable,):
+            for tok in (self.mutable, self.thread_local):
                 if tok is not None:
                     raise CxxParseError(f"{msg}: unexpected '{tok.value}'")
 
@@ -48,7 +50,13 @@ class ParsedTypeModifiers:
                     raise CxxParseError(f"{msg}: unexpected '{tok.value}'")
 
         if not meth_ok and not var_ok:
-            for tok in (self.constexpr, self.extern, self.inline, self.static):
+            for tok in (
+                self.constexpr,
+                self.consteval,
+                self.extern,
+                self.inline,
+                self.static,
+            ):
                 if tok is not None:
                     raise CxxParseError(f"{msg}: unexpected '{tok.value}'")
 
