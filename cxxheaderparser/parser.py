@@ -2135,7 +2135,11 @@ class CxxParser:
                     )
                 )
 
-            tok = self._next_token_must_be(",", ")")
+            tok = self._next_token_must_be(",", ")", "ELLIPSIS")
+            if tok.type == "ELLIPSIS":
+                vararg = True
+                self._next_token_must_be(")")
+                break
             if tok.value == ")":
                 break
 
