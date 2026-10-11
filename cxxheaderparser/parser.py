@@ -1752,6 +1752,7 @@ class CxxParser:
 
     _fundamentals = _compound_fundamentals | {
         "bool",
+        "char8_t",
         "char16_t",
         "char32_t",
         "nullptr_t",
