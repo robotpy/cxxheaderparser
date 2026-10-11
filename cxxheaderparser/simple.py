@@ -22,6 +22,41 @@ to start:
 
 See below for the contents of the returned :class:`ParsedData`.
 
+Looking up declarations
+-----------------------
+
+Use :func:`get_declaration` to retrieve a parsed object by its qualified name:
+
+.. code-block:: python
+
+    from cxxheaderparser.simple import get_declaration, parse_string
+
+    data = parse_string('''
+        namespace name {
+            /** A counter. */
+            struct Bar {
+                /** Current count. */
+                int count();
+            };
+        }
+    ''')
+
+    print(get_declaration(data, "name::Bar::count").doxygen)
+    print(get_declaration(data, "name::Bar").class_decl.doxygen)
+
+Classes return :class:`ClassScope`, so their documentation is on
+``class_decl.doxygen``. Invalid or missing names raise :class:`KeyError`;
+multiple matches (including overloads) raise :class:`AmbiguousNameError`.
+Lookup does not follow inheritance, aliases, or using declarations.
+
+Names are parsed with :func:`parse_name`, which returns a
+:class:`~cxxheaderparser.types.PQName` and supports templates and operators
+without parameter lists. Use :func:`parse_typename` for type-ids such as
+``const C*`` instead.
+
+API reference
+-------------
+
 """
 
 import os
@@ -33,16 +68,21 @@ import typing
 from dataclasses import dataclass, field
 
 from .types import (
+    AnonymousName,
     ClassDecl,
     Concept,
     DeductionGuide,
     EnumDecl,
+    Enumerator,
     Field,
     ForwardDecl,
     FriendDecl,
     Function,
     Method,
     NamespaceAlias,
+    NameSpecifier,
+    PQName,
+    PQNameSegment,
     TemplateInst,
     TypeId,
     Typedef,
@@ -57,6 +97,7 @@ from .parserstate import (
     ExternBlockState,
     NamespaceBlockState,
 )
+from .errors import CxxParseError
 from .parser import CxxParser
 from .options import ParserOptions
 from .visitor import null_visitor
@@ -349,6 +390,27 @@ def parse_string(
     return visitor.data
 
 
+def parse_name(
+    name: str,
+    *,
+    filename: str = "<str>",
+    options: typing.Optional[ParserOptions] = None,
+) -> PQName:
+    """Parse a qualified declaration name, returning a :class:`PQName`.
+
+    Supports template arguments, constructors, destructors, and operator names
+    without parameter lists. Conversion operators use a final NameSpecifier
+    containing ``operator`` followed by a space and the formatted target type.
+
+    Unlike :func:`parse_typename`, this parses names rather than type-ids:
+    ``C::operator bool`` is a name, whereas ``const C*`` is a type-id.
+
+    :raises CxxParseError: The input is not a supported declaration name.
+    """
+    parser = CxxParser(filename, f"{name};", null_visitor, options)
+    return parser.parse_name()
+
+
 def parse_typename(
     typename: str,
     *,
@@ -386,3 +448,134 @@ def parse_file(
     parser.parse()
 
     return visitor.data
+
+
+NamedDeclaration = typing.Union[
+    NamespaceScope,
+    ClassScope,
+    EnumDecl,
+    Enumerator,
+    Function,
+    Field,
+    Typedef,
+    Variable,
+    ForwardDecl,
+    UsingAlias,
+    NamespaceAlias,
+    Concept,
+]
+
+
+class AmbiguousNameError(LookupError):
+    """Raised by :func:`get_declaration` when multiple declarations match a name."""
+
+
+def _qualified_name(
+    prefix: typing.List[PQNameSegment], name: typing.Union[str, PQName]
+) -> typing.List[PQNameSegment]:
+    if isinstance(name, str):
+        if not name:
+            return []
+        segments: typing.List[PQNameSegment] = [NameSpecifier(name)]
+    else:
+        segments = name.segments
+    if any(isinstance(segment, AnonymousName) for segment in segments):
+        return []
+    if segments and segments[0] == NameSpecifier(""):
+        return segments[1:]
+    return prefix + segments
+
+
+def _named_elements(
+    scope: Block, prefix: typing.List[PQNameSegment]
+) -> typing.Iterator[typing.Tuple[typing.List[PQNameSegment], NamedDeclaration]]:
+    if isinstance(scope, NamespaceScope):
+        for name, ns in scope.namespaces.items():
+            qualified = _qualified_name(prefix, name)
+            if qualified:
+                yield qualified, ns
+                yield from _named_elements(ns, qualified)
+        groups: typing.Iterable[typing.Iterable[NamedDeclaration]] = (
+            scope.functions,
+            scope.method_impls,
+            scope.variables,
+            scope.ns_alias,
+            scope.concepts,
+        )
+    else:
+        groups = (scope.methods, scope.fields)
+
+    for group in (*groups, scope.typedefs, scope.using_alias, scope.forward_decls):
+        for element in group:
+            if isinstance(element, (UsingAlias, NamespaceAlias)):
+                element_name: typing.Union[str, PQName, None] = element.alias
+            elif isinstance(element, ForwardDecl):
+                element_name = element.typename
+            else:
+                # These groups contain only declarations with a name attribute.
+                element_name = typing.cast(
+                    typing.Union[Function, Variable, Concept, Field, Typedef], element
+                ).name
+            if element_name is not None:
+                qualified = _qualified_name(prefix, element_name)
+                if qualified:
+                    if (
+                        isinstance(element, Function)
+                        and element.operator == "conversion"
+                    ):
+                        assert element.return_type is not None
+                        qualified = qualified[:-1] + [
+                            NameSpecifier("operator " + element.return_type.format())
+                        ]
+                    yield qualified, element
+
+    for enum in scope.enums:
+        qualified = _qualified_name(prefix, enum.typename)
+        if qualified:
+            yield qualified, enum
+            for value in enum.values:
+                yield qualified + [NameSpecifier(value.name)], value
+
+    for cls in scope.classes:
+        qualified = _qualified_name(prefix, cls.class_decl.typename)
+        if qualified:
+            yield qualified, cls
+            yield from _named_elements(cls, qualified)
+
+
+def get_declaration(data: ParsedData, qualified_name: str) -> NamedDeclaration:
+    """Find a named declaration in parsed data.
+
+    Names are relative to the global namespace; a leading ``::`` is optional.
+    Returns the original object, including :class:`ClassScope` for classes
+    and :class:`NamespaceScope` for namespaces. Enum values are addressed as
+    ``Enum::value``. Names are parsed with :func:`parse_name` and compared
+    structurally, allowing whitespace in qualified names and template arguments.
+    Operator names are supported, including conversions such as
+    ``C::operator bool`` or ``C::operator const int*``.
+
+    This is declaration lookup, not C++ semantic name resolution: inheritance,
+    using-directives/declarations, alias targets, and inline/anonymous namespace
+    injection are not followed. Anonymous declarations, friends, deduction
+    guides, and explicit template instantiations are not searched. Qualified
+    declarations are matched even when stored outside their named scope.
+
+    :raises KeyError: The name is invalid or no declaration matches.
+    :raises AmbiguousNameError: Multiple declarations match. Overloads,
+        repeated declarations, and forward declarations are not merged.
+    """
+    try:
+        name = _qualified_name([], parse_name(qualified_name))
+    except CxxParseError as exc:
+        raise KeyError(qualified_name) from exc
+    match: typing.Optional[NamedDeclaration] = None
+    for candidate, element in _named_elements(data.namespace, []):
+        if candidate == name:
+            if match is not None:
+                raise AmbiguousNameError(
+                    f"Multiple declarations match {qualified_name!r}"
+                )
+            match = element
+    if match is None:
+        raise KeyError(qualified_name)
+    return match
