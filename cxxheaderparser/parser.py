@@ -2888,7 +2888,7 @@ class CxxParser:
                 break
             elif tok_type == "const":
                 const = True
-            elif tok_type == "friend" and pqname is None:
+            elif tok_type == "friend":
                 mods.friend = tok
             elif tok_type == "constexpr":
                 mods.constexpr = tok
