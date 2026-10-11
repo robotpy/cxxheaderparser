@@ -998,6 +998,9 @@ class UsingDecl:
     #: Documentation if present
     doxygen: typing.Optional[str] = None
 
+    #: True if the using-declaration is a pack expansion.
+    param_pack: bool = False
+
 
 @dataclass
 class UsingAlias:

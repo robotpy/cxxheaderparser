@@ -1192,7 +1192,12 @@ class CxxParser:
         typename, _ = self._parse_pqname(
             tok, fn_ok=True, compound_ok=True, fund_ok=True
         )
-        decl = UsingDecl(typename, self._current_access, doxygen)
+        decl = UsingDecl(
+            typename,
+            self._current_access,
+            doxygen,
+            param_pack=self.lex.token_if("ELLIPSIS") is not None,
+        )
 
         self.visitor.on_using_declaration(self.state, decl)
 
