@@ -1567,6 +1567,12 @@ class CxxParser:
 
             # each initializer is either foo() or foo{}, so look for that
             while True:
+                if tok.type == "<":
+                    # Parentheses in template arguments belong to the
+                    # initializer-id, not to its argument list.
+                    self._consume_balanced_tokens(tok)
+                    tok = get_token()
+                    continue
                 if tok.type not in ("{", "("):
                     tok = get_token()
                     continue
