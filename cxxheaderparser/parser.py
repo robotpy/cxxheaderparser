@@ -1349,9 +1349,7 @@ class CxxParser:
             if doxygen is None:
                 doxygen = self.lex.get_doxygen_after()
 
-            tok = self.lex.token_if("DBL_LBRACKET")
-            if tok:
-                attributes = self._consume_attribute_specifier_seq(tok, record=False)
+            attributes = self._consume_decl_attributes()
 
             if doxygen is None:
                 doxygen = self.lex.get_doxygen_after()
