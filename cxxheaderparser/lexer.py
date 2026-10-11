@@ -71,6 +71,7 @@ class PlyLexer:
 
     keywords = {
         "__attribute__",
+        "__extension__",
         "alignas",
         "alignof",
         "asm",

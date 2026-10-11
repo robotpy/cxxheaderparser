@@ -359,6 +359,7 @@ class CxxParser:
         _translation_unit_tokens: typing.Dict[
             str, typing.Callable[[LexToken, typing.Optional[str]], typing.Any]
         ] = {
+            "__extension__": lambda _1, _2: None,
             "__attribute__": self._consume_gcc_attribute,
             "__declspec": self._consume_declspec,
             "alignas": self._consume_attribute_specifier_seq,
@@ -382,7 +383,13 @@ class CxxParser:
             ";": lambda _1, _2: None,
         }
 
-        _keep_doxygen = {"__declspec", "alignas", "__attribute__", "DBL_LBRACKET"}
+        _keep_doxygen = {
+            "__declspec",
+            "alignas",
+            "__attribute__",
+            "DBL_LBRACKET",
+            "__extension__",
+        }
 
         tok = None
 
