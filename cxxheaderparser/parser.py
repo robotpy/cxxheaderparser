@@ -2250,6 +2250,8 @@ class CxxParser:
                 toks = self._consume_balanced_tokens(otok)[1:-1]
             fn.noexcept = self._create_value(toks)
 
+        fn.attributes.extend(self._consume_decl_attributes())
+
         if self.lex.token_if("ARROW"):
             return_type = self._parse_trailing_return_type(fn.return_type)
             fn.has_trailing_return = True
