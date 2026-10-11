@@ -1934,7 +1934,7 @@ class CxxParser:
                 segments.append(self._parse_pqname_decltype_specifier())
 
             # check for fundamentals, consume them
-            elif tok_value in _fundamentals:
+            elif tok_value in _fundamentals and (fund_ok or tok.type != "NAME"):
                 if not fund_ok:
                     raise self._parse_error(tok)
 
