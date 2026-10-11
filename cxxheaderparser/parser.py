@@ -2474,7 +2474,7 @@ class CxxParser:
 
                 if fn.constexpr:
                     raise CxxParseError("typedef function may not be constexpr")
-                if fn.extern:
+                if mods.extern is not None:
                     raise CxxParseError("typedef function may not be extern")
                 if fn.static:
                     raise CxxParseError("typedef function may not be static")
