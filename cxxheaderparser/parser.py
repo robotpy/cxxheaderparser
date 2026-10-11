@@ -1674,6 +1674,8 @@ class CxxParser:
 
             bits = self._parse_bitfield()
 
+        attributes.extend(self._consume_decl_attributes())
+
         # default values
         tok = self.lex.token_if("=")
         if tok:
