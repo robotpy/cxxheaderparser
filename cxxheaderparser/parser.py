@@ -370,6 +370,7 @@ class CxxParser:
             "protected": self._process_access_specifier,
             "public": self._process_access_specifier,
             "static_assert": self._consume_static_assert,
+            "_Static_assert": self._consume_static_assert,
             "template": self._parse_template,
             "typedef": self._parse_typedef,
             "using": self._parse_using,

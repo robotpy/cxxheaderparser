@@ -138,6 +138,7 @@ class PlyLexer:
         "sizeof",
         "static",
         "static_assert",
+        "_Static_assert",
         "static_cast",
         "struct",
         "switch",
