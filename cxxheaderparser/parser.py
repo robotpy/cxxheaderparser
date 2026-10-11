@@ -900,9 +900,11 @@ class CxxParser:
                 tok = self.lex.token()
             elif tok.type == "requires":
                 rawtoks.append(tok)
-                for tt in ("(", "{"):
-                    tok = self._next_token_must_be(tt)
+                tok = self._next_token_must_be("(", "{")
+                if tok.type == "(":
                     rawtoks.extend(self._consume_balanced_tokens(tok))
+                    tok = self._next_token_must_be("{")
+                rawtoks.extend(self._consume_balanced_tokens(tok))
                 tok = self.lex.token()
             else:
                 tok = self._parse_requires_segment(tok, rawtoks)
