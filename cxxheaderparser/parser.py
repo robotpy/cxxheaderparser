@@ -2316,6 +2316,8 @@ class CxxParser:
                 method.noexcept = self._create_value(toks)
             elif tok_value == "requires":
                 method.raw_requires = self._parse_requires(tok)
+            elif tok.type in self._attribute_start_tokens:
+                method.attributes.extend(self._consume_attribute(tok, record=False))
             else:
                 self.lex.return_token(tok)
                 break
