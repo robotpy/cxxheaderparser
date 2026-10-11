@@ -1749,6 +1749,7 @@ class CxxParser:
         "__int16",
         "__int32",
         "__int64",
+        "__int128",
     }
 
     _fundamentals = _compound_fundamentals | {

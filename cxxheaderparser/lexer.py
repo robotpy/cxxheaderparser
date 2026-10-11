@@ -119,6 +119,7 @@ class PlyLexer:
         "__int16",
         "__int32",
         "__int64",
+        "__int128",
         "long",
         "mutable",
         "namespace",
