@@ -1729,6 +1729,7 @@ class CxxParser:
     _compound_fundamentals = {
         "unsigned",
         "signed",
+        "__signed__",
         "short",
         "int",
         "long",

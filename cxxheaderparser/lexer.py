@@ -135,6 +135,7 @@ class PlyLexer:
         "return",
         "short",
         "signed",
+        "__signed__",
         "sizeof",
         "static",
         "static_assert",
