@@ -1743,6 +1743,7 @@ class CxxParser:
         "long",
         "float",
         "double",
+        "_Complex",
         "char",
         "__int8",
         "__int16",

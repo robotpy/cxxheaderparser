@@ -96,6 +96,7 @@ class PlyLexer:
         "delete",
         "do",
         "double",
+        "_Complex",
         "dynamic_cast",
         "else",
         "enum",
