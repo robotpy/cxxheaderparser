@@ -111,6 +111,7 @@ class PlyLexer:
         "goto",
         "if",
         "__inline",
+        "__inline__",
         "inline",
         "int",
         "__int8",

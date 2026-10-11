@@ -366,6 +366,7 @@ class CxxParser:
             "extern": self._parse_extern,
             "friend": self._parse_friend_decl,
             "inline": self._parse_inline,
+            "__inline__": self._parse_inline,
             "namespace": self._parse_namespace,
             "private": self._process_access_specifier,
             "protected": self._process_access_specifier,
@@ -2800,6 +2801,7 @@ class CxxParser:
             "volatile",
             "mutable",
             "__inline",
+            "__inline__",
             "__forceinline",
             "this",
             "ELLIPSIS",
@@ -2872,7 +2874,7 @@ class CxxParser:
                 if linkage_tok:
                     mods.extern_linkage = linkage_tok.value
                 mods.extern = tok
-            elif tok_type in ("__inline", "__forceinline", "inline"):
+            elif tok_type in ("__inline", "__inline__", "__forceinline", "inline"):
                 mods.inline = tok
             elif tok_type == "static":
                 mods.static = tok
