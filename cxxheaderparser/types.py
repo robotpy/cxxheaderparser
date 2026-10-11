@@ -841,6 +841,9 @@ class Function:
     #: template <typename T> int main() requires ...
     raw_requires: typing.Optional[Value] = None
 
+    #: True for an immediate function declared with ``consteval``.
+    consteval: bool = False
+
 
 @dataclass
 class Method(Function):
@@ -947,6 +950,9 @@ class Variable:
     #: Any attributes attached to this variable
     attributes: typing.List[Attribute] = field(default_factory=list)
 
+    #: Thread-local storage (``thread_local`` or GNU ``__thread``).
+    thread_local: bool = False
+
 
 @dataclass
 class Field:
@@ -972,6 +978,9 @@ class Field:
     #: Any attributes attached to this field
     attributes: typing.List[Attribute] = field(default_factory=list)
 
+    #: Thread-local storage (``thread_local`` or GNU ``__thread``).
+    thread_local: bool = False
+
 
 @dataclass
 class UsingDecl:
@@ -988,6 +997,9 @@ class UsingDecl:
 
     #: Documentation if present
     doxygen: typing.Optional[str] = None
+
+    #: True if the using-declaration is a pack expansion.
+    param_pack: bool = False
 
 
 @dataclass
@@ -1012,6 +1024,9 @@ class UsingAlias:
 
     #: Documentation if present
     doxygen: typing.Optional[str] = None
+
+    #: Attributes attached to this alias declaration
+    attributes: typing.List[Attribute] = field(default_factory=list)
 
 
 @dataclass
