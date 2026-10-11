@@ -20,6 +20,7 @@ class ParsedTypeModifiers:
 
     #: Modifiers only allowed on variables/fields.
     mutable: typing.Optional[LexToken] = None
+    thread_local: typing.Optional[LexToken] = None
 
     #: Modifiers only allowed on methods.
     explicit: typing.Optional[LexToken] = None
@@ -39,7 +40,7 @@ class ParsedTypeModifiers:
     ) -> None:
         # Almost there! Do any checks the caller asked for
         if not var_ok:
-            for tok in (self.mutable,):
+            for tok in (self.mutable, self.thread_local):
                 if tok is not None:
                     raise CxxParseError(f"{msg}: unexpected '{tok.value}'")
 

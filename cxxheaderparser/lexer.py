@@ -151,6 +151,7 @@ class PlyLexer:
         "template",
         "this",
         "thread_local",
+        "__thread",
         "throw",
         "true",
         "try",

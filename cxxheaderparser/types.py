@@ -950,6 +950,9 @@ class Variable:
     #: Any attributes attached to this variable
     attributes: typing.List[Attribute] = field(default_factory=list)
 
+    #: Thread-local storage (``thread_local`` or GNU ``__thread``).
+    thread_local: bool = False
+
 
 @dataclass
 class Field:
@@ -974,6 +977,9 @@ class Field:
     doxygen: typing.Optional[str] = None
     #: Any attributes attached to this field
     attributes: typing.List[Attribute] = field(default_factory=list)
+
+    #: Thread-local storage (``thread_local`` or GNU ``__thread``).
+    thread_local: bool = False
 
 
 @dataclass

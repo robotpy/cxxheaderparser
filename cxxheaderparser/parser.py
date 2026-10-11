@@ -1710,6 +1710,7 @@ class CxxParser:
                     attributes=attributes,
                     constexpr=mods.constexpr is not None,
                     mutable=mods.mutable is not None,
+                    thread_local=mods.thread_local is not None,
                     static=mods.static is not None,
                     inline=mods.inline is not None,
                 )
@@ -1725,6 +1726,7 @@ class CxxParser:
                     attributes=attributes,
                     constexpr=mods.constexpr is not None,
                     extern=self._make_extern_value(mods),
+                    thread_local=mods.thread_local is not None,
                     static=mods.static is not None,
                     inline=mods.inline is not None,
                 )
@@ -2815,7 +2817,16 @@ class CxxParser:
         return dtype
 
     # Applies to variables and return values
-    _type_kwd_both = {"const", "constexpr", "consteval", "extern", "inline", "static"}
+    _type_kwd_both = {
+        "const",
+        "constexpr",
+        "consteval",
+        "extern",
+        "inline",
+        "static",
+        "thread_local",
+        "__thread",
+    }
 
     # Only found on methods
     _type_kwd_meth = {"explicit", "virtual"}
@@ -2902,6 +2913,8 @@ class CxxParser:
                 mods.constexpr = tok
             elif tok_type == "consteval":
                 mods.consteval = tok
+            elif tok_type in ("thread_local", "__thread"):
+                mods.thread_local = tok
             elif tok_type == "extern":
                 linkage_tok = self.lex.token_if("STRING_LITERAL")
                 if linkage_tok:
