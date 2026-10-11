@@ -782,7 +782,10 @@ class CxxParser:
                         if tmp_lex.has_tokens():
                             dtype = None
 
-            if self.lex.token_if("ELLIPSIS"):
+            ellipsis = self.lex.token_if("ELLIPSIS")
+            if ellipsis:
+                if not val.tokens:
+                    raise self._parse_error(ellipsis, "template pack operand")
                 param_pack = True
 
             if dtype:
@@ -1824,6 +1827,52 @@ class CxxParser:
         self._consume_until(parts, "(")
         return parts
 
+    _standalone_operators = frozenset(
+        (
+            "+ - * / % ^ & | ~ ! = < > += -= *= /= %= ^= &= |= << >> <<= >>= "
+            "== != <= >= <=> && || ++ -- , ->* -> () [] "
+            "new new[] delete delete[] co_await"
+        ).split()
+    )
+
+    def _parse_standalone_operator_name(self) -> NameSpecifier:
+        """Parse an operator-id without a following parameter list."""
+        tok = self.lex.token()
+        if (
+            tok.value in self._standalone_operators
+            or tok.value in ("(", "[")
+            or tok.type in {"STRING_LITERAL", "UD_STRING_LITERAL"}
+        ):
+            parts = [tok]
+            while not self.lex.token_peek_if(";"):
+                parts.append(self.lex.token())
+
+            # Separate the longest operator-id from any template arguments.
+            # In particular, '<' can belong to either part of the name.
+            for end in range(len(parts), 0, -1):
+                if end < len(parts) and parts[end].type != "<":
+                    continue
+                op = "".join(part.value for part in parts[:end])
+                if op not in self._standalone_operators and not re.fullmatch(
+                    r'""[A-Za-z_][A-Za-z_0-9]*', op
+                ):
+                    continue
+                self.lex.return_tokens(parts[end:])
+                specialization = None
+                if self.lex.token_if("<"):
+                    specialization = self._parse_template_specialization()
+                return NameSpecifier("operator" + op, specialization)
+            raise self._parse_error(tok, "operator name")
+
+        # Conversion operators carry their target type separately in Method.
+        # Use the same type parser and canonical spelling for their name segment.
+        ctype, mods = self._parse_type(tok)
+        if ctype is None:
+            raise self._parse_error(tok, "conversion type")
+        mods.validate(var_ok=False, meth_ok=False, msg="parsing conversion operator")
+        target = self._parse_cv_ptr(ctype)
+        return NameSpecifier("operator " + target.format())
+
     _pqname_start_tokens = (
         {
             "auto",
@@ -1868,6 +1917,7 @@ class CxxParser:
         fn_ok: bool = False,
         compound_ok: bool = False,
         fund_ok: bool = False,
+        standalone: bool = False,
     ) -> typing.Tuple[PQName, typing.Optional[str]]:
         """
         Parses a possibly qualified function name or a type name, returns when
@@ -1876,6 +1926,7 @@ class CxxParser:
         :param fn_ok: Operator functions ok
         :param compound_ok: Compound types ok
         :param fund_ok: Fundamental types ok
+        :param standalone: Parse operators without a following parameter list
 
         qualified_id: ["::"] nested_name_specifier ["template"] unqualified_id
                     | "::" IDENTIFIER
@@ -1980,6 +2031,12 @@ class CxxParser:
                 if tok_value == "template":
                     tok = self._next_token_must_be("NAME")
                     tok_value = tok.value
+
+                if standalone and tok_value == "operator":
+                    segments.append(self._parse_standalone_operator_name())
+                    break
+                if standalone and tok_value == "~":
+                    tok_value += self._next_token_must_be("NAME").value
 
                 name, op = self._parse_pqname_name(tok_value)
                 segments.append(name)
@@ -2219,6 +2276,20 @@ class CxxParser:
             atok = self.lex.token_if("[")
 
         return dtype
+
+    def parse_name(self) -> PQName:
+        """Parse a standalone qualified declaration name."""
+        try:
+            name, _ = self._parse_pqname(None, fn_ok=True, standalone=True)
+            if any(isinstance(segment, AutoSpecifier) for segment in name.segments):
+                raise self._parse_error(None, "declaration name")
+            self._next_token_must_be(";")
+            extra = self.lex.token_eof_ok()
+            if extra is not None:
+                raise self._parse_error(extra)
+            return name
+        except EOFError as exc:
+            raise CxxParseError("unexpected end of declaration name") from exc
 
     def parse_typename(self) -> TypeId:
         """
